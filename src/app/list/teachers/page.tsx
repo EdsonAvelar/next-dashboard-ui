@@ -1,32 +1,65 @@
+import ColumnFilter from "@/components/ColumnFilter";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role, teachersData } from "@/lib/data";
+import { role } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Class, Prisma, Subject, Teacher } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
-type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
-
 const columns = [
-  { header: "Info", accessor: "info" },
   {
-    header: "Teacher ID",
+    header: (
+      <div className="flex items-center gap-2">
+        <span>Info</span>
+        {/* Botão de filtro */}
+        <ColumnFilter
+          paramKey="info"
+          filterType="text"
+          label="Filtrar por info ID"
+        />
+      </div>
+    ),
+    accessor: "info",
+    className: "",
+  },
+  {
+    header: (
+      <div className="flex items-center gap-2">
+        <span>Teacher ID</span>
+        {/* Botão de filtro */}
+        <ColumnFilter
+          paramKey="teacherId"
+          filterType="text"
+          label="Filtrar por Teacher ID"
+        />
+      </div>
+    ),
     accessor: "teacherId",
     className: "hidden md:table-cell",
   },
   {
-    header: "Subjects",
+    header: (
+      <div className="flex items-center gap-2">
+        <span>Subjects</span>
+        {/* Botão de filtro */}
+        <ColumnFilter
+          paramKey="subjects"
+          filterType="text"
+          label="Filtrar por Subjects ID"
+        />
+      </div>
+    ),
     accessor: "subjects",
     className: "hidden md:table-cell",
   },
   { header: "Classes", accessor: "classes", className: "hidden md:table-cell" },
   { header: "Phone", accessor: "phone", className: "hidden lg:table-cell" },
   { header: "Address", accessor: "address", className: "hidden lg:table-cell" },
-  { header: "Actions", accessor: "actions" },
+  { header: "Actions", accessor: "actions", className: "" },
 ];
 
 const TeacherListPage = async ({
@@ -34,19 +67,36 @@ const TeacherListPage = async ({
 }: {
   searchParams: { [key: string]: string } | undefined;
 }) => {
-  const { page, ...queryParams } = searchParams || {};
+  const { page, ...params } = searchParams || {};
   const p = page ? parseInt(page) : 1;
 
-  const query: Prisma.TeacherWhereInput = {};
+  const where: Prisma.TeacherWhereInput = {};
 
-  if (queryParams) {
-    for (const [key, value] of Object.entries(queryParams)) {
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
       if (value !== undefined) {
         switch (key) {
-          case "classId":
-            query.lessons = {
+          case "teacherId":
+            where.username = {
+              contains: params.teacherId,
+            };
+            break;
+          case "info":
+            where.name = {
+              contains: params.info,
+            };
+            break;
+          case "search":
+            where.name = {
+              contains: params.search,
+            };
+            break;
+          case "subjects":
+            where.subjects = {
               some: {
-                classId: parseInt(value),
+                name: {
+                  contains: params.subjects,
+                },
               },
             };
             break;
@@ -55,9 +105,20 @@ const TeacherListPage = async ({
     }
   }
 
+  //   // createdAt => dateRange no formato "YYYY-MM-DD_to_YYYY-MM-DD"
+  //   if (params.createdAt) {
+  //     const [start, end] = params.createdAt.split("_to_");
+  //     if (start) {
+  //       where.createdAt = { ...where.createdAt, gte: new Date(start) };
+  //     }
+  //     if (end) {
+  //       where.createdAt = { ...where.createdAt, lte: new Date(end) };
+  //     }
+  //   }
+
   const [data, pagecount] = await prisma.$transaction([
     prisma.teacher.findMany({
-      where: query,
+      where,
       include: {
         subjects: true,
         classes: true,
@@ -65,7 +126,7 @@ const TeacherListPage = async ({
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
-    prisma.teacher.count({ where: query }),
+    prisma.teacher.count({ where }),
   ]);
 
   // Pré-renderiza as linhas no servidor
