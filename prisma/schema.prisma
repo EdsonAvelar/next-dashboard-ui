@@ -7,6 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Model User baseado na migration do Laravel
+model User {
+  id                Int       @id @default(autoincrement())
+  name              String
+  avatar            String
+  telefone          String?   // campo opcional
+  cpf               String?
+  rg                String?
+  endereco          String?
+  data_contratacao  String?
+  data_demissao     String?
+  status            Int
+  // Relação com Equipe (opcional)
+  equipe_id         Int?
+  equipe            Equipe?   @relation(fields: [equipe_id], references: [id])
+  
+  email             String    @unique
+  email_verified_at DateTime?
+  password          String
+  role              Role      @default(USER) // Por padrão, usuário comum
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+ 
+}
+
+// Definição do enum para roles
+enum Role {
+  ADMIN
+  USER
+}
+
+// Se você tiver um model de Equipe, defina-o assim:
+model Equipe {
+  id    Int     @id @default(autoincrement())
+  name  String
+  users User[]
+}
+
+
+
 model Admin {
   id       String @id
   username String @unique

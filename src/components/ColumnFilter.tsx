@@ -30,7 +30,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
   const searchParams = useSearchParams();
 
   // Valor atual do filtro na URL
-  const currentValue = searchParams.get(paramKey) || "";
+  const currentValue = searchParams?.get(paramKey) || "";
 
   // Estados locais para manipular o filtro antes de aplicar
   const [inputValue, setInputValue] = useState(currentValue);
@@ -53,7 +53,9 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
 
   // Aplica o filtro atualizando a query string
   const applyFilter = () => {
-    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    const params = new URLSearchParams(
+      Array.from(searchParams?.entries() || [])
+    );
 
     // Reinicia a paginação
     params.set("page", "1");
@@ -78,7 +80,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
 
   // Limpa o filtro
   const clearFilter = () => {
-    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    const params = new URLSearchParams(Array.from(searchParams?.entries() || []));
     params.delete(paramKey);
     params.set("page", "1");
     router.push(`?${params.toString()}`);

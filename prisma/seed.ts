@@ -1,7 +1,28 @@
 import { Day, PrismaClient, UserSex } from "@prisma/client";
 const prisma = new PrismaClient();
+import bcrypt from 'bcryptjs'
 
 async function main() {
+
+  // Cria hash da senha (o número 10 é o salt rounds)'
+  const passwordHash = await bcrypt.hash("12345", 10)
+
+  // Cria o usuário admin
+  await prisma.user.create({
+    data: {
+      name: "Gerente",
+      avatar: "", // você pode definir um avatar padrão
+      email: "gerente@com.br",
+      password: passwordHash,
+      role: "ADMIN",
+      status: 1, // supondo que 1 seja ativo
+      // Outros campos podem ser deixados como null ou definidos conforme necessário
+    }
+  })
+
+  console.log("Usuário admin criado com sucesso!")
+
+
   // ADMIN
   await prisma.admin.create({
     data: {

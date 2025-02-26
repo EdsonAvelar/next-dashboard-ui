@@ -38,12 +38,7 @@ const AdminPage = () => {
         <div className="w-full h-[500px] bg-white rounded-xl p-4">
           <FinanceChart />
         </div>
-
-
       </div>
-
-
-
       {/* Right */}
 
       <div className="w-full lg:w-1/3 flex flex-col gap-8 ">

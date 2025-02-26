@@ -3,7 +3,11 @@
 import React, { useState } from "react";
 
 type TableProps = {
-  columns: { header: string; accessor: string; className?: string }[];
+  columns: {
+    header: string | JSX.Element;
+    accessor: string;
+    className?: string;
+  }[];
   rows: React.ReactElement[];
   selectable?: boolean;
 };
@@ -14,9 +18,8 @@ const Table = ({ columns, rows, selectable = false }: TableProps) => {
   const isAllSelected = rows.length > 0 && selectedRows.size === rows.length;
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-
     if (e.target.checked) {
-      const allIds = rows.map((row) => (row.props["data-rowid"]));
+      const allIds = rows.map((row) => row.props["data-rowid"]);
       setSelectedRows(new Set(allIds));
     } else {
       setSelectedRows(new Set());
@@ -24,7 +27,6 @@ const Table = ({ columns, rows, selectable = false }: TableProps) => {
   };
 
   const handleRowSelect = (id: number, checked: boolean) => {
-    
     const newSelected = new Set(selectedRows);
     if (checked) {
       newSelected.add(id);

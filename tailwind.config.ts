@@ -8,6 +8,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        loadingBar: {
+          "0%": { transform: "translateX(0%)" },
+          "50%": { transform: "translateX(70%)" },
+          "100%": { transform: "translateX(0%)" },
+        },
+      },
+      animation: {
+        loadingBar: "loadingBar 1.5s ease-in-out infinite",
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
@@ -19,8 +29,8 @@ const config: Config = {
         lamaPurple: "#CFCEFF",
         lamaPurpleLight: "#F1F0FF",
         lamaYellow: "#FAE27C",
-        lamaYellowLight: "#FEFCE8"
-      }
+        lamaYellowLight: "#FEFCE8",
+      },
     },
   },
   plugins: [],
