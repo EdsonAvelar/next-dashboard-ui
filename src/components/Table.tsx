@@ -71,19 +71,23 @@ const Table = ({ columns, rows, selectable = false }: TableProps) => {
             const id = row.props["data-rowid"];
 
             const checked = selectedRows.has(id);
-            return React.cloneElement(row, { key: row.key }, [
-              <td
-                key="checkbox"
-                className="p-2"
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) => handleRowSelect(id, e.target.checked)}
-                />
-              </td>,
-              ...React.Children.toArray(row.props.children),
-            ]);
+            return React.cloneElement(
+              row,
+              { key: row.props["data-rowid"] ?? row.key },
+              [
+                <td
+                  key="checkbox"
+                  className="p-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => handleRowSelect(id, e.target.checked)}
+                  />
+                </td>,
+                ...React.Children.toArray(row.props.children),
+              ]
+            );
           }
           return row;
         })}

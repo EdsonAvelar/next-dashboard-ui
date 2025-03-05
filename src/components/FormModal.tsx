@@ -1,32 +1,53 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-// import TeacherForm from "./forms/TeacherForm";
-// import StudentForm from "./forms/StudentForm";
-import dynamic from "next/dynamic";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
+import dynamic from "next/dynamic";
+import { deleteFuncionario } from "@/lib/actions";
+import { useFormState } from "react-dom";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { FormContainerProps } from "./forms/FormContainer";
+
+const deleteActionMap = {
+  user: deleteFuncionario,
+  negocio: deleteFuncionario,
+  parent: deleteFuncionario,
+  student: deleteFuncionario,
+  teacher: deleteFuncionario,
+};
+
+const FuncionarioForm = dynamic(() => import("./forms/FuncionarioForm"), {
   loading: () => <h1>Carregando...</h1>,
 });
 
-const StudentForm = dynamic(() => import("./forms/StudentForm"), {
+const NegocioForm = dynamic(() => import("./forms/NegocioForm"), {
   loading: () => <h1>Carregando...</h1>,
 });
 
 const forms: {
-  [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
+  [key: string]: (
+    setOpen: Dispatch<SetStateAction<boolean>>,
+    type: "create" | "update",
+    data?: any,
+    relatedData?: any
+  ) => JSX.Element;
 } = {
-  teacher: (type, data) => (
-    <TeacherForm
+  user: (setOpen, type, data) => (
+    <FuncionarioForm
       type={type}
       data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
     />
   ),
-  student: (type, data) => (
-    <StudentForm
+  negocio: (setOpen, type, data) => (
+    <NegocioForm
       type={type}
       data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
     />
   ),
 };
@@ -36,12 +57,8 @@ const FormModal = ({
   type,
   data,
   id,
-}: {
-  table: "teacher" | "student" | "parent";
-  type: "create" | "update" | "delete";
-  data?: any;
-  id?: number;
-}) => {
+  relatedData,
+}: FormContainerProps & { relatedData?: any }) => {
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
   const bgColor =
     type === "create"
@@ -53,11 +70,32 @@ const FormModal = ({
   const [open, setOpen] = useState(false);
 
   const Form = () => {
+    const [state, formAction] = useFormState(deleteActionMap[table], {
+      success: false,
+      msg: "",
+    });
+
+    const router = useRouter();
+
+    useEffect(() => {
+      if (state.success) {
+        toast("Negocio deletado com sucesso");
+        setOpen(false);
+        router.refresh();
+      }
+    }, [state]);
+
     return type === "delete" && id ? (
       <form
-        action=""
+        action={formAction}
         className="p-4 flex flex-col gap-4"
       >
+        <input
+          type="text | number"
+          name="id"
+          value={id}
+          hidden
+        />
         <span className="text-center font-medium">
           All data will be lost. Are you sure you want to delte this {table}?
         </span>
@@ -66,7 +104,7 @@ const FormModal = ({
         </button>
       </form>
     ) : type === "create" || type === "update" ? (
-      forms[table](type, data)
+      forms[table](setOpen, type, data, relatedData)
     ) : (
       "Form not found"
     );

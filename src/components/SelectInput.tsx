@@ -25,8 +25,9 @@ const SelectInput = ({
   options,
 }: SelectInputProps) => {
   return (
-    <div className="flex flex-col gap-2 w-full md:w-[30%]">
+    <div className="flex flex-col gap-2 w-full px-4">
       <label className="text-xs text-gray-500">{label}</label>
+
       <select
         {...register(name)}
         defaultValue={defaultValue}

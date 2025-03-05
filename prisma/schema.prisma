@@ -7,6 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Cargo {
+  id Int@id @default(autoincrement())
+  name  String
+  User User[]
+}
+
+model Role {
+  id                Int       @id @default(autoincrement())
+  name  String
+  descricao String
+  // Relação muitos-para-muitos: cada role pode ter vários usuários
+  users      User[]
+}
+
 // Model User baseado na migration do Laravel
 model User {
   id                Int       @id @default(autoincrement())
@@ -18,6 +32,7 @@ model User {
   endereco          String?
   data_contratacao  String?
   data_demissao     String?
+
   status            Int
   // Relação com Equipe (opcional)
   equipe_id         Int?
@@ -26,25 +41,148 @@ model User {
   email             String    @unique
   email_verified_at DateTime?
   password          String
-  role              Role      @default(USER) // Por padrão, usuário comum
+  roles             Role[]  
+  cargoId           Int?      // chave estrangeira opcional
+  cargo             Cargo?    @relation(fields: [cargoId], references: [id])
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
  
+  negocios          Negocio[]  // se desejar relacionar o usuário com os negócios
 }
 
-// Definição do enum para roles
-enum Role {
-  ADMIN
-  USER
-}
 
 // Se você tiver um model de Equipe, defina-o assim:
 model Equipe {
   id    Int     @id @default(autoincrement())
   name  String
+  emblema String?
   users User[]
 }
 
+enum NegocioTipo {
+  // Substitua os valores abaixo pelos definidos em NegocioTipo do Laravel
+  IMOVEL
+  CARRO
+  MOTO
+  CAMINHAO
+  TERRENO
+  MAQUINARIO
+  SERVICO
+}
+
+enum NegocioStatus {
+  // Substitua os valores abaixo pelos definidos em NegocioStatus do Laravel
+  ATIVO
+  INATIVO
+  VENDIDO
+  PERDIDO
+}
+
+model Negocio {
+  id              Int           @id @default(autoincrement())
+  fechamento      String?       
+  titulo          String
+  valor           String?       @db.VarChar(20)
+
+  origem String?
+
+  tipo            NegocioTipo
+  status          NegocioStatus
+
+  lead_id         Int
+  lead            Lead          @relation(fields: [lead_id], references: [id])
+  
+  funil_id        Int
+  funil           Funil         @relation(fields: [funil_id], references: [id])
+  
+  etapa_funil_id  Int
+  etapa_funil     EtapaFunil    @relation(fields: [etapa_funil_id], references: [id])
+  
+  user_id         Int?
+  user            User?         @relation(fields: [user_id], references: [id])
+  
+  data_criacao    DateTime      @default(now())
+
+  updatedAt       DateTime      @updatedAt
+
+  label  Label[]
+}
+
+model Label {
+  id              Int           @id @default(autoincrement())
+  nome      String? 
+  negocio Negocio[]
+}
+
+
+model Lead {
+  id             Int      @id @default(autoincrement())
+  nome           String   @db.VarChar(254)
+  telefone       String   @db.VarChar(32)
+  whatsapp       String?  @db.VarChar(32)
+  email          String?  @db.VarChar(254)
+  data_conversao String?  @db.VarChar(254)
+  fonte          String?  @db.VarChar(254)
+  campanha       String?  @db.VarChar(254)
+  endereco       String?  @db.VarChar(254)
+  complemento    String?  @db.VarChar(254)
+  cep            String?  @db.VarChar(254)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relação: um lead pode estar associado a vários negócios
+  negocios       Negocio[]
+}
+
+model Funil {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Um funil pode ter várias etapas e negócios
+  etapa_funils EtapaFunil[]
+  negocios     Negocio[]
+}
+
+enum EtapaFunilTipo {
+  COMUM
+  REUNIAO
+  AGENDAMENTO
+  FECHAMENTO
+}
+
+
+model EtapaFunil {
+  id        Int             @id @default(autoincrement())
+  nome      String
+  tipo      EtapaFunilTipo  // Novo campo para definir o tipo da etapa
+  ordem     Int
+  funil_id  Int
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  funil     Funil           @relation(fields: [funil_id], references: [id])
+  negocios  Negocio[]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ###############################################################################
+// ###############################################################################
+//  ABAIXO MODELS DO SISTEMA DE EXEMPLO, DELETAR DEPOIS
+// ###############################################################################
+// ###############################################################################
 
 
 model Admin {

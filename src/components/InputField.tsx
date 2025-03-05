@@ -4,6 +4,7 @@ type InputFieldProps = {
   label: string;
   type?: string;
   register: any;
+  isRequired?: boolean;
   name: string;
   defaultValue?: string;
   error?: FieldError;
@@ -14,6 +15,7 @@ const InputField = ({
   label,
   type = "text",
   register,
+  isRequired,
   name,
   defaultValue,
   error,
@@ -21,8 +23,11 @@ const InputField = ({
 }: InputFieldProps) => {
   return (
     <>
-      <div className="flex flex-col gap-2 w-full md:w-[30%]">
-        <label className="text-xs text-gray-500">{label}</label>
+      <div className="flex flex-col gap-2 w-full px-4">
+        <label className="text-xs text-gray-500">
+          {label}
+          {isRequired && <span className="text-red-500 text-lg">*</span>}
+        </label>
         <input
           type={type}
           {...register(name)}

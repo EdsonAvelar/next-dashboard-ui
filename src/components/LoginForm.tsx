@@ -2,16 +2,21 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 interface LoginFormProps {
   csrfToken: string | null;
 }
+
+import { useRouter } from "next/navigation";
 
 export default function LoginForm({ csrfToken }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +30,8 @@ export default function LoginForm({ csrfToken }: LoginFormProps) {
       setError(res.error);
       setLoading(false);
     } else {
-      window.location.href = "/dashboard/admin";
+      
+      router.push("/dashboard/crm");
     }
   };
 
