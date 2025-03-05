@@ -24,7 +24,7 @@ const FuncionarioForm = ({
   type: "create" | "update";
   setOpen: Dispatch<SetStateAction<boolean>>;
   data?: any;
-  relatedData?:any;
+  relatedData?: any;
 }) => {
   const router = useRouter();
 
@@ -41,63 +41,15 @@ const FuncionarioForm = ({
   const [cargoOptions, setCargoOptions] = useState<
     { value: string; label: string }[]
   >([]);
+
   useEffect(() => {
-    async function fetchCargo() {
-      try {
-        const res = await fetch("/api/cargos");
-        const cargos = await res.json();
-        // Mapeie os dados para o formato { value, label }
-        const options = cargos.map((role: { name: string; id: string }) => ({
-          value: role.id,
-          label: role.name,
-        }));
-        setCargoOptions(options);
-      } catch (error) {
-        console.error("Erro ao buscar cargos:", error);
-      }
-    }
-    fetchCargo();
+    const { cargos } = relatedData;
+    const options = cargos.map((cargo: { name: string; id: string }) => ({
+      value: cargo.id,
+      label: cargo.name,
+    }));
+    setCargoOptions(options);
   }, []);
-
-  // const onSubmit = handleSubmit(
-  //   async (formData) => {
-  //     console.log("Commit!");
-  //     try {
-  //       // Envia os dados para a API (lembre-se: birthday deve ser enviado em formato adequado, ex: ISO string)
-  //       const res = await fetch("/api/funcionario/create", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({
-  //           ...formData,
-  //           //birthday: formData.data_contratacao.toISOString(), // converte a data para string ISO
-  //         }),
-  //       });
-  //       if (!res.ok) {
-  //         console.log(res);
-
-  //         const errorData = await res.json();
-  //         console.error("Erro ao salvar funcionário:", errorData.error);
-  //       } else {
-  //         const savedData = await res.json();
-  //         console.log("Funcionário salvo com sucesso:", savedData);
-
-  //         // window.location.reload();
-
-  //         setOpen(false);
-  //         router.refresh();
-
-  //         toast("Funcionario Criado com Sucesso");
-
-  //         // Aqui você pode, por exemplo, redirecionar ou mostrar uma mensagem de sucesso
-  //       }
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   },
-  //   (formErrors) => {
-  //     console.log(formErrors);
-  //   }
-  // );
 
   const [state, formAction] = useFormState(
     type === "create" ? createFuncionario : updateFuncionario,
@@ -141,11 +93,15 @@ const FuncionarioForm = ({
           <span className="text-xs text-gray-400 font-medium">
             Informações Obrigatórias
           </span>
-          <input
-            hidden
-            {...register("id")}
-            value={data?.id}
-          />
+          {data && (
+            <InputField
+              label="Id"
+              name="id"
+              defaultValue={data?.id}
+              register={register}
+              hidden={true}
+            />
+          )}
           <InputField
             label="Nome"
             name="name"

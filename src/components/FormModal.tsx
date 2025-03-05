@@ -34,7 +34,7 @@ const forms: {
     relatedData?: any
   ) => JSX.Element;
 } = {
-  user: (setOpen, type, data) => (
+  user: (setOpen, type, data, relatedData) => (
     <FuncionarioForm
       type={type}
       data={data}
@@ -42,7 +42,7 @@ const forms: {
       relatedData={relatedData}
     />
   ),
-  negocio: (setOpen, type, data) => (
+  negocio: (setOpen, type, data, relatedData) => (
     <NegocioForm
       type={type}
       data={data}
@@ -91,7 +91,7 @@ const FormModal = ({
         className="p-4 flex flex-col gap-4"
       >
         <input
-          type="text | number"
+          type="hidden"
           name="id"
           value={id}
           hidden

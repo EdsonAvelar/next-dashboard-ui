@@ -47,6 +47,8 @@ const SingleFuncionarioPage = () => {
                 />
               </div>
 
+              
+
               <p className="text-sm text-gray-500">Loren jdfkdjf kdf jkdf </p>
 
               <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium">
