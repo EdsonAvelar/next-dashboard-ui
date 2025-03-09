@@ -1,34 +1,40 @@
-// pages/api/currentUser.ts
-import type { NextApiRequest, NextApiResponse } from "next";
+// app/api/currentUser/route.ts
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // ajuste o caminho conforme sua estrutura
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // ajuste o caminho conforme necessário
 import { prisma } from "@/lib/prisma";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export async function GET(request: Request) {
   // Obtém a sessão do usuário
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(authOptions);
 
   if (!session || !session.user?.email) {
-    return res.status(401).json({ error: "Usuário não autenticado" });
+    return NextResponse.json(
+      { error: "Usuário não autenticado" },
+      { status: 401 }
+    );
   }
 
   try {
-    // Busca o usuário pelo email (assumindo que email é único) e inclui as roles
+    // Busca o usuário pelo email (assumindo que o email é único) e inclui as roles
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: { roles: true },
     });
 
     if (!user) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
+      return NextResponse.json(
+        { error: "Usuário não encontrado" },
+        { status: 404 }
+      );
     }
 
-    return res.status(200).json(user);
+    return NextResponse.json(user, { status: 200 });
   } catch (error: any) {
     console.error("Erro ao buscar usuário atual:", error);
-    return res.status(500).json({ error: "Erro ao buscar usuário atual" });
+    return NextResponse.json(
+      { error: "Erro ao buscar usuário atual" },
+      { status: 500 }
+    );
   }
 }

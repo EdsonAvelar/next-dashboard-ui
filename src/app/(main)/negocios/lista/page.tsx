@@ -1,11 +1,15 @@
 import Badge from "@/components/Badge";
 import ColumnFilter from "@/components/ColumnFilter";
 import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/forms/FormContainer";
 import Pagination from "@/components/Pagination";
+import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import { getCurrentUser, UserProfile } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
+import { hasRole } from "@/lib/user";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,16 +62,7 @@ const columns = [
   },
   // Valor do Crédito
   {
-    header: (
-      <div className="flex items-center gap-2">
-        <span>Valor do Crédito</span>
-        <ColumnFilter
-          paramKey="valor"
-          filterType="text"
-          label="Filtrar por Valor"
-        />
-      </div>
-    ),
+    header: "Valor do Crédito",
     accessor: "valor",
     className: "hidden md:table-cell",
   },
@@ -157,9 +152,70 @@ const Negocios = async ({
   const { page, ...params } = searchParams || {};
   const p = page ? parseInt(page) : 1;
 
+  const user: UserProfile = await getCurrentUser();
+
+  const isAdmin = hasRole(user, "gerente_geral");
+
   // Exemplo simples de filtro – você pode aprimorar conforme a necessidade.
   const where: Prisma.NegocioWhereInput = {};
   // Aqui você pode adicionar filtros com base em params, se necessário.
+
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "title":
+            where.titulo = {
+              contains: params.title,
+            };
+            break;
+          case "cliente":
+            where.lead = {
+              nome: {
+                contains: params.cliente,
+              },
+            };
+
+            break;
+          case "telefone":
+            where.lead = {
+              telefone: {
+                contains: params.telefone,
+              },
+            };
+
+          case "etapa":
+            where.etapa_funil = {
+              nome: {
+                contains: params.etapa,
+              },
+            };
+            break;
+          case "proprietario":
+            where.user = {
+              name: {
+                contains: params.proprietario,
+              },
+            };
+            break;
+          case "origem":
+            where.origem = {
+              contains: params.origem,
+            };
+            break;
+          case "proprietario_id":
+            where.user = { id: parseInt(value, 10) };
+            break;
+        }
+      }
+    }
+  }
+
+  // Se o usuário não for admin, forçamos o filtro pelo id do usuário logado
+  
+  if (!isAdmin && user) {
+    where.user = { id: user.id };
+  }
 
   // Buscando os negócios com paginação e incluindo relações
   const [data, pagecount] = await prisma.$transaction([
@@ -240,6 +296,14 @@ const Negocios = async ({
     </tr>
   ));
 
+  // Buscando os dados para ações em massa:
+  const allUsers = await prisma.user.findMany({
+    select: { id: true, name: true },
+  });
+  const allEtapas = await prisma.etapaFunil.findMany({
+    select: { id: true, nome: true },
+  });
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -264,11 +328,15 @@ const Negocios = async ({
                 height={14}
               />
             </button>
-            <FormModal
+            <FormContainer
               table="negocio"
               type="create"
             />
           </div>
+          {/* Adicionando o select para filtrar por Proprietário */}
+          
+          {isAdmin && <ProprietarioFilterSelect users={allUsers} /> }
+
         </div>
       </div>
       {/* LIST */}
@@ -276,6 +344,7 @@ const Negocios = async ({
         columns={columns}
         rows={rows}
         selectable={true}
+        massRelatedData={{ users: allUsers, etapas: allEtapas }}
       />
       {/* PAGINATION */}
       <Pagination

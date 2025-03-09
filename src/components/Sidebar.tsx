@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   HomeIcon,
   UserGroupIcon,
@@ -11,54 +11,89 @@ import {
   BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 import { HOMEPAGE } from "@/lib/settings";
-
-const menuData = [
-  {
-    title: "Dashboards",
-    icon: HomeIcon,
-    children: [
-      { label: "Geral", href: HOMEPAGE },
-      { label: "Equipes", href: "/dashboard/equipes" },
-      { label: "Semanal", href: "/dashboard/semanal" },
-      { label: "Produção", href: "/dashboard/producao" },
-    ],
-  },
-  {
-    title: "Negócios",
-    icon: BriefcaseIcon,
-    children: [{ label: "Lista", href: "/negocios/lista" }],
-  },
-  {
-    title: "Administrativo",
-    icon: UserGroupIcon,
-    children: [{ label: "Funcionarios", href: "/administrativo/funcionario" }],
-  },
-  {
-    title: "Configurações",
-    icon: CogIcon,
-    children: [
-      { label: "Minha Conta", href: "/profile" },
-      { label: "Empresa", href: "/settings" },
-      { label: "Logout", href: "/logout" },
-    ],
-  },
-];
+import { useWindowSize } from "@/hooks/useWindowSize"; // ajuste o caminho conforme sua estrutura
+import { getCurrentUser, UserProfile } from "@/lib/actions";
 
 export default function Sidebar() {
+
+  const [user, setUser] = useState<UserProfile | null>(null);
+  useEffect(() => {
+    async function fetchUser() {
+      const res = await fetch("/api/currentUser");
+      const data = await res.json();
+      setUser(data);
+    }
+    fetchUser();
+  }, []);
+
+  const menuData = [
+    {
+      title: "Dashboards",
+      icon: HomeIcon,
+      children: [
+        { label: "Geral", href: HOMEPAGE },
+        { label: "Equipes", href: "/dashboard/equipes" },
+        { label: "Semanal", href: "/dashboard/semanal" },
+        { label: "Produção", href: "/dashboard/producao" },
+      ],
+    },
+    {
+      title: "Negócios",
+      icon: BriefcaseIcon,
+      children: [
+        {
+          label: "Pipeline",
+          href: "/negocios/pipeline",
+          params: `proprietario_id=${user?.id}`,
+        },
+        {
+          label: "Lista",
+          href: "/negocios/lista",
+          params: `proprietario_id=${user?.id}`,
+        },
+        { label: "Agendamentos", href: "/negocios/agendamentos", params: `proprietario_id=${user?.id}`, },
+        { label: "Reunioes", href: "/negocios/reunioes", params: `proprietario_id=${user?.id}`, },
+      ],
+    },
+    {
+      title: "Administrativo",
+      icon: UserGroupIcon,
+      children: [
+        { label: "Funcionarios", href: "/administrativo/funcionario" },
+      ],
+    },
+    {
+      title: "Configurações",
+      icon: CogIcon,
+      children: [
+        { label: "Minha Conta", href: "/profile" },
+        { label: "Permissões", href: "/permissions" },
+        { label: "Empresa", href: "/settings" },
+        { label: "Logout", href: "/logout" },
+      ],
+    },
+  ];
+
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  // Estado para controle de hover no modo colapsado (expansão temporária)
   const [isHovered, setIsHovered] = useState(false);
-
-  // Estado para controlar quais submenus estão abertos (por índice)
   const [openSubmenus, setOpenSubmenus] = useState<Record<number, boolean>>({});
 
-  // Função para alternar submenu (por clique)
+  // Usa o hook customizado para monitorar o tamanho da janela
+  const { width } = useWindowSize();
+
+  // Atualiza isCollapsed sempre que a largura muda
+  useEffect(() => {
+    if (width < 768) {
+      setIsCollapsed(true);
+    } else {
+      setIsCollapsed(false);
+    }
+  }, [width]);
+
   const toggleSubmenu = (idx: number) => {
     setOpenSubmenus((prev) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  // Funções para hover: somente se estiver colapsado persistentemente
   const handleMouseEnter = () => {
     if (isCollapsed) setIsHovered(true);
   };
@@ -70,30 +105,20 @@ export default function Sidebar() {
   return (
     <div
       className={`h-full relative flex-shrink-0 transition-all duration-300 ease-in-out ${
-        isCollapsed ? "w-16" : "w-64"
+        isCollapsed ? "w-16" : "w-[13rem]"
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 
-        Se o menu não está colapsado persistentemente (isCollapsed false),
-        renderizamos o conteúdo normalmente.
-        Se está colapsado, mas está sendo hover, renderizamos uma div
-        expandida em overlay (absolute) que não altera a largura do contêiner pai.
-      */}
       {!isCollapsed || isHovered ? (
-        // Modo expandido (persistente ou temporário via hover)
-        <div className="absolute inset-0 z-50 w-64 bg-white border-r border-gray-200 transition-all duration-500 ease-in-out overflow-hidden">
-          {/* Cabeçalho/Logo */}
+        <div className="absolute inset-0 z-50 w-[13rem] bg-white border-r border-gray-200 transition-all duration-500 ease-in-out overflow-hidden">
           <div className="p-4 border-b border-gray-200">
             <span className="block font-bold overflow-hidden whitespace-nowrap">
               LOGO
             </span>
           </div>
-          {/* Itens do Menu */}
           <div className="overflow-y-auto h-[80%]">
             {menuData.map((menu, idx) => {
-              // Se o item possui submenus (children)
               if (menu.children) {
                 const isOpen = !!openSubmenus[idx];
                 const ArrowIcon = isOpen ? ChevronDownIcon : ChevronRightIcon;
@@ -120,7 +145,10 @@ export default function Sidebar() {
                       {menu.children.map((child, cIdx) => (
                         <Link
                           key={cIdx}
-                          href={child.href}
+                          href={
+                            child.href +
+                            (child.params ? `?${child.params}` : "")
+                          }
                           className="block pl-8 pr-2 py-2 text-sm hover:bg-gray-50"
                         >
                           {child.label}
@@ -130,13 +158,9 @@ export default function Sidebar() {
                   </div>
                 );
               }
-
-              // Caso seja um menu sem submenu (items)
               return null;
             })}
           </div>
-
-          {/* Botão de Colapsar/Expandir (na parte inferior do menu expandido) */}
           <div className="p-2 border-t border-gray-200">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
@@ -147,12 +171,10 @@ export default function Sidebar() {
           </div>
         </div>
       ) : (
-        // Modo colapsado (sem hover): renderiza apenas o conteúdo mínimo, que já está no contêiner pai
         <div className="w-full h-full bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden">
           <div className="p-4">
             <span className="block font-bold">LOGO</span>
           </div>
-          {/* Aqui você pode renderizar somente ícones se desejar */}
           <div className="flex flex-col items-center">
             {menuData.map((menu, idx) => (
               <div

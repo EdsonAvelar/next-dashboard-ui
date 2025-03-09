@@ -27,6 +27,7 @@ const Badge = ({ children, type }: BadgeProps) => {
     indigo: "bg-indigo-50 text-indigo-700 ring-indigo-700/10",
     purple: "bg-purple-50 text-purple-700 ring-purple-700/10",
     pink: "bg-pink-50 text-pink-700 ring-pink-700/10",
+    
   };
 
   return (

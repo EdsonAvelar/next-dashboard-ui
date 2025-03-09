@@ -18,23 +18,8 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // ajuste o ca
  *  - cargo: O cargo do usuário ou "Sem Cargo" se não definido.
  *  - avatar: A URL do avatar do usuário ou o caminho para a imagem padrão.
  */
-export const getCurrentUser = async () => {
-  const session = await getServerSession(authOptions);
 
-  const userName = session?.user?.name || "Guest";
-  const cargo = session?.user?.cargo || "Sem Cargo";
-  const avatar = session?.user?.avatar || "/noAvatar";
-  const currentId = session?.user?.id || null;
-
-  return {
-    id: currentId,
-    name: userName,
-    cargo: cargo,
-    avatar: avatar,
-  };
-};
-
-export const negocioTipoOptions = [
+export const NegocioTipoOptions = [
   { value: "IMOVEL", label: "Imóvel" },
   { value: "CARRO", label: "Carro" },
   { value: "MOTO", label: "Moto" },
@@ -44,3 +29,9 @@ export const negocioTipoOptions = [
   { value: "SERVICO", label: "Serviço" },
 ];
 
+export const NegotioStatus = {
+  ATIVO: "ATIVO",
+  INATIVO: "INATIVO",
+  VENDIDO: "VENDIDO",
+  PERDIDO: "PERDIDO",
+};

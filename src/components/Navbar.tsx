@@ -1,10 +1,8 @@
-import { getCurrentUser } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/actions";
 import Image from "next/image";
 
 const Navbar = async () => {
-
   const user = await getCurrentUser();
-
 
   return (
     <div className="flex items-center justify-between p-4 ">
@@ -48,7 +46,7 @@ const Navbar = async () => {
         <div className="flex flex-col">
           <span className="text-xs leading-3 font-medium">{user.name}</span>
           <span className="text-[10px] text-gray-500 text-right">
-            {user.cargo}
+            {user.cargo?.name}
           </span>
         </div>
         <Image

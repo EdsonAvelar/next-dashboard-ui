@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
           include: { roles: true, cargo: true }, // se você quiser incluir roles, ou inclua a role do cargo
         });
         if (user) {
-          // console.log(user);
+          
         } else {
           throw new Error("Usuário não encontrado");
         }

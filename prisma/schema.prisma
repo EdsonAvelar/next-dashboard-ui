@@ -25,7 +25,7 @@ model Role {
 model User {
   id                Int       @id @default(autoincrement())
   name              String
-  avatar            String
+  avatar            String?
   telefone          String?   // campo opcional
   cpf               String?
   rg                String?
@@ -48,6 +48,8 @@ model User {
   updatedAt         DateTime  @updatedAt
  
   negocios          Negocio[]  // se desejar relacionar o usuário com os negócios
+  agendamento Agendamento[]
+  reunioes  Reuniao[]
 }
 
 
@@ -106,6 +108,9 @@ model Negocio {
   updatedAt       DateTime      @updatedAt
 
   label  Label[]
+  agendamento Agendamento[]
+ 
+
 }
 
 model Label {
@@ -166,8 +171,39 @@ model EtapaFunil {
   negocios  Negocio[]
 }
 
+model Agendamento {
+  id              Int      @id @default(autoincrement())
+  dataAgendado    DateTime
+  dataAgendamento DateTime @default(now())
+  hora            String
+  status          String?
+  
+  negocioId       Int
+  negocio         Negocio @relation(fields: [negocioId], references: [id])
 
+  userId          Int
+  user            User @relation(fields: [userId], references: [id])
 
+  reuniao     Reuniao?  // Se for 1:1, é um campo opcional
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Reuniao {
+  id            Int         @id @default(autoincrement())
+  
+  userId        Int
+  dataReuniao   DateTime @default(now())
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relacionamentos
+  agendamentoId Int @unique
+  agendamento   Agendamento @relation(fields: [agendamentoId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+}
 
 
 

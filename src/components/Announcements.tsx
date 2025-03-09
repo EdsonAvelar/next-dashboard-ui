@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/utils";
+// import { getCurrentUser } from "@/lib/utils";
 
 const Announcements = async () => {
   const user = await getCurrentUser();

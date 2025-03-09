@@ -3,10 +3,60 @@ const prisma = new PrismaClient();
 import bcrypt from "bcryptjs";
 
 async function main() {
+  // Defina as permissões desejadas
+  const permissionsData = [
+    {
+      name: "gerente_geral",
+      descricao: "Permite acesso total ao sistema sem restrições",
+    },
+    {
+      name: "gerenciar_funcionarios",
+      descricao: "Permite adicionar ou remover funcionarios",
+    },
+    {
+      name: "importar_leads",
+      descricao: "Permite ter acesso a área de importação de leads",
+    },
+    {
+      name: "gerenciar_equipe",
+      descricao: "Permite um usuário poder ser líder de uma equipe",
+    },
+    {
+      name: "gerenciar_vendas",
+      descricao: "Permite enxergar a área de vendas realizadas",
+    },
+    {
+      name: "gerenciar_bordero",
+      descricao: "Permite enxergar a área de criação de bordero",
+    },
+    {
+      name: "enviar_notificacao",
+      descricao: "Permite enviar notificações de vendas",
+    },
+    {
+      name: "gerenciar_filiais",
+      descricao: "Permite enxergar a área de filiais",
+    },
+  ];
+
+  // Cria ou atualiza cada permissão
+  for (const permission of permissionsData) {
+    await prisma.role.create({ data: permission });
+  }
+
+  console.log("Permissões criadas com sucesso!");
+
   // Cria hash da senha (o número 10 é o salt rounds)'
   const passwordHash = await bcrypt.hash("12345", 10);
 
-  // Cria o usuário admin
+  //get roles with name === 'gerente_geral'
+  const gerente_geral = await prisma.role.findFirst({
+    where: {
+      name: "gerente_geral",
+    },
+  });
+
+  // Cria o usuário admin e conecta com a permissão de gerente_geral
   await prisma.user.create({
     data: {
       name: "Gerente",
@@ -14,7 +64,7 @@ async function main() {
       email: "gerente@com.br",
       password: passwordHash,
       roles: {
-        create: [{ name: "gerente_geral", descricao: "gerente geral" }],
+        connect: { id: gerente_geral!.id },
       },
       status: 1, // supondo que 1 seja ativo
       // Outros campos podem ser deixados como null ou definidos conforme necessário
@@ -27,6 +77,8 @@ async function main() {
     { name: "Gerente" },
     { name: "Vendedor" },
     { name: "Coordenador" },
+    { name: "Supervisor" },
+    { name: "Telemarketing" },
     { name: "Gerente Adminstrativo" },
     { name: "Auxiliar Adminstrativo" },
     { name: "Pós-Venda" },

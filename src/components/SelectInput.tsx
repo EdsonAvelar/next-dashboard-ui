@@ -10,6 +10,7 @@ type SelectInputProps = {
   register: any;
   name: string;
   defaultValue?: string;
+  isRequired?: boolean;
   error?: FieldError;
   selectProps?: React.SelectHTMLAttributes<HTMLSelectElement>;
   options: Option[];
@@ -21,12 +22,15 @@ const SelectInput = ({
   name,
   defaultValue,
   error,
+  isRequired,
   selectProps,
   options,
 }: SelectInputProps) => {
   return (
     <div className="flex flex-col gap-2 w-full px-4">
-      <label className="text-xs text-gray-500">{label}</label>
+      <label className="text-xs text-gray-500">
+        {label} {isRequired && <span className="text-red-500 text-lg">*</span>}
+      </label>
 
       <select
         {...register(name)}

@@ -91,7 +91,7 @@ const AttendanceChartContainer = async () => {
     absent: attendanceMap[day].absent,
   }));
 
-  console.log(data);
+
 
   return (
     <div className="bg-white rounded-lg h-full p-4">

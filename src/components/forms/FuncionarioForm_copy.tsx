@@ -56,7 +56,6 @@ const FuncionarioForm_copy = ({
 
   const onSubmit = handleSubmit(
     async (formData) => {
-      console.log("Commit!");
       try {
         // Envia os dados para a API (lembre-se: birthday deve ser enviado em formato adequado, ex: ISO string)
         const res = await fetch("/api/funcionario/create", {
@@ -68,13 +67,10 @@ const FuncionarioForm_copy = ({
           }),
         });
         if (!res.ok) {
-          console.log(res);
 
           const errorData = await res.json();
-          console.error("Erro ao salvar funcionário:", errorData.error);
         } else {
           const savedData = await res.json();
-          console.log("Funcionário salvo com sucesso:", savedData);
 
           // window.location.reload();
 

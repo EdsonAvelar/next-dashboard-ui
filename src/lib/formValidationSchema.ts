@@ -12,7 +12,10 @@ export const funcionarioSchema = z.object({
     .string()
     .min(8, { message: "Password must be at least 8 characters long" }),
   // phone: z.string().min(1, { message: "Phone name is required" }),
-  // address: z.string().min(1, { message: "Address name is required" }),
+  endereco: z.string().optional(),
+  telefone: z.string().optional(),
+  cpf: z.string().optional(),
+  data_contratacao: z.string().optional(),
   // birthday: z.date({ message: "Birthday name is required" }),
   // img: z.string().min(1, { message: "Image is required" }),
   cargo: z.string().min(1, { message: "Cargo is required" }),
@@ -31,6 +34,7 @@ export const negocioSchema = z.object({
   valor_credito: z.string().optional(),
   titulo: z.string().optional(),
   whatsapp: z.string().optional(),
+  proprietario_id: z.string().optional(),
 });
 
 export type NegocioSchema = z.infer<typeof negocioSchema>;

@@ -13,7 +13,7 @@ import {
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useFormState } from "react-dom";
-import { createFuncionario, updateFuncionario } from "@/lib/actions";
+import { createUser, updateUser } from "@/lib/actions";
 
 const FuncionarioForm = ({
   type,
@@ -52,7 +52,7 @@ const FuncionarioForm = ({
   }, []);
 
   const [state, formAction] = useFormState(
-    type === "create" ? createFuncionario : updateFuncionario,
+    type === "create" ? createUser : updateUser,
     {
       success: false,
       msg: "",
@@ -66,7 +66,7 @@ const FuncionarioForm = ({
 
   useEffect(() => {
     if (state.success) {
-      toast(state.msg);
+      toast.success(state.msg);
       setOpen(false);
       router.refresh();
     }
@@ -86,7 +86,9 @@ const FuncionarioForm = ({
       className="flex flex-col gap-8"
       onSubmit={onSubmit}
     >
-      <h1 className="text-xl font-semibold">Criar Funcionário</h1>
+      <h1 className="text-xl font-semibold">
+        {type === "create" ? "Criar " : "Atualizar"} Funcionário
+      </h1>
 
       <div className="flex gap-4">
         <div className="flex flex-col gap-4 w-1/2">
@@ -135,7 +137,7 @@ const FuncionarioForm = ({
             label="Cargo"
             name="cargo"
             register={register}
-            defaultValue={data?.cargo?.name}
+            defaultValue={data?.cargo?.id}
             error={errors?.cargo}
             options={[
               { value: "", label: "Selecionar Cargo" },
@@ -153,7 +155,11 @@ const FuncionarioForm = ({
             <InputField
               label="Contratacao"
               name="data_contratacao"
-              defaultValue={new Date().toISOString().split("T")[0]}
+              defaultValue={
+                type === "create"
+                  ? new Date().toISOString().split("T")[0]
+                  : data?.data_contratacao
+              }
               register={register}
               type="date"
             />
@@ -161,7 +167,7 @@ const FuncionarioForm = ({
             <InputField
               label="Telefone"
               name="telefone"
-              defaultValue={data?.phone}
+              defaultValue={data?.telefone}
               register={register}
             />
 
@@ -175,7 +181,7 @@ const FuncionarioForm = ({
             <InputField
               label="Endereco"
               name="endereco"
-              defaultValue={data?.address}
+              defaultValue={data?.endereco}
               register={register}
             />
           </div>

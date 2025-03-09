@@ -27,15 +27,15 @@ export default function RootLayout({
           <Sidebar />
 
           {/* Coluna Direita: flex-1 expande para ocupar todo o espaço restante */}
-          <div className="flex-1 bg-[#F7F8FA] overflow-scroll flex flex-col">
-            <Navbar  />
-            
+          <div className="flex-1 bg-[#F7F8FA] overflow-y-auto">
+            <Navbar />
+
             {children}
           </div>
         </div>
         <ToastContainer
           position="bottom-right"
-          theme="dark"
+          theme="colored"
         />
       </body>
     </html>

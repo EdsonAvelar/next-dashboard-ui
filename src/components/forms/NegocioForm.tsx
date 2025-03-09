@@ -5,12 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, SetStateAction, Dispatch } from "react";
 import InputField from "../InputField";
 import SelectInput from "../SelectInput";
-import { negocioTipoOptions } from "@/lib/utils";
+import { NegocioTipoOptions } from "@/lib/utils";
 import { createNegocio } from "@/lib/actions";
 import { NegocioSchema, negocioSchema } from "@/lib/formValidationSchema";
 import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const NegocioForm = ({
   type,
@@ -32,6 +32,9 @@ const NegocioForm = ({
     resolver: zodResolver(negocioSchema),
   });
 
+  const searchParams = useSearchParams();
+  const proprietarioId = searchParams.get("proprietario_id") || "";
+
   // Estado para as opções do Select referente ao tipo de crédito.
   // Você pode buscar via API (ex: "/api/negocioTipo") ou definir estaticamente.
   const [tipoCreditoOptions, setTipoCreditoOptions] = useState<
@@ -40,7 +43,7 @@ const NegocioForm = ({
 
   useEffect(() => {
     async function fetchTipoCredito() {
-      setTipoCreditoOptions([...negocioTipoOptions]);
+      setTipoCreditoOptions([...NegocioTipoOptions]);
     }
     fetchTipoCredito();
   }, []);
@@ -58,7 +61,7 @@ const NegocioForm = ({
 
   useEffect(() => {
     if (state.success) {
-      toast("Negocio criado com sucesso");
+      toast.success("Negocio criado com sucesso");
       setOpen(false);
       router.refresh();
     }
@@ -76,6 +79,18 @@ const NegocioForm = ({
 
       <div className="flex gap-4">
         <div className="flex flex-col gap-4 w-1/2">
+          {proprietarioId && (
+            <InputField
+              label="Proprietario ID"
+              name="proprietario_id"
+              isRequired={true}
+              hidden={true}
+              defaultValue={proprietarioId}
+              register={register}
+  
+            />
+          )}
+
           <InputField
             label="Nome do Contato"
             name="nome_contato"
@@ -96,6 +111,7 @@ const NegocioForm = ({
           <SelectInput
             label="Tipo de Crédito"
             name="tipo_credito"
+            isRequired={true}
             register={register}
             defaultValue={data?.tipo_credito}
             error={errors?.tipo_credito}
@@ -112,10 +128,6 @@ const NegocioForm = ({
             register={register}
             error={errors?.valor_credito}
           />
-
-          {!state.success && (
-            <span className="text-red-600">Aconteceu algum erro! </span>
-          )}
         </div>
         <div className="flex flex-col gap-4 w-1/2">
           <InputField
