@@ -1,7 +1,11 @@
 "use server";
 
 import { NegocioTipo } from "@prisma/client";
-import { FuncionarioSchema, NegocioSchema } from "./formValidationSchema";
+import {
+  FechamentoSchema,
+  FuncionarioSchema,
+  NegocioSchema,
+} from "./formValidationSchema";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -38,7 +42,7 @@ export const createNegocio = async (
         tipo: data.tipo_credito as NegocioTipo,
         status: "ATIVO", // ou outro valor padrão, conforme seu enum NegocioStatus
         // Conectando o Lead criado:
-        lead: { connect: { id: lead.id } },
+        consorciado: { connect: { id: lead.id } },
         // Conectando outros relacionamentos, utilizando os IDs recebidos ou definidos no form:
         funil: { connect: { id: 1 } },
         etapa_funil: { connect: { id: 1 } },
@@ -78,7 +82,7 @@ export const updateNegocio = async (
         tipo: data.tipo_credito as NegocioTipo,
         status: "ATIVO", // ou outro valor padrão, conforme seu enum NegocioStatus
         // Conectando o Lead criado:
-        lead: { connect: { id: lead.id } },
+        consorciado: { connect: { id: lead.id } },
         // Conectando outros relacionamentos, utilizando os IDs recebidos ou definidos no form:
         funil: { connect: { id: 1 } },
         etapa_funil: { connect: { id: 1 } },
@@ -484,37 +488,6 @@ export async function listarAgendamentos() {
   }
 }
 
-// export async function createAgendamentoOnDrop(
-//   negocioId: number,
-//   data: Date,
-//   hoja: Date
-// ) {
-//   // Verifica se a etapa é "Reunião Agendada" (ID fixo para exemplo)
-//   const etapaReuniaoAgendada = 3; // Substituir pelo ID real
-
-//   // Buscar detalhes do negócio e do usuário responsável
-//   const negocio = await prisma.negocio.findUnique({
-//     where: { id: negocioId },
-//     select: { id: true, user_id: true },
-//   });
-
-//   if (negocio && negocio.user_id) {
-//     const hoje = new Date().toISOString().split("T")[0];
-//     const hora = "10:00"; // Pode ser ajustado conforme necessidade
-
-//     // Criar o agendamento automaticamente
-//     await criarAgendamento({
-//       dataAgendado: hoje,
-//       hora,
-//       negocioId: negocio.id,
-//       userId: negocio.user_id,
-//     });
-//   }
-
-//   revalidatePath("/pipeline"); // Atualiza a página do pipeline
-//   return { success: true };
-// }
-
 export async function saveStageChange(negocioId: number, etapaId: number) {
   try {
     await prisma.negocio.update({
@@ -527,3 +500,79 @@ export async function saveStageChange(negocioId: number, etapaId: number) {
     return { success: false };
   }
 }
+
+export const updateFechamento = async (
+  data: FechamentoSchema
+): Promise<CurrentState> => {
+  try {
+    const fechamento = await prisma.fechamento.update({
+      where: { negocioId: parseInt(data.negocio_id, 10) },
+      data: {
+        data_fechamento: data.data_fechamento
+          ? new Date(data.data_fechamento)
+          : null,
+        status: data.status || null,
+        especie: data.especie || null,
+        marca: data.marca || null,
+        modelo: data.modelo || null,
+        codigo_bem: data.codigo_bem || null,
+        preco_bem: data.preco_bem ? parseFloat(data.preco_bem) : null,
+        duracao_grupo: data.duracao_grupo
+          ? parseInt(data.duracao_grupo, 10)
+          : null,
+        duracao_plano: data.duracao_plano
+          ? parseInt(data.duracao_plano, 10)
+          : null,
+        grupo_em_formacao: data.grupo_em_formacao === "1",
+        numero_assembleia_adesao: data.numero_assembleia_adesao
+          ? parseInt(data.numero_assembleia_adesao, 10)
+          : null,
+        data_assembleia: data.data_assembleia
+          ? new Date(data.data_assembleia)
+          : null,
+        pagamento_incorporado: data.pagamento_incorporado
+          ? parseFloat(data.pagamento_incorporado)
+          : null,
+        pagamento_ate_contemplacao: data.pagamento_ate_contemplacao
+          ? parseFloat(data.pagamento_ate_contemplacao)
+          : null,
+        numero_contrato: data.numero_contrato
+          ? parseInt(data.numero_contrato, 10)
+          : null,
+        parcela: data.parcela ? parseFloat(data.parcela) : null,
+        parcela_antecipada: data.parcela_antecipada
+          ? parseFloat(data.parcela_antecipada)
+          : null,
+        total_antecipado: data.total_antecipado
+          ? parseFloat(data.total_antecipado)
+          : null,
+        adesao: data.adesao ? parseFloat(data.adesao) : null,
+        primeira_parcela: data.primeira_parcela
+          ? parseFloat(data.primeira_parcela)
+          : null,
+        total_pago: data.total_pago ? parseFloat(data.total_pago) : null,
+        forma_pagamento: data.forma_pagamento || null,
+        comentarios: data.comentarios || null,
+        vendedores: {
+          deleteMany: {}, // Remove todas as associações atuais
+          create:
+            data.vendedores && data.vendedores.length > 0
+              ? data.vendedores
+                  .filter((v) => v.userId !== "") // Garante que só serão criados registros com usuário selecionado
+                  .map((v) => ({
+                    userId: parseInt(v.userId, 10),
+                    comissao: v.comissao ? v.comissao : null,
+                    modo: v.modo || null,
+                  }))
+              : [],
+        },
+      },
+    });
+    console.log(fechamento);
+    console.log(fechamento);
+    return { success: true, msg: "Fechamento atualizado com sucesso" };
+  } catch (error) {
+    console.error("Erro ao atualizar fechamento:", error);
+    return { success: false, msg: "Erro ao atualizar fechamento" };
+  }
+};

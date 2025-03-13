@@ -12,7 +12,7 @@ import { hasRole } from "@/lib/user";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 
 // Função para calcular a diferença de tempo entre agendamento e reunião (em dias)
 function calcularDiferenca(dataAgendado: Date, dataReuniao: Date): number {
@@ -122,7 +122,7 @@ export default async function ReunioesPage({
           include: {
             negocio: {
               include: {
-                lead: true,
+                consorciado: true,
               },
             },
           },
@@ -159,7 +159,7 @@ export default async function ReunioesPage({
       >
         {/* Cliente (extraído do lead do negócio) */}
         <td>
-          {reuniao.agendamento?.negocio?.lead?.nome || (
+          {reuniao.agendamento?.negocio?.consorciado?.nome || (
             <Badge type="gray">SEM CLIENTE</Badge>
           )}
         </td>

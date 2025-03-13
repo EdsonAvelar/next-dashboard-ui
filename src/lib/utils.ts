@@ -29,9 +29,17 @@ export const NegocioTipoOptions = [
   { value: "SERVICO", label: "Serviço" },
 ];
 
+
 export const NegotioStatus = {
   ATIVO: "ATIVO",
   INATIVO: "INATIVO",
   VENDIDO: "VENDIDO",
   PERDIDO: "PERDIDO",
+};
+
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs));
 };

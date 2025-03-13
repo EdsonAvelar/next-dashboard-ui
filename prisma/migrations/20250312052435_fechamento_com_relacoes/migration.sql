@@ -19,7 +19,7 @@ CREATE TABLE `Role` (
 CREATE TABLE `User` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
-    `avatar` VARCHAR(191) NOT NULL,
+    `avatar` VARCHAR(191) NULL,
     `telefone` VARCHAR(191) NULL,
     `cpf` VARCHAR(191) NULL,
     `rg` VARCHAR(191) NULL,
@@ -51,18 +51,27 @@ CREATE TABLE `Equipe` (
 -- CreateTable
 CREATE TABLE `Negocio` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `fechamento` VARCHAR(191) NULL,
     `titulo` VARCHAR(191) NOT NULL,
     `valor` VARCHAR(20) NULL,
     `origem` VARCHAR(191) NULL,
     `tipo` ENUM('IMOVEL', 'CARRO', 'MOTO', 'CAMINHAO', 'TERRENO', 'MAQUINARIO', 'SERVICO') NOT NULL,
     `status` ENUM('ATIVO', 'INATIVO', 'VENDIDO', 'PERDIDO') NOT NULL,
-    `lead_id` INTEGER NOT NULL,
+    `consorciado_id` INTEGER NOT NULL,
+    `conjugeId` INTEGER NULL,
     `funil_id` INTEGER NOT NULL,
     `etapa_funil_id` INTEGER NOT NULL,
     `user_id` INTEGER NULL,
     `data_criacao` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Negocio_conjugeId_key`(`conjugeId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Label` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `nome` VARCHAR(191) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -74,10 +83,27 @@ CREATE TABLE `Lead` (
     `telefone` VARCHAR(32) NOT NULL,
     `whatsapp` VARCHAR(32) NULL,
     `email` VARCHAR(254) NULL,
-    `data_conversao` VARCHAR(254) NULL,
+    `nome_mae` VARCHAR(255) NULL,
+    `nome_pai` VARCHAR(255) NULL,
+    `data_nasc` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `orgao_exp` VARCHAR(255) NULL,
+    `cpf` VARCHAR(255) NULL,
+    `rg` VARCHAR(255) NULL,
+    `data_exp` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `nacionalidade` VARCHAR(255) NULL,
+    `naturalidade` VARCHAR(255) NULL,
+    `genero` VARCHAR(255) NULL,
+    `formacao` VARCHAR(255) NULL,
+    `profissao` VARCHAR(255) NULL,
+    `renda_liquida` VARCHAR(255) NULL,
+    `data_conversao` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `fonte` VARCHAR(254) NULL,
     `campanha` VARCHAR(254) NULL,
     `endereco` VARCHAR(254) NULL,
+    `numero` VARCHAR(254) NULL,
+    `bairro` VARCHAR(254) NULL,
+    `cidade` VARCHAR(254) NULL,
+    `estado` VARCHAR(254) NULL,
     `complemento` VARCHAR(254) NULL,
     `cep` VARCHAR(254) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -107,6 +133,83 @@ CREATE TABLE `EtapaFunil` (
     `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Agendamento` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `dataAgendado` DATETIME(3) NOT NULL,
+    `dataAgendamento` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `hora` VARCHAR(191) NOT NULL,
+    `status` VARCHAR(191) NULL,
+    `negocioId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Reuniao` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userId` INTEGER NOT NULL,
+    `dataReuniao` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `agendamentoId` INTEGER NOT NULL,
+
+    UNIQUE INDEX `Reuniao_agendamentoId_key`(`agendamentoId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Fechamento` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `data_fechamento` DATETIME(3) NULL,
+    `status` VARCHAR(255) NULL,
+    `grupo` INTEGER NULL,
+    `cota` INTEGER NULL,
+    `especie` VARCHAR(255) NULL,
+    `marca` VARCHAR(255) NULL,
+    `modelo` VARCHAR(255) NULL,
+    `tipo_plano` VARCHAR(255) NULL,
+    `plano_leve` VARCHAR(255) NULL,
+    `seguro_prestamista` VARCHAR(255) NULL,
+    `codigo_bem` VARCHAR(255) NULL,
+    `preco_bem` DECIMAL(10, 2) NULL,
+    `duracao_grupo` INTEGER NULL,
+    `duracao_plano` INTEGER NULL,
+    `grupo_em_formacao` BOOLEAN NULL,
+    `numero_assembleia_adesao` INTEGER NULL,
+    `data_assembleia` DATETIME(3) NULL,
+    `pagamento_incorporado` DECIMAL(10, 2) NULL,
+    `pagamento_ate_contemplacao` DECIMAL(10, 2) NULL,
+    `numero_contrato` INTEGER NULL,
+    `parcela` DECIMAL(10, 2) NULL,
+    `parcela_antecipada` DECIMAL(10, 2) NULL,
+    `total_antecipado` DECIMAL(10, 2) NULL,
+    `adesao` DECIMAL(10, 2) NULL,
+    `primeira_parcela` DECIMAL(10, 2) NULL,
+    `total_pago` DECIMAL(10, 2) NULL,
+    `forma_pagamento` VARCHAR(255) NULL,
+    `comentarios` TEXT NULL,
+    `negocioId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Fechamento_negocioId_key`(`negocioId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `FechamentoUser` (
+    `fechamentoId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `comissao` VARCHAR(10) NULL,
+    `modo` ENUM('VENDEDOR_PRINCIPAL', 'MODO_AJUDA', 'TELEMARKETING', 'OUTROS') NOT NULL DEFAULT 'OUTROS',
+
+    PRIMARY KEY (`fechamentoId`, `userId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -301,6 +404,15 @@ CREATE TABLE `_RoleToUser` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `_LabelToNegocio` (
+    `A` INTEGER NOT NULL,
+    `B` INTEGER NOT NULL,
+
+    UNIQUE INDEX `_LabelToNegocio_AB_unique`(`A`, `B`),
+    INDEX `_LabelToNegocio_B_index`(`B`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `_SubjectToTeacher` (
     `A` INTEGER NOT NULL,
     `B` VARCHAR(191) NOT NULL,
@@ -316,7 +428,10 @@ ALTER TABLE `User` ADD CONSTRAINT `User_equipe_id_fkey` FOREIGN KEY (`equipe_id`
 ALTER TABLE `User` ADD CONSTRAINT `User_cargoId_fkey` FOREIGN KEY (`cargoId`) REFERENCES `Cargo`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Negocio` ADD CONSTRAINT `Negocio_lead_id_fkey` FOREIGN KEY (`lead_id`) REFERENCES `Lead`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Negocio` ADD CONSTRAINT `Negocio_consorciado_id_fkey` FOREIGN KEY (`consorciado_id`) REFERENCES `Lead`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Negocio` ADD CONSTRAINT `Negocio_conjugeId_fkey` FOREIGN KEY (`conjugeId`) REFERENCES `Lead`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Negocio` ADD CONSTRAINT `Negocio_funil_id_fkey` FOREIGN KEY (`funil_id`) REFERENCES `Funil`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -329,6 +444,27 @@ ALTER TABLE `Negocio` ADD CONSTRAINT `Negocio_user_id_fkey` FOREIGN KEY (`user_i
 
 -- AddForeignKey
 ALTER TABLE `EtapaFunil` ADD CONSTRAINT `EtapaFunil_funil_id_fkey` FOREIGN KEY (`funil_id`) REFERENCES `Funil`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Agendamento` ADD CONSTRAINT `Agendamento_negocioId_fkey` FOREIGN KEY (`negocioId`) REFERENCES `Negocio`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Agendamento` ADD CONSTRAINT `Agendamento_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Reuniao` ADD CONSTRAINT `Reuniao_agendamentoId_fkey` FOREIGN KEY (`agendamentoId`) REFERENCES `Agendamento`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Reuniao` ADD CONSTRAINT `Reuniao_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Fechamento` ADD CONSTRAINT `Fechamento_negocioId_fkey` FOREIGN KEY (`negocioId`) REFERENCES `Negocio`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `FechamentoUser` ADD CONSTRAINT `FechamentoUser_fechamentoId_fkey` FOREIGN KEY (`fechamentoId`) REFERENCES `Fechamento`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `FechamentoUser` ADD CONSTRAINT `FechamentoUser_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Student` ADD CONSTRAINT `Student_parentId_fkey` FOREIGN KEY (`parentId`) REFERENCES `Parent`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -386,6 +522,12 @@ ALTER TABLE `_RoleToUser` ADD CONSTRAINT `_RoleToUser_A_fkey` FOREIGN KEY (`A`) 
 
 -- AddForeignKey
 ALTER TABLE `_RoleToUser` ADD CONSTRAINT `_RoleToUser_B_fkey` FOREIGN KEY (`B`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_LabelToNegocio` ADD CONSTRAINT `_LabelToNegocio_A_fkey` FOREIGN KEY (`A`) REFERENCES `Label`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_LabelToNegocio` ADD CONSTRAINT `_LabelToNegocio_B_fkey` FOREIGN KEY (`B`) REFERENCES `Negocio`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `_SubjectToTeacher` ADD CONSTRAINT `_SubjectToTeacher_A_fkey` FOREIGN KEY (`A`) REFERENCES `Subject`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

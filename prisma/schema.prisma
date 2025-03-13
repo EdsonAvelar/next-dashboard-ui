@@ -50,6 +50,9 @@ model User {
   negocios          Negocio[]  // se desejar relacionar o usuário com os negócios
   agendamento Agendamento[]
   reunioes  Reuniao[]
+  
+  // Added opposite relation for FechamentoUser model
+  fechamentoUsers  FechamentoUser[]
 }
 
 
@@ -82,7 +85,7 @@ enum NegocioStatus {
 
 model Negocio {
   id              Int           @id @default(autoincrement())
-  fechamento      String?       
+     
   titulo          String
   valor           String?       @db.VarChar(20)
 
@@ -91,8 +94,12 @@ model Negocio {
   tipo            NegocioTipo
   status          NegocioStatus
 
-  lead_id         Int
-  lead            Lead          @relation(fields: [lead_id], references: [id])
+  consorciado_id         Int
+  consorciado            Lead          @relation(fields: [consorciado_id], references: [id])
+
+      // Nova relação opcional para o conjuge (Lead)
+  conjugeId                  Int?   @unique
+  conjuge                    Lead?       @relation("FechamentoConjuge", fields: [conjugeId], references: [id])
   
   funil_id        Int
   funil           Funil         @relation(fields: [funil_id], references: [id])
@@ -102,15 +109,15 @@ model Negocio {
   
   user_id         Int?
   user            User?         @relation(fields: [user_id], references: [id])
-  
+
   data_criacao    DateTime      @default(now())
 
   updatedAt       DateTime      @updatedAt
 
+  fechamento      Fechamento?   // Um negócio pode ter 0 ou 1 fechamento
+
   label  Label[]
   agendamento Agendamento[]
- 
-
 }
 
 model Label {
@@ -126,18 +133,47 @@ model Lead {
   telefone       String   @db.VarChar(32)
   whatsapp       String?  @db.VarChar(32)
   email          String?  @db.VarChar(254)
-  data_conversao String?  @db.VarChar(254)
+
+  // Dados pessoais adicionais
+  nome_mae       String?  @db.VarChar(255)
+  nome_pai       String?  @db.VarChar(255)
+  data_nasc      DateTime @default(now())
+  orgao_exp      String?  @db.VarChar(255)
+  cpf            String?  @db.VarChar(255)
+  rg             String?  @db.VarChar(255)
+  data_exp       DateTime? @default(now())
+  nacionalidade  String?  @db.VarChar(255)
+  naturalidade   String?  @db.VarChar(255)
+  genero         String?  @db.VarChar(255)
+  formacao       String?  @db.VarChar(255)
+  profissao      String?  @db.VarChar(255)
+  renda_liquida  String?  @db.VarChar(255)
+
+  // Informações de campanha
+  data_conversao DateTime? @default(now())
   fonte          String?  @db.VarChar(254)
   campanha       String?  @db.VarChar(254)
+
+  // Endereço
   endereco       String?  @db.VarChar(254)
+  numero       String?  @db.VarChar(254)
+  bairro       String?  @db.VarChar(254)
+  cidade       String?  @db.VarChar(254)
+  estado       String?  @db.VarChar(254)
+  
   complemento    String?  @db.VarChar(254)
   cep            String?  @db.VarChar(254)
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   // Relação: um lead pode estar associado a vários negócios
   negocios       Negocio[]
+
+  // Relação reversa para quando o lead é usado como cônjuge em um Fechamento
+  fechamentoConjuge Negocio? @relation("FechamentoConjuge")
 }
+
 
 model Funil {
   id        Int      @id @default(autoincrement())
@@ -204,6 +240,68 @@ model Reuniao {
   agendamento   Agendamento @relation(fields: [agendamentoId], references: [id])
   user          User        @relation(fields: [userId], references: [id])
 }
+
+model Fechamento {
+  id                         Int         @id @default(autoincrement())
+  data_fechamento            DateTime?   // Alteramos para DateTime para facilitar manipulação
+  status                     String?     @db.VarChar(255)
+
+  // Dados do Plano Contratado
+  grupo                      Int?     
+  cota                       Int?    
+  especie                    String?     @db.VarChar(255)
+  marca                      String?     @db.VarChar(255)
+  modelo                     String?     @db.VarChar(255)
+  tipo_plano                     String?     @db.VarChar(255)
+  plano_leve                     String?     @db.VarChar(255)
+  seguro_prestamista                     String?     @db.VarChar(255)
+  codigo_bem                 String?     @db.VarChar(255)
+  preco_bem                  Decimal?    @db.Decimal(10,2) // Dinheiro com 2 casas decimais
+  duracao_grupo              Int?        // Número de meses
+  duracao_plano              Int?        // Número de meses
+  grupo_em_formacao          Boolean?    // 0 ou 1
+  numero_assembleia_adesao   Int?        
+  data_assembleia            DateTime?   // Data
+  pagamento_incorporado      Decimal?    @db.Decimal(10,2)
+  pagamento_ate_contemplacao Decimal?    @db.Decimal(10,2)
+  numero_contrato            Int?
+
+  // Forma de Pagamento Inicial
+  parcela                    Decimal?    @db.Decimal(10,2)
+  parcela_antecipada         Decimal?    @db.Decimal(10,2)
+  total_antecipado           Decimal?    @db.Decimal(10,2)
+  adesao                     Decimal?    @db.Decimal(10,2)
+  primeira_parcela           Decimal?    @db.Decimal(10,2)
+  total_pago                 Decimal?    @db.Decimal(10,2)
+  forma_pagamento            String?     @db.VarChar(255)
+
+  // Checagem do Administrativo
+  comentarios                String?     @db.Text
+
+  // Associação com Negócio: um fechamento pertence a um negócio
+  negocioId                Int      @unique
+  negocio                  Negocio  @relation(fields: [negocioId], references: [id])
+
+  // Relação many-to-many: Um fechamento pode ter 1 ou mais usuários
+  vendedores                 FechamentoUser[]
+
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime    @updatedAt
+}
+
+model FechamentoUser {
+  fechamento   Fechamento @relation(fields: [fechamentoId], references: [id])
+  fechamentoId Int
+  user         User       @relation(fields: [userId], references: [id])
+  userId       Int
+
+  // Comissão precisa ser string porque não pode passar Decimal do servidor pro cliente
+  comissao    String?     @db.VarChar(10)
+  modo        String?     @db.VarChar(255)
+
+  @@id([fechamentoId, userId])
+}
+
 
 
 

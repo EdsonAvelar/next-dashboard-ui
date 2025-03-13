@@ -15,7 +15,6 @@ import { useWindowSize } from "@/hooks/useWindowSize"; // ajuste o caminho confo
 import { getCurrentUser, UserProfile } from "@/lib/actions";
 
 export default function Sidebar() {
-
   const [user, setUser] = useState<UserProfile | null>(null);
   useEffect(() => {
     async function fetchUser() {
@@ -51,8 +50,21 @@ export default function Sidebar() {
           href: "/negocios/lista",
           params: `proprietario_id=${user?.id}`,
         },
-        { label: "Agendamentos", href: "/negocios/agendamentos", params: `proprietario_id=${user?.id}`, },
-        { label: "Reunioes", href: "/negocios/reunioes", params: `proprietario_id=${user?.id}`, },
+        {
+          label: "Agendamentos",
+          href: "/negocios/agendamentos",
+          params: `proprietario_id=${user?.id}`,
+        },
+        {
+          label: "Reunioes",
+          href: "/negocios/reunioes",
+          params: `proprietario_id=${user?.id}`,
+        },
+        {
+          label: "Vendas Fechadas",
+          href: "/negocios/vendas",
+          params: `proprietario_id=${user?.id}`,
+        },
       ],
     },
     {
@@ -104,7 +116,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`h-full relative flex-shrink-0 transition-all duration-300 ease-in-out ${
+      className={`h-full mt-[50px]  relative flex-shrink-0 transition-all duration-300 ease-in-out ${
         isCollapsed ? "w-16" : "w-[13rem]"
       }`}
       onMouseEnter={handleMouseEnter}
@@ -112,11 +124,11 @@ export default function Sidebar() {
     >
       {!isCollapsed || isHovered ? (
         <div className="absolute inset-0 z-50 w-[13rem] bg-white border-r border-gray-200 transition-all duration-500 ease-in-out overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
+          {/* <div className="p-4 border-b border-gray-200">
             <span className="block font-bold overflow-hidden whitespace-nowrap">
               LOGO
             </span>
-          </div>
+          </div> */}
           <div className="overflow-y-auto h-[80%]">
             {menuData.map((menu, idx) => {
               if (menu.children) {
@@ -147,7 +159,9 @@ export default function Sidebar() {
                           key={cIdx}
                           href={
                             child.href +
-                            (child.params ? `?${child.params}` : "")
+                            ("params" in child && child.params
+                              ? `?${child.params}`
+                              : "")
                           }
                           className="block pl-8 pr-2 py-2 text-sm hover:bg-gray-50"
                         >
@@ -171,10 +185,10 @@ export default function Sidebar() {
           </div>
         </div>
       ) : (
-        <div className="w-full h-full bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden">
-          <div className="p-4">
+        <div className="w-full bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden">
+          {/* <div className="p-4">
             <span className="block font-bold">LOGO</span>
-          </div>
+          </div> */}
           <div className="flex flex-col items-center">
             {menuData.map((menu, idx) => (
               <div

@@ -5,12 +5,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, SetStateAction, Dispatch } from "react";
 import InputField from "../InputField";
 import SelectInput from "../SelectInput";
-import { NegocioTipoOptions } from "@/lib/utils";
+// import { NegocioTipoOptions } from "@/lib/utils";
 import { createNegocio } from "@/lib/actions";
 import { NegocioSchema, negocioSchema } from "@/lib/formValidationSchema";
 import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
+
+
+export const NegocioTipoOptions = [
+  { value: "IMOVEL", label: "Imóvel" },
+  { value: "CARRO", label: "Carro" },
+  { value: "MOTO", label: "Moto" },
+  { value: "CAMINHAO", label: "Caminhão" },
+  { value: "TERRENO", label: "Terreno" },
+  { value: "MAQUINARIO", label: "Maquinário" },
+  { value: "SERVICO", label: "Serviço" },
+];
+
+
 
 const NegocioForm = ({
   type,

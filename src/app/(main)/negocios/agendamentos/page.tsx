@@ -12,7 +12,11 @@ import { hasRole } from "@/lib/user";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
-import dayjs from "dayjs";
+
+
+import dayjs from "@/lib/dayjs";
+
+
 import AgendamentoActions from "@/components/AgendamentoActions";
 
 function getStatus(agendamento: any) {
@@ -167,7 +171,7 @@ export default async function AgendamentoPage({
         negocio: {
           include: {
             user: true, // Proprietário
-            lead: true, // Cliente
+            consorciado: true, // Cliente
           },
         },
         reuniao: true, // Se existir, reunião realizada
@@ -193,8 +197,10 @@ export default async function AgendamentoPage({
 
         {/* Cliente */}
         <td>
-          {negocio.lead ? (
-            <Link href={`/negocios/${negocio.id}`}>{negocio.lead.nome}</Link>
+          {negocio.consorciado ? (
+            <Link href={`/negocios/${negocio.id}`}>
+              {negocio.consorciado.nome}
+            </Link>
           ) : (
             "N/A"
           )}
@@ -202,8 +208,10 @@ export default async function AgendamentoPage({
 
         {/* Telefone */}
         <td className="hidden md:table-cell">
-          {negocio.lead?.telefone ? (
-            <a href={`tel:${negocio.lead.telefone}`}>{negocio.lead.telefone}</a>
+          {negocio.consorciado?.telefone ? (
+            <a href={`tel:${negocio.consorciado.telefone}`}>
+              {negocio.consorciado.telefone}
+            </a>
           ) : (
             "N/A"
           )}
@@ -230,8 +238,8 @@ export default async function AgendamentoPage({
 
         {/* Ações */}
         <td className="flex items-center gap-2 bg-blue-400 rounded-md p-2">
-        {negocio.id}
-        
+          {negocio.id}
+
           <AgendamentoActions negocioId={negocio.id} />
         </td>
       </tr>

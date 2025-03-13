@@ -11,8 +11,18 @@ export default function AgendamentoModal({
   onClose: () => void;
   onConfirm: (data: string, hora: string) => void;
 }) {
-  const [dataAgendado, setDataAgendado] = useState("");
-  const [hora, setHora] = useState("");
+  // Inicializa com a data de hoje no formato YYYY-MM-DD
+  const [dataAgendado, setDataAgendado] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
+
+  // Inicializa com o horário atual no formato HH:MM
+  const [hora, setHora] = useState(() => {
+    const now = new Date();
+    return now.toISOString().substring(11, 16);
+  });
+  
   const [gerarProtocolo, setGerarProtocolo] = useState(false);
 
   if (!isOpen) return null;

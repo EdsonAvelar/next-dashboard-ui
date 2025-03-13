@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./forms/FormContainer";
 
+
 // Import dinâmico dos forms já existentes
 const FuncionarioForm = dynamic(() => import("./forms/FuncionarioForm"), {
   loading: () => <h1>Carregando...</h1>,
@@ -41,8 +42,7 @@ function getFormComponent(
   type: string,
   setOpen: Dispatch<SetStateAction<boolean>>,
   data?: any,
-  relatedData?: any,
-
+  relatedData?: any
 ) {
   if (table === "user") {
     return (

@@ -170,7 +170,7 @@ const Negocios = async ({
             };
             break;
           case "cliente":
-            where.lead = {
+            where.consorciado = {
               nome: {
                 contains: params.cliente,
               },
@@ -178,7 +178,7 @@ const Negocios = async ({
 
             break;
           case "telefone":
-            where.lead = {
+            where.consorciado = {
               telefone: {
                 contains: params.telefone,
               },
@@ -222,7 +222,7 @@ const Negocios = async ({
     prisma.negocio.findMany({
       where,
       include: {
-        lead: true, // para obter nome e telefone do cliente
+        consorciado: true, // para obter nome e telefone do cliente
         etapa_funil: true, // para obter o nome da etapa
         user: true, // para obter o nome do proprietário
       },
@@ -255,10 +255,12 @@ const Negocios = async ({
         </Link>
       </td>
       {/* Nome do Cliente */}
-      <td className="hidden md:table-cell">{negocio.lead?.nome || "N/A"}</td>
+      <td className="hidden md:table-cell">
+        {negocio.consorciado?.nome || "N/A"}
+      </td>
       {/* Telefone do Cliente */}
       <td className="hidden md:table-cell">
-        {negocio.lead?.telefone || "N/A"}
+        {negocio.consorciado?.telefone || "N/A"}
       </td>
       {/* Valor do Crédito */}
       <td className="hidden md:table-cell">{negocio.valor || "N/A"}</td>

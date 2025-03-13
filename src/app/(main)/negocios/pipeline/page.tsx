@@ -3,14 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 // import PipelineBoard from "@/components/PipelineBoard";
-import { hasRole } from "@/lib/user"; // se tiver um hasRole
 import { redirect } from "next/navigation";
 
 // import PipelineBoard from "@/components/PipelineBoard";
-import FormContainer from "@/components/forms/FormContainer";
-import { NegotioStatus } from "@/lib/utils";
 import dynamic from "next/dynamic";
-import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
+import PipelineBoardContainer from "@/components/containers/PipelineBoardContainer";
 
 const PipelineBoard = dynamic(() => import("@/components/PipelineBoard"), {
   ssr: false,
@@ -47,11 +44,9 @@ export default async function PipelinePage({
     },
     include: {
       etapa_funil: true,
-      lead: true,
+      consorciado: true,
     },
   });
-
-
 
   // Organiza os negócios por etapa
   const columns = funil?.etapa_funils.map((etapa) => {
@@ -64,7 +59,7 @@ export default async function PipelinePage({
           id: n.id,
           titulo: n.titulo,
           valor: n.valor !== null ? Number(n.valor) : 0,
-          cliente: n.lead.nome, // ajuste conforme seu schema
+          cliente: n.consorciado.nome, // ajuste conforme seu schema
         })),
     };
   });
@@ -73,26 +68,19 @@ export default async function PipelinePage({
     return <div>Funil não encontrado</div>;
   }
 
-    const allUsers = await prisma.user.findMany({
-      select: { id: true, name: true },
-    });
+ 
 
   return (
     <div className="p-4">
       {/* <h1 className="text-2xl font-semibold mb-4">Pipeline de Negócios</h1> */}
-      <div className="w-full justify-between flex items-center mb-4">
-        <FormContainer
-          table="negocio"
-          type="create"
-        />
-        <ProprietarioFilterSelect users={allUsers} />
-      </div>
-
-      <div className="overflow-auto h-screen">
-        <PipelineBoard
+     
+      <div className="">
+        <PipelineBoardContainer
           columns={columns}
           proprietarioId={+params.proprietario_id}
         />
+
+     
       </div>
     </div>
   );
