@@ -66,6 +66,14 @@ export default function PipelineBoard({
     const etapaReuniaoAgendada = 3; // ID da coluna de "Reunião Agendada"
     const etapaReuniao = 4; // ID da coluna de "Reunião"
 
+    // Obtém o id da coluna original onde o negócio está
+    const originalColumnId = columns.find((col) =>
+      col.negocios.some((n) => n.id === negocioId)
+    )?.id;
+
+    // Se o cartão for "solto" na mesma coluna, não faça nada
+    if (originalColumnId === newEtapaId) return;
+
     // Se a nova etapa for "Reunião Agendada", abre o modal e não atualiza o estado imediatamente
     if (newEtapaId === etapaReuniaoAgendada) {
       setSelectedNegocio(negocioId);

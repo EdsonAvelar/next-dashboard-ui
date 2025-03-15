@@ -25,9 +25,6 @@ function getStatus(agendamento: any) {
     return <Badge type="green">REUNIÃO REALIZADA</Badge>;
   }
 
-  console.log(agendamento.dataAgendado);
-
-
   // Caso contrário, comparar data_agendado com a data atual
   const date = dayjs(agendamento.dataAgendado);
   const now = dayjs();

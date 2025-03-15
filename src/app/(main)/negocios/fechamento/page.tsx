@@ -57,7 +57,6 @@ export default async function FechamentoPage({
     });
   }
 
-  console.log(fechamento);
 
   // Dados relacionados para os selects do formulário (ex: cargos e vendedores)
   const cargos = await prisma.cargo.findMany();

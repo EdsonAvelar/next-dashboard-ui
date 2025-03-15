@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-
 import { HomeIcon } from "@heroicons/react/24/outline";
+import Badge from "./Badge";
+import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
+import { useRouter } from "next/navigation";
 
 type NegocioItem = {
   id: number;
@@ -23,88 +24,79 @@ export default function NegocioCard({ negocio }: { negocio: NegocioItem }) {
     zIndex: transform ? 1000 : "auto",
   };
 
-  const [openMenu, setOpenMenu] = useState(false);
+  const router = useRouter();
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="bg-white rounded shadow p-2 cursor-move relative "
+      className="bg-white rounded shadow-md p-2 relative"
     >
-      <div className="font-semibold text-gray-800 ">{negocio.titulo}</div>
-      <div className="justify-between flex py-1">
-        {/* //diminui o tamanho do icone */}
-        <div className="flex items-center gap-2">
+      {/* Área de arraste */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-move"
+      >
+        <div className="flex gap-2">
           <HomeIcon
             width={20}
             className="text-gray-500"
             strokeWidth={0.5}
           />
-          <p className="text-sm text-gray-500">IMOVEL</p>
+          <Badge type={"blue"}>NOVO</Badge>
         </div>
-
-        <div className="text-sm text-gray-500">R$ {negocio.valor}</div>
+        <div className="font-semibold text-gray-800">{negocio.titulo}</div>
+        <div className="justify-between flex py-1">
+          <div className="flex items-center gap-2">
+            {negocio.cliente && (
+              <div className="text-xs text-gray-400">
+                Cliente: {negocio.cliente}
+              </div>
+            )}
+          </div>
+          <div className="text-sm text-gray-500">R$ {negocio.valor}</div>
+        </div>
       </div>
 
-      {negocio.cliente && (
-        <div className="text-xs text-gray-400">Cliente: {negocio.cliente}</div>
-      )}
-
-      {/* Botão para abrir menu */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpenMenu((prev) => !prev);
-        }}
-        className="absolute top-1 right-2 text-gray-400 hover:text-gray-600"
-      >
-        •••
-      </button>
-
-      {openMenu && (
-        <div className="absolute top-8 right-2 bg-white border rounded shadow-lg w-36 z-10 text-sm">
+      {/* Botão e menu de contexto gerenciados pelo Popover */}
+      <Popover className="absolute top-1 right-2">
+        <PopoverButton className="text-gray-400 hover:text-gray-600 focus:outline-none">
+          •••
+        </PopoverButton>
+        <PopoverPanel className="absolute top-8 right-0 bg-white border rounded shadow-lg w-36 z-10 text-sm">
           <ul className="flex flex-col">
             <li
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => {
-                console.log("Editar negócio", negocio.id);
-                setOpenMenu(false);
-              }}
+              onClick={() =>
+                router.push(`/negocios/editar?negocio_id=${negocio.id}`)
+              }
             >
               Editar
             </li>
-            <li
+            {/* <li
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => {
-                console.log("WhatsApp", negocio.id);
-                setOpenMenu(false);
-              }}
+              onClick={() => console.log("WhatsApp", negocio.id)}
             >
               WhatsApp
-            </li>
+            </li> */}
             <li
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => {
-                console.log("Gerar Proposta", negocio.id);
-                setOpenMenu(false);
-              }}
+              onClick={() =>
+                router.push(`/propostas/gerador?negocio_id=${negocio.id}`)
+              }
             >
               Gerar Proposta
             </li>
             <li
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => {
-                console.log("Multi Proposta", negocio.id);
-                setOpenMenu(false);
-              }}
+              onClick={() => console.log("Multi Proposta", negocio.id)}
             >
               Multi Proposta
             </li>
           </ul>
-        </div>
-      )}
+        </PopoverPanel>
+      </Popover>
     </div>
   );
 }

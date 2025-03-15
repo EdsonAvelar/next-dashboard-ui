@@ -72,6 +72,8 @@ export default function Sidebar() {
       icon: UserGroupIcon,
       children: [
         { label: "Funcionarios", href: "/administrativo/funcionario" },
+        { label: "Produções", href: "/administrativo/producoes" },
+        { label: "Equipes", href: "/administrativo/equipes" },
       ],
     },
     {

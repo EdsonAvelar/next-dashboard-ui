@@ -10,13 +10,18 @@ import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./forms/FormContainer";
-
+import { deleteProduction } from "@/lib/actions"; // <-- importamos a action de produção
+import { deleteEquipe } from "@/lib/actions";
 
 // Import dinâmico dos forms já existentes
 const FuncionarioForm = dynamic(() => import("./forms/FuncionarioForm"), {
   loading: () => <h1>Carregando...</h1>,
 });
 const NegocioForm = dynamic(() => import("./forms/NegocioForm"), {
+  loading: () => <h1>Carregando...</h1>,
+});
+
+const EquipeForm = dynamic(() => import("./forms/EquipeForm"), {
   loading: () => <h1>Carregando...</h1>,
 });
 
@@ -28,12 +33,16 @@ const NegocioAtribuirForm = dynamic(
   }
 );
 
+// Import dinâmico do novo form de Produções
+const ProductionForm = dynamic(() => import("./forms/ProductionForm"), {
+  loading: () => <h1>Carregando...</h1>,
+});
+
 const deleteActionMap = {
   user: deleteFuncionario,
   negocio: deleteFuncionario,
-  parent: deleteFuncionario,
-  student: deleteFuncionario,
-  teacher: deleteFuncionario,
+  producao: deleteProduction, // <--- Adicionamos aqui
+  equipe: deleteEquipe,
 };
 
 // Função para mapear table+type -> componente
@@ -77,6 +86,28 @@ function getFormComponent(
       );
     }
   }
+
+  if (table === "producao") {
+    return (
+      <ProductionForm
+        type={type as "create" | "update"}
+        data={data}
+        setOpen={setOpen}
+      />
+    );
+  }
+
+  if (table === "equipe") {
+    return (
+      <EquipeForm
+        type={type as "create" | "update"}
+        data={data}
+        setOpen={setOpen}
+        relatedData={relatedData}
+      />
+    );
+  }
+
   return null;
 }
 

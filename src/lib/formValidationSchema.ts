@@ -39,12 +39,41 @@ export const negocioSchema = z.object({
 
 export type NegocioSchema = z.infer<typeof negocioSchema>;
 
+export const leadSchema = z.object({
+  nome: z.string().optional(),
+  email: z.string().optional(),
+  telefone: z.string().optional(),
+  whatsapp: z.string().optional(),
+  data_nasc: z.string().optional(),
+  nome_mae: z.string().optional(),
+  nome_pai: z.string().optional(),
+  orgao_exp: z.string().optional(),
+  cpf: z.string().optional(),
+  rg: z.string().optional(),
+  data_exp: z.string().optional(),
+  nacionalidade: z.string().optional(),
+  naturalidade: z.string().optional(),
+  genero: z.string().optional(),
+  estado_civil: z.string().optional(),
+  formacao: z.string().optional(),
+  profissao: z.string().optional(),
+  renda_liquida: z.string().optional(),
+  data_conversao: z.string().optional(),
+  fonte: z.string().optional(),
+  campanha: z.string().optional(),
+  endereco: z.string().optional(),
+  numero: z.string().optional(),
+  bairro: z.string().optional(),
+  cidade: z.string().optional(),
+  estado: z.string().optional(),
+  complemento: z.string().optional(),
+  cep: z.string().optional(),
+});
 
 export const vendedorSchema = z.object({
-  userId: z.string().min(1, "Selecione um usuário"),
-  modo: z.string().min(1, "Selecione um papel").optional(),
-  comissao: z.string().optional(), // vamos converter para Decimal depois
-  confirmed: z.boolean().optional(),
+  userId: z.string(),
+  modo: z.string(),
+  comissao: z.string().optional(),
 });
 
 export const fechamentoSchema = z.object({
@@ -77,8 +106,40 @@ export const fechamentoSchema = z.object({
   total_pago: z.string().optional(),
   forma_pagamento: z.string().optional(),
   comentarios: z.string().optional(),
-  // Aqui definimos o array de vendedores:
+  tabela: z.string().optional(),
   vendedores: z.array(vendedorSchema).optional(),
+  consorciado: leadSchema.optional(),
+  conjuge: leadSchema.optional(),
 });
 
 export type FechamentoSchema = z.infer<typeof fechamentoSchema>;
+
+export const productionSchema = z.object({
+  id: z.coerce.number().optional(),
+  name: z.string().min(1, "O nome é obrigatório"),
+  startDate: z.preprocess(
+    (arg) => (typeof arg === "string" ? new Date(arg) : arg),
+    z.date()
+  ),
+  endDate: z.preprocess(
+    (arg) => (typeof arg === "string" ? new Date(arg) : arg),
+    z.date()
+  ),
+  isActive: z.boolean().default(true),
+});
+
+export type ProductionSchema = z.infer<typeof productionSchema>;
+
+export const equipeSchema = z.object({
+  id: z.coerce.number().optional(),
+  name: z.string().min(1, "O nome da equipe é obrigatório"),
+  description: z.string().optional(),
+  // Recebemos o liderId como string e depois transformamos para number
+  liderId: z
+    .string()
+    .min(1, "O ID do líder é obrigatório")
+    .transform((val) => parseInt(val, 10)),
+  logo: z.string().optional(),
+});
+
+export type EquipeSchema = z.infer<typeof equipeSchema>;

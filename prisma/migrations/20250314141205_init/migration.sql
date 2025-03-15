@@ -27,13 +27,13 @@ CREATE TABLE `User` (
     `data_contratacao` VARCHAR(191) NULL,
     `data_demissao` VARCHAR(191) NULL,
     `status` INTEGER NOT NULL,
-    `equipe_id` INTEGER NULL,
     `email` VARCHAR(191) NOT NULL,
     `email_verified_at` DATETIME(3) NULL,
     `password` VARCHAR(191) NOT NULL,
     `cargoId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `equipeId` INTEGER NULL,
 
     UNIQUE INDEX `User_email_key`(`email`),
     PRIMARY KEY (`id`)
@@ -43,8 +43,13 @@ CREATE TABLE `User` (
 CREATE TABLE `Equipe` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
-    `emblema` VARCHAR(191) NULL,
+    `description` VARCHAR(191) NULL,
+    `logo` VARCHAR(191) NULL,
+    `liderId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
+    UNIQUE INDEX `Equipe_liderId_key`(`liderId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -93,6 +98,7 @@ CREATE TABLE `Lead` (
     `nacionalidade` VARCHAR(255) NULL,
     `naturalidade` VARCHAR(255) NULL,
     `genero` VARCHAR(255) NULL,
+    `estado_civil` VARCHAR(255) NULL,
     `formacao` VARCHAR(255) NULL,
     `profissao` VARCHAR(255) NULL,
     `renda_liquida` VARCHAR(255) NULL,
@@ -168,8 +174,8 @@ CREATE TABLE `Fechamento` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `data_fechamento` DATETIME(3) NULL,
     `status` VARCHAR(255) NULL,
-    `grupo` INTEGER NULL,
-    `cota` INTEGER NULL,
+    `grupo` VARCHAR(255) NULL,
+    `cota` VARCHAR(255) NULL,
     `especie` VARCHAR(255) NULL,
     `marca` VARCHAR(255) NULL,
     `modelo` VARCHAR(255) NULL,
@@ -181,8 +187,10 @@ CREATE TABLE `Fechamento` (
     `duracao_grupo` INTEGER NULL,
     `duracao_plano` INTEGER NULL,
     `grupo_em_formacao` BOOLEAN NULL,
+    `grupo_em_andamento` BOOLEAN NULL,
     `numero_assembleia_adesao` INTEGER NULL,
     `data_assembleia` DATETIME(3) NULL,
+    `tabela` VARCHAR(255) NULL,
     `pagamento_incorporado` DECIMAL(10, 2) NULL,
     `pagamento_ate_contemplacao` DECIMAL(10, 2) NULL,
     `numero_contrato` INTEGER NULL,
@@ -193,7 +201,6 @@ CREATE TABLE `Fechamento` (
     `primeira_parcela` DECIMAL(10, 2) NULL,
     `total_pago` DECIMAL(10, 2) NULL,
     `forma_pagamento` VARCHAR(255) NULL,
-    `comentarios` TEXT NULL,
     `negocioId` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -207,9 +214,22 @@ CREATE TABLE `FechamentoUser` (
     `fechamentoId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
     `comissao` VARCHAR(10) NULL,
-    `modo` ENUM('VENDEDOR_PRINCIPAL', 'MODO_AJUDA', 'TELEMARKETING', 'OUTROS') NOT NULL DEFAULT 'OUTROS',
+    `modo` VARCHAR(255) NULL,
 
     PRIMARY KEY (`fechamentoId`, `userId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Producao` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `startDate` DATETIME(3) NOT NULL,
+    `endDate` DATETIME(3) NOT NULL,
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -422,10 +442,13 @@ CREATE TABLE `_SubjectToTeacher` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `User` ADD CONSTRAINT `User_equipe_id_fkey` FOREIGN KEY (`equipe_id`) REFERENCES `Equipe`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `User` ADD CONSTRAINT `User_cargoId_fkey` FOREIGN KEY (`cargoId`) REFERENCES `Cargo`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `User` ADD CONSTRAINT `User_cargoId_fkey` FOREIGN KEY (`cargoId`) REFERENCES `Cargo`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `User` ADD CONSTRAINT `User_equipeId_fkey` FOREIGN KEY (`equipeId`) REFERENCES `Equipe`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Equipe` ADD CONSTRAINT `Equipe_liderId_fkey` FOREIGN KEY (`liderId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Negocio` ADD CONSTRAINT `Negocio_consorciado_id_fkey` FOREIGN KEY (`consorciado_id`) REFERENCES `Lead`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

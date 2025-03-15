@@ -34,9 +34,8 @@ model User {
   data_demissao     String?
 
   status            Int
-  // Relação com Equipe (opcional)
-  equipe_id         Int?
-  equipe            Equipe?   @relation(fields: [equipe_id], references: [id])
+
+
   
   email             String    @unique
   email_verified_at DateTime?
@@ -50,19 +49,35 @@ model User {
   negocios          Negocio[]  // se desejar relacionar o usuário com os negócios
   agendamento Agendamento[]
   reunioes  Reuniao[]
+  simulacoes Simulacao[]
+
+  // Relação de membro de equipe (um usuário pode pertencer a, no máximo, uma equipe)
+  equipeId          Int?      
+  equipe            Equipe?   @relation("TeamMembers", fields: [equipeId], references: [id])
+
+  // Relação de liderança: cada usuário pode liderar, no máximo, uma equipe
+  liderEquipe      Equipe?   @relation("LeaderTeam")
   
   // Added opposite relation for FechamentoUser model
   fechamentoUsers  FechamentoUser[]
 }
 
-
-// Se você tiver um model de Equipe, defina-o assim:
 model Equipe {
-  id    Int     @id @default(autoincrement())
-  name  String
-  emblema String?
-  users User[]
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  logo        String?
+  // leaderId é obrigatório e único para garantir que toda equipe tenha um líder
+  liderId    Int      @unique
+  lider      User     @relation("LeaderTeam", fields: [liderId], references: [id])
+  
+  // Membros da equipe (um usuário pode pertencer a apenas uma equipe, e pode ser ou não o líder)
+  membros     User[]   @relation("TeamMembers")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
+
 
 enum NegocioTipo {
   // Substitua os valores abaixo pelos definidos em NegocioTipo do Laravel
@@ -118,6 +133,7 @@ model Negocio {
 
   label  Label[]
   agendamento Agendamento[]
+  simulacoes Simulacao[]
 }
 
 model Label {
@@ -145,6 +161,8 @@ model Lead {
   nacionalidade  String?  @db.VarChar(255)
   naturalidade   String?  @db.VarChar(255)
   genero         String?  @db.VarChar(255)
+  estado_civil   String?  @db.VarChar(255)
+  
   formacao       String?  @db.VarChar(255)
   profissao      String?  @db.VarChar(255)
   renda_liquida  String?  @db.VarChar(255)
@@ -247,21 +265,23 @@ model Fechamento {
   status                     String?     @db.VarChar(255)
 
   // Dados do Plano Contratado
-  grupo                      Int?     
-  cota                       Int?    
+  grupo                      String?     @db.VarChar(255)   
+  cota                       String?     @db.VarChar(255)    
   especie                    String?     @db.VarChar(255)
   marca                      String?     @db.VarChar(255)
   modelo                     String?     @db.VarChar(255)
-  tipo_plano                     String?     @db.VarChar(255)
-  plano_leve                     String?     @db.VarChar(255)
-  seguro_prestamista                     String?     @db.VarChar(255)
+  tipo_plano                 String?     @db.VarChar(255)
+  plano_leve                 String?     @db.VarChar(255)
+  seguro_prestamista         String?     @db.VarChar(255)
   codigo_bem                 String?     @db.VarChar(255)
   preco_bem                  Decimal?    @db.Decimal(10,2) // Dinheiro com 2 casas decimais
   duracao_grupo              Int?        // Número de meses
   duracao_plano              Int?        // Número de meses
   grupo_em_formacao          Boolean?    // 0 ou 1
+  grupo_em_andamento         Boolean?    // 0 ou 1
   numero_assembleia_adesao   Int?        
   data_assembleia            DateTime?   // Data
+  tabela                     String?     @db.VarChar(255) // cima e baixo
   pagamento_incorporado      Decimal?    @db.Decimal(10,2)
   pagamento_ate_contemplacao Decimal?    @db.Decimal(10,2)
   numero_contrato            Int?
@@ -275,12 +295,9 @@ model Fechamento {
   total_pago                 Decimal?    @db.Decimal(10,2)
   forma_pagamento            String?     @db.VarChar(255)
 
-  // Checagem do Administrativo
-  comentarios                String?     @db.Text
-
   // Associação com Negócio: um fechamento pertence a um negócio
-  negocioId                Int      @unique
-  negocio                  Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId                  Int      @unique
+  negocio                    Negocio  @relation(fields: [negocioId], references: [id])
 
   // Relação many-to-many: Um fechamento pode ter 1 ou mais usuários
   vendedores                 FechamentoUser[]
@@ -303,11 +320,71 @@ model FechamentoUser {
 }
 
 
+model Producao {
+  id        Int      @id @default(autoincrement())
+  name      String
+  startDate DateTime 
+  endDate   DateTime 
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 
+model Simulacao {
+  id             Int                      @id @default(autoincrement())
+  tipo           String?                  
+  dataProposta   DateTime? 
+  negocioId      Int
+  userId         Int
+  consorcios     SimulacaoConsorcio[]
+  financiamentos SimulacaoFinanciamento[]
 
+  // Relações (supondo que existam os modelos Negocio e User)
+  negocio        Negocio?                 @relation(fields: [negocioId], references: [id])
+  user           User                     @relation(fields: [userId], references: [id])
+}
 
+model SimulacaoConsorcio {
+  id                      Int      @id @default(autoincrement())
+  conTitulo               String? 
+  conEmpresa              String?  
+  conCredito               Decimal?    @db.Decimal(10,2)
+  conAdesao               Decimal?    @db.Decimal(10,2) 
+  conEntrada               Decimal?    @db.Decimal(10,2)
+  conParcelaCheia          Decimal?    @db.Decimal(10,2)  
+  conParcelaReduzida       Decimal?    @db.Decimal(10,2)  
+  conLance                Decimal?    @db.Decimal(10,2)  
+  conPrazo               Int
+  conCreditoPosContemplacao  Decimal?    @db.Decimal(10,2)
+  conRendaExigida          Decimal?    @db.Decimal(10,2) 
+  conValorPago             Decimal?    @db.Decimal(10,2) 
+  conJurosPagos           Decimal?    @db.Decimal(10,2)  
 
+  conParcelasEmbutidas    Int  
+  simulacaoId             Int
+  simulacao               Simulacao  @relation(fields: [simulacaoId], references: [id])
+}
+
+model SimulacaoFinanciamento {
+  id              Int      @id @default(autoincrement())
+  finTitulo       String?  
+  finAmortizacao  String? 
+  finEmpresa      String? 
+  finCredito       Decimal?    @db.Decimal(10,2)  
+  finEntrada       Decimal?    @db.Decimal(10,2)
+  finParcelas      Decimal?    @db.Decimal(10,2)  
+  finUltimaParcela      Decimal?    @db.Decimal(10,2)  
+  finPrazo        Int  
+  finRendaExigida  Decimal?    @db.Decimal(10,2)  
+  finCartorio      Decimal?    @db.Decimal(10,2) 
+  finJurosPagos    Decimal?    @db.Decimal(10,2)  
+  finValPagoTotal  Decimal?    @db.Decimal(10,2)  
+  simulacaoId     Int
+  simulacao       Simulacao @relation(fields: [simulacaoId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
 
 
 

@@ -26,7 +26,7 @@ const InputField = ({
   return (
     <>
       {isRequired}
-      <div className={hidden ? "hidden" : "flex flex-col gap-2 w-full px-4"}>
+      <div className={hidden ? "hidden" : "flex flex-col gap-2 w-full px-2"}>
         <label className="text-xs text-gray-500">
           {label}
           {isRequired && <span className="text-red-500 text-lg">*</span>}

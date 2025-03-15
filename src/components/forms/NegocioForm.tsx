@@ -12,9 +12,7 @@ import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 
-
 export const NegocioTipoOptions = [
-  { value: "IMOVEL", label: "Imóvel" },
   { value: "CARRO", label: "Carro" },
   { value: "MOTO", label: "Moto" },
   { value: "CAMINHAO", label: "Caminhão" },
@@ -22,8 +20,6 @@ export const NegocioTipoOptions = [
   { value: "MAQUINARIO", label: "Maquinário" },
   { value: "SERVICO", label: "Serviço" },
 ];
-
-
 
 const NegocioForm = ({
   type,
@@ -100,7 +96,6 @@ const NegocioForm = ({
               hidden={true}
               defaultValue={proprietarioId}
               register={register}
-  
             />
           )}
 
@@ -124,12 +119,12 @@ const NegocioForm = ({
           <SelectInput
             label="Tipo de Crédito"
             name="tipo_credito"
-            isRequired={true}
+        
             register={register}
-            defaultValue={data?.tipo_credito}
+            defaultValue="CARRO"
             error={errors?.tipo_credito}
             options={[
-              { value: "", label: "Selecione o Tipo de Crédito" },
+              { value: "IMOVEL", label: "Imóvel" },
               ...tipoCreditoOptions,
             ]}
           />

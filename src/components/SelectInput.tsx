@@ -6,7 +6,7 @@ type Option = {
 };
 
 type SelectInputProps = {
-  label: string;
+  label?: string;
   register: any;
   name: string;
   defaultValue?: string;
@@ -27,10 +27,13 @@ const SelectInput = ({
   options,
 }: SelectInputProps) => {
   return (
-    <div className="flex flex-col gap-2 w-full px-4">
-      <label className="text-xs text-gray-500">
-        {label} {isRequired && <span className="text-red-500 text-lg">*</span>}
-      </label>
+    <div className="flex flex-col gap-2 px-4">
+      {label && (
+        <label className="text-xs text-gray-500">
+          {label}{" "}
+          {isRequired && <span className="text-red-500 text-lg">*</span>}
+        </label>
+      )}
 
       <select
         {...register(name)}
