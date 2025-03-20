@@ -13,3 +13,4 @@ export function hasRole(user: UserProfile, roleName: string): boolean {
   if (!user.roles || user.roles.length === 0) return false;
   return user.roles.some((role) => role.name === roleName);
 }
+

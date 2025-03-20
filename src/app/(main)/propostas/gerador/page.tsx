@@ -1,5 +1,6 @@
 // app/simulacao/page.tsx
 import SimulacaoClient from "@/components/simulacoes/SimulacaoClient";
+import { getCurrentUser } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
 
 interface Negocio {
@@ -8,6 +9,7 @@ interface Negocio {
   cliente: string;
   cpf?: string;
   tipoCredito: string;
+  userId: number;
 }
 
 export default async function SimulacaoPage({
@@ -26,6 +28,10 @@ export default async function SimulacaoPage({
     include: { consorciado: true, user: true },
   });
 
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("Usuário não autenticado");
+  }
 
   if (!negocio) {
     return <div>Negócio não encontrado.</div>;
@@ -33,9 +39,10 @@ export default async function SimulacaoPage({
 
   const mappedNegocio: Negocio = {
     id: negocio.id,
-    consultor: negocio.consorciado?.nome,
-    cliente: negocio.user?.name || "",
+    consultor: negocio.user?.name || "",
+    cliente: negocio.consorciado?.nome || "",
     tipoCredito: negocio.tipo,
+    userId: user.id,
   };
 
   return <SimulacaoClient initialNegocio={mappedNegocio} />;

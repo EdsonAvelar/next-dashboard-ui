@@ -28,7 +28,6 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         relatedData = { cargos: cargos };
         break;
       case "equipe":
-        console.log("Equipe");
         // Busca os usuários que têm permissão de gerenciar equipes.
         // Aqui, assumimos que essa permissão está registrada em um relacionamento com a entidade Role.
         // Por exemplo, filtramos usuários cujo role contenha "gerenciar_equipes".
@@ -47,7 +46,6 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
     }
   }
 
-  console.log(relatedData);
 
   return (
     <div className="">

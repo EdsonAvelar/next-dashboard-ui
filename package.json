@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 8000",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -20,6 +20,7 @@
     "@types/react-big-calendar": "^1.16.1",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "flowbite-react": "^0.10.2",
     "framer-motion": "^12.5.0",
     "jsonwebtoken": "^9.0.2",

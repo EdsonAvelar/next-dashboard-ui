@@ -3,6 +3,7 @@ import FechamentoForm from "@/components/forms/FechamentoForm";
 import { prisma } from "@/lib/prisma";
 import dayjs from "@/lib/dayjs";
 import { redirect } from "next/navigation";
+import { getTimeComercialVendedores } from "@/lib/actions";
 
 export default async function FechamentoPage({
   searchParams,
@@ -57,12 +58,15 @@ export default async function FechamentoPage({
     });
   }
 
-
   // Dados relacionados para os selects do formulário (ex: cargos e vendedores)
   const cargos = await prisma.cargo.findMany();
-  const vendedores = await prisma.user.findMany({
-    select: { id: true, name: true },
-  });
+
+  // const vendedores = await prisma.user.findMany({
+  //   select: { id: true, name: true },
+  // });
+
+  const vendedores = await getTimeComercialVendedores();
+
   const relatedData = { cargos, vendedores };
 
   return (

@@ -2,40 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+.no-printme {
+  display: none !important;
+  visibility: hidden !important;
+}
 
 /* customScrollbar.css */
 .custom-scrollbar {
-  scrollbar-width: thin;            /* Firefox */
-  scrollbar-color: #ccc #f5f5f5;    /* Firefox */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #ccc #f5f5f5; /* Firefox */
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;                       /* Largura da barra no Chrome, Edge */
-  height: 8px;                      /* Altura da barra no Chrome, Edge (horizontal) */
+  width: 8px; /* Largura da barra no Chrome, Edge */
+  height: 8px; /* Altura da barra no Chrome, Edge (horizontal) */
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #f5f5f5;              /* Trilho */
+  background: #f5f5f5; /* Trilho */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #ccc;           /* Cor da barra */
+  background-color: #ccc; /* Cor da barra */
   border-radius: 4px;
   border: 1px solid #f5f5f5;
 }
 
-
 .react-calendar {
   width: 100% !important;
   border: none !important;
-  font-family: "Inter", sans-serif  !important;
+  font-family: "Inter", sans-serif !important;
 }
 
 .react-calendar__navigation__label__labelText {
-  
-  font-weight: 600 ;
-    font-size: 0.9rem;
-    text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
 }
 
 .react-calendar__tile--active {
@@ -48,70 +50,67 @@
 } */
 
 .rbc-toolbar-label {
-    text-align: right !important;
-    padding: 0px 20px !important;
+  text-align: right !important;
+  padding: 0px 20px !important;
 }
 
 .rbc-btn-group:first-child {
-    display: none !important;
+  display: none !important;
 }
 
 .rbc-btn-group:last-child {
-    font-size: 13px !important;
+  font-size: 13px !important;
 }
 
 .rbc-btn-group:last-child button {
-    border: none !important;
-    background-color: #f1f0ff !important;
-    margin-left: 2px !important
+  border: none !important;
+  background-color: #f1f0ff !important;
+  margin-left: 2px !important;
 }
 
 .rbc-toolbar button.rbc-active {
-    background-color: #dbdafe !important;
-    box-shadow: none !important;
+  background-color: #dbdafe !important;
+  box-shadow: none !important;
 }
 
 .rbc-time-view {
-    border-color: #eee !important;
+  border-color: #eee !important;
 }
 
 .rbc-time-header {
-    border: none !important;
+  border: none !important;
 }
 
 .rbc-time-content {
-    border: none !important;
+  border: none !important;
 }
 
-
 .rbc-time-gutter.rbc-time-column {
-    font-size: 12px !important;
+  font-size: 12px !important;
 }
 
 .rbc-time-gutter.rbc-time-column .rbc-timeslot-group {
-    padding:0px 20px !important;
+  padding: 0px 20px !important;
 }
-
 
 .rbc-timeslot-group {
-    background-color: #f7fdff !important;
+  background-color: #f7fdff !important;
 }
 
-.rbc-day-slot{
-font-size: 14px !important;
+.rbc-day-slot {
+  font-size: 14px !important;
 }
 
 .rbc-event {
-    border: none !important;
-    color: #000 !important;
-    padding: 10px !important;
-    margin: 10px !important;
-    width: 99% !important;
-    
+  border: none !important;
+  color: #000 !important;
+  padding: 10px !important;
+  margin: 10px !important;
+  width: 99% !important;
 }
 
 .rbc-event:nth-child {
-background-color: bisque !important;
+  background-color: bisque !important;
 }
 
 .rbc-event:nth-child(1) {
@@ -140,6 +139,6 @@ background-color: bisque !important;
 }
 
 .rbc-event-label {
-    color: gray !important;
-    margin-bottom: 5px;
+  color: gray !important;
+  margin-bottom: 5px;
 }

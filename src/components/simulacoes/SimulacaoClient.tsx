@@ -14,16 +14,8 @@ interface Negocio {
   cliente: string;
   cpf?: string;
   tipoCredito: string;
+  userId: number;
 }
-
-export const NegocioTipoOptions = [
-  { value: "CARRO", label: "Carro" },
-  { value: "MOTO", label: "Moto" },
-  { value: "CAMINHAO", label: "Caminhão" },
-  { value: "TERRENO", label: "Terreno" },
-  { value: "MAQUINARIO", label: "Maquinário" },
-  { value: "SERVICO", label: "Serviço" },
-];
 
 interface SimulacaoClientProps {
   initialNegocio: Negocio;
@@ -45,7 +37,6 @@ export default function SimulacaoClient({
   const [consorcios, setConsorcios] = useState<ConsorcioData[]>([]);
   const [financiamentos, setFinanciamentos] = useState<FinanciamentoData[]>([]);
 
-  
   function handleAddConsorcio() {
     setConsorcios((prev) => [
       ...prev,
@@ -120,7 +111,7 @@ export default function SimulacaoClient({
     const payload = {
       tipo: tipoCredito, // ou outro valor que defina o tipo de simulação
       negocioId: initialNegocio.id,
-      userId: 1, // substitua pelo id do usuário logado
+      userId: initialNegocio.userId, // substitua pelo id do usuário logado
       consorcios: consorcios.map((c) => ({
         titulo: c.titulo,
         empresa: c.banco, // ajuste se necessário
@@ -154,8 +145,6 @@ export default function SimulacaoClient({
       })),
     };
 
-  
-
     // Utilizamos startTransition para chamar a server action
     startTransition(async () => {
       try {
@@ -164,7 +153,7 @@ export default function SimulacaoClient({
         const ret = await salvarSimulacao(payload);
 
         if (ret.success && ret.simulacaoId) {
-          router.push(`/propostas/exibir?simulacao_id=${ret.simulacaoId}`);
+          router.push(`/propostas?simulacao_id=${ret.simulacaoId}`);
         } else {
           toast.error("Erro ao salvar simulação: " + ret.msg);
         }
@@ -176,7 +165,7 @@ export default function SimulacaoClient({
   }
 
   return (
-    <div className="mx-auto p-4 space-y-6">
+    <div className=" mx-auto p-4 space-y-6">
       <h1 className="text-2xl font-bold text-gray-700">Criação de Proposta</h1>
 
       {/* Cabeçalho */}

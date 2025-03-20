@@ -30,7 +30,11 @@ export default function Sidebar() {
       title: "Dashboards",
       icon: HomeIcon,
       children: [
-        { label: "Geral", href: HOMEPAGE },
+        {
+          label: "Geral",
+          href: HOMEPAGE,
+          params: `proprietario_id=${user?.id}`,
+        },
         { label: "Equipes", href: "/dashboard/equipes" },
         { label: "Semanal", href: "/dashboard/semanal" },
         { label: "Produção", href: "/dashboard/producao" },
@@ -88,7 +92,7 @@ export default function Sidebar() {
     },
   ];
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [openSubmenus, setOpenSubmenus] = useState<Record<number, boolean>>({});
 
@@ -97,11 +101,9 @@ export default function Sidebar() {
 
   // Atualiza isCollapsed sempre que a largura muda
   useEffect(() => {
-    if (width < 768) {
+    if (width < 1000) {
       setIsCollapsed(true);
-    } else {
-      setIsCollapsed(false);
-    }
+    } 
   }, [width]);
 
   const toggleSubmenu = (idx: number) => {
@@ -118,7 +120,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`h-full mt-[50px]  relative flex-shrink-0 transition-all duration-300 ease-in-out ${
+      className={`h-full mt-[50px]  relative flex-shrink-0 transition-all duration-300 ease-in-out hidden md:block ${
         isCollapsed ? "w-16" : "w-[13rem]"
       }`}
       onMouseEnter={handleMouseEnter}

@@ -29,7 +29,6 @@ export default function NegocioAtribuirMassForm({
     msg: "",
   });
 
-  console.log(relatedData);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 

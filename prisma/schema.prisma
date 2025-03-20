@@ -60,6 +60,7 @@ model User {
   
   // Added opposite relation for FechamentoUser model
   fechamentoUsers  FechamentoUser[]
+
 }
 
 model Equipe {
@@ -102,7 +103,7 @@ model Negocio {
   id              Int           @id @default(autoincrement())
      
   titulo          String
-  valor           String?       @db.VarChar(20)
+  valor           Decimal?      
 
   origem String?
 
@@ -134,6 +135,7 @@ model Negocio {
   label  Label[]
   agendamento Agendamento[]
   simulacoes Simulacao[]
+  aprovacoes Aprovacao[] @relation("NegocioAprovacao")
 }
 
 model Label {
@@ -215,6 +217,7 @@ enum EtapaFunilTipo {
 model EtapaFunil {
   id        Int             @id @default(autoincrement())
   nome      String
+  title     String?
   tipo      EtapaFunilTipo  // Novo campo para definir o tipo da etapa
   ordem     Int
   funil_id  Int
@@ -257,6 +260,18 @@ model Reuniao {
   agendamentoId Int @unique
   agendamento   Agendamento @relation(fields: [agendamentoId], references: [id])
   user          User        @relation(fields: [userId], references: [id])
+}
+
+model Aprovacao {
+  id             Int       @id @default(autoincrement())
+  data_aprovacao DateTime  // Use DateTime para armazenar a data/hora da aprovação
+  status         String    // Valores esperados: "ANALISE", "APROVADO", "REPROVADO"
+
+  negocioId      Int
+
+  negocio        Negocio   @relation("NegocioAprovacao", fields: [negocioId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model Fechamento {

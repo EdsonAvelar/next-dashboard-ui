@@ -57,7 +57,7 @@ CREATE TABLE `Equipe` (
 CREATE TABLE `Negocio` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `titulo` VARCHAR(191) NOT NULL,
-    `valor` VARCHAR(20) NULL,
+    `valor` DECIMAL(65, 30) NULL,
     `origem` VARCHAR(191) NULL,
     `tipo` ENUM('IMOVEL', 'CARRO', 'MOTO', 'CAMINHAO', 'TERRENO', 'MAQUINARIO', 'SERVICO') NOT NULL,
     `status` ENUM('ATIVO', 'INATIVO', 'VENDIDO', 'PERDIDO') NOT NULL,
@@ -132,6 +132,7 @@ CREATE TABLE `Funil` (
 CREATE TABLE `EtapaFunil` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `nome` VARCHAR(191) NOT NULL,
+    `title` VARCHAR(191) NULL,
     `tipo` ENUM('COMUM', 'REUNIAO', 'AGENDAMENTO', 'FECHAMENTO') NOT NULL,
     `ordem` INTEGER NOT NULL,
     `funil_id` INTEGER NOT NULL,
@@ -226,6 +227,61 @@ CREATE TABLE `Producao` (
     `startDate` DATETIME(3) NOT NULL,
     `endDate` DATETIME(3) NOT NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Simulacao` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `tipo` VARCHAR(191) NULL,
+    `dataProposta` DATETIME(3) NULL,
+    `negocioId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SimulacaoConsorcio` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `conTitulo` VARCHAR(191) NULL,
+    `conEmpresa` VARCHAR(191) NULL,
+    `conCredito` DECIMAL(10, 2) NULL,
+    `conAdesao` DECIMAL(10, 2) NULL,
+    `conEntrada` DECIMAL(10, 2) NULL,
+    `conParcelaCheia` DECIMAL(10, 2) NULL,
+    `conParcelaReduzida` DECIMAL(10, 2) NULL,
+    `conLance` DECIMAL(10, 2) NULL,
+    `conPrazo` INTEGER NOT NULL,
+    `conCreditoPosContemplacao` DECIMAL(10, 2) NULL,
+    `conRendaExigida` DECIMAL(10, 2) NULL,
+    `conValorPago` DECIMAL(10, 2) NULL,
+    `conJurosPagos` DECIMAL(10, 2) NULL,
+    `conParcelasEmbutidas` INTEGER NOT NULL,
+    `simulacaoId` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SimulacaoFinanciamento` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `finTitulo` VARCHAR(191) NULL,
+    `finAmortizacao` VARCHAR(191) NULL,
+    `finEmpresa` VARCHAR(191) NULL,
+    `finCredito` DECIMAL(10, 2) NULL,
+    `finEntrada` DECIMAL(10, 2) NULL,
+    `finParcelas` DECIMAL(10, 2) NULL,
+    `finUltimaParcela` DECIMAL(10, 2) NULL,
+    `finPrazo` INTEGER NOT NULL,
+    `finRendaExigida` DECIMAL(10, 2) NULL,
+    `finCartorio` DECIMAL(10, 2) NULL,
+    `finJurosPagos` DECIMAL(10, 2) NULL,
+    `finValPagoTotal` DECIMAL(10, 2) NULL,
+    `simulacaoId` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -488,6 +544,18 @@ ALTER TABLE `FechamentoUser` ADD CONSTRAINT `FechamentoUser_fechamentoId_fkey` F
 
 -- AddForeignKey
 ALTER TABLE `FechamentoUser` ADD CONSTRAINT `FechamentoUser_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Simulacao` ADD CONSTRAINT `Simulacao_negocioId_fkey` FOREIGN KEY (`negocioId`) REFERENCES `Negocio`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Simulacao` ADD CONSTRAINT `Simulacao_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SimulacaoConsorcio` ADD CONSTRAINT `SimulacaoConsorcio_simulacaoId_fkey` FOREIGN KEY (`simulacaoId`) REFERENCES `Simulacao`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SimulacaoFinanciamento` ADD CONSTRAINT `SimulacaoFinanciamento_simulacaoId_fkey` FOREIGN KEY (`simulacaoId`) REFERENCES `Simulacao`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Student` ADD CONSTRAINT `Student_parentId_fkey` FOREIGN KEY (`parentId`) REFERENCES `Parent`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

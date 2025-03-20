@@ -74,12 +74,6 @@ export default function NegocioCard({ negocio }: { negocio: NegocioItem }) {
             >
               Editar
             </li>
-            {/* <li
-              className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => console.log("WhatsApp", negocio.id)}
-            >
-              WhatsApp
-            </li> */}
             <li
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
               onClick={() =>
@@ -87,12 +81,6 @@ export default function NegocioCard({ negocio }: { negocio: NegocioItem }) {
               }
             >
               Gerar Proposta
-            </li>
-            <li
-              className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => console.log("Multi Proposta", negocio.id)}
-            >
-              Multi Proposta
             </li>
           </ul>
         </PopoverPanel>

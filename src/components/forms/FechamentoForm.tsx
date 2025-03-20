@@ -11,13 +11,7 @@ import { fechamentoSchema, FechamentoSchema } from "@/lib/formValidationSchema";
 import { updateFechamento } from "@/lib/actions";
 import dayjs from "@/lib/dayjs";
 import CabecalhoFechamento from "../CabecalhoFechamento";
-
-export const ModoFechamentoOptions = [
-  { value: "VENDEDOR_PRINCIPAL", label: "Vendedor Principal" },
-  { value: "MODO_AJUDA", label: "Modo Ajuda" },
-  { value: "TELEMARKETING", label: "Telemarketing" },
-  { value: "OUTROS", label: "Outros" },
-];
+import { ModoFechamentoOptions } from "@/lib/utils";
 
 type FechamentoFormProps = {
   fechamento: any;
@@ -61,6 +55,7 @@ export default function FechamentoForm({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
     control,
     reset,
@@ -190,11 +185,16 @@ export default function FechamentoForm({
 
   const onSubmit = handleSubmit(
     async (data) => {
-      console.log("Submit", data);
       const result = await updateFechamento(data);
       setSubmitState(result);
     },
     (errors) => {
+      if (errors.vendedores && errors.vendedores.message) {
+        toast.error(errors.vendedores?.message as string);
+      } else if (errors.vendedores?.root) {
+        toast.error(errors.vendedores?.root?.message as string);
+      }
+
       console.log("Validation Errors:", errors);
     }
   );
@@ -906,7 +906,7 @@ export default function FechamentoForm({
               isRequired={true}
               defaultValue={
                 fechamento.data_fechamento
-                  ? formatDate(fechamento.data_fechamento)
+                  ? dayjs(fechamento.data_fechamento).format("YYYY-MM-DD")
                   : dayjs().format("YYYY-MM-DD")
               }
               type="date"
@@ -934,6 +934,13 @@ export default function FechamentoForm({
           >
             Adicionar Vendedor
           </button>
+
+          {errors.vendedores && (
+            <div className="mt-2 text-red-500 text-lg">
+              {errors.vendedores.message}
+            </div>
+          )}
+
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-green-200">
               <tr>
@@ -952,59 +959,90 @@ export default function FechamentoForm({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {fields.map((field, index) => (
-                <tr key={field.id}>
-                  <td className="px-4 py-2">
-                    <select
-                      {...register(`vendedores.${index}.userId`)}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="">Selecione um usuário</option>
-                      {vendedores.map((user: any) => (
-                        <option
-                          key={user.id}
-                          value={user.id}
-                        >
-                          {user.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-4 py-2">
-                    <select
-                      {...register(`vendedores.${index}.modo`)}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="">Selecione</option>
-                      {ModoFechamentoOptions.map((option) => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-4 py-2">
-                    <input
-                      type="text"
-                      placeholder="Comissão"
-                      {...register(`vendedores.${index}.comissao`)}
-                      className="w-full p-2 border rounded"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded transition-colors"
-                    >
-                      Deletar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {fields.map((field, index) => {
+                // Observa os valores atuais do array de vendedores
+                const vendedoresWatch = watch("vendedores") || [];
+                // Obtém o valor atual (se houver) para essa linha
+                const currentValue = vendedoresWatch[index]?.modo;
+                // Pega os papéis selecionados nas outras linhas (excluindo "OUTROS")
+                const selectedRoles = vendedoresWatch
+                  .filter(
+                    (v: any, i: number) =>
+                      i !== index && v.modo && v.modo !== "OUTROS"
+                  )
+                  .map((v: any) => v.modo);
+
+                // Filtra as opções: remove as opções que já foram selecionadas em outra linha,
+                // exceto se for "OUTROS" ou se já estiver selecionado nesta linha.
+                const filteredOptions = ModoFechamentoOptions.filter(
+                  (option) => {
+                    if (option.value === "OUTROS") return true;
+                    if (
+                      selectedRoles.includes(option.value) &&
+                      currentValue !== option.value
+                    ) {
+                      return false;
+                    }
+                    return true;
+                  }
+                );
+
+                return (
+                  <tr key={field.id}>
+                    <td className="px-4 py-2">
+                      <select
+                        {...register(`vendedores.${index}.userId`)}
+                        defaultValue={vendedores[0]?.id}
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="">Selecione um usuário</option>
+                        {vendedores.map((user: any) => (
+                          <option
+                            key={user.id}
+                            value={user.id}
+                          >
+                            {user.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-4 py-2">
+                      <select
+                        {...register(`vendedores.${index}.modo`)}
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="">Selecione</option>
+                        {filteredOptions.map((option) => (
+                          <option
+                            key={option.value}
+                            value={option.value}
+                          >
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-4 py-2">
+                      <input
+                        type="text"
+                        placeholder="Comissão"
+                        {...register(`vendedores.${index}.comissao`)}
+                        className="w-full p-2 border rounded"
+                      />
+                    </td>
+                    <td className="px-4 py-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded transition-colors"
+                      >
+                        Deletar
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+
               {fields.length === 0 && (
                 <tr>
                   <td
@@ -1022,12 +1060,13 @@ export default function FechamentoForm({
 
       {/* Botões */}
       <div className="flex flex-col md:flex-row justify-end items-center mt-6 space-y-2 md:space-y-0 md:space-x-4">
-        <button
-          type="submit"
-          className="bg-green-500 text-white py-2 px-4 rounded"
-        >
-          Salvar
-        </button>
+        <SelectInput
+          name="status"
+          register={register}
+          defaultValue={fechamento.status || ""}
+          options={VendaStatusOptions}
+        />
+
         <button
           type="button"
           onClick={() => window.print()}
@@ -1035,13 +1074,18 @@ export default function FechamentoForm({
         >
           Gerar Protocolo
         </button>
-
-        <SelectInput
-          name="status"
-          register={register}
-          defaultValue={fechamento.status || ""}
-          options={VendaStatusOptions}
-        />
+        <button
+          type="submit"
+          className="bg-yellow-500 text-white py-2 px-4 rounded"
+        >
+          Salvar e Notificar
+        </button>
+        <button
+          type="submit"
+          className="bg-green-500 text-white py-2 px-4 rounded"
+        >
+          Salvar
+        </button>
       </div>
     </form>
   );

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ModoFechamentoOptions } from "./utils";
 
 // Defina seu schema (exemplo)
 export const funcionarioSchema = z.object({
@@ -107,7 +108,14 @@ export const fechamentoSchema = z.object({
   forma_pagamento: z.string().optional(),
   comentarios: z.string().optional(),
   tabela: z.string().optional(),
-  vendedores: z.array(vendedorSchema).optional(),
+  vendedores: z
+    .array(vendedorSchema)
+    .min(1, "É necessário associar pelo menos um vendedor.")
+    .refine(
+      (vendedores) => vendedores.some((v) => v.modo === "VENDEDOR_PRINCIPAL"),
+      { message: "É necessário ter alguém no papel de VENDEDOR_PRINCIPAL." }
+    ),
+
   consorciado: leadSchema.optional(),
   conjuge: leadSchema.optional(),
 });

@@ -1,12 +1,20 @@
 "use client";
 
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
-import { criarAgendamento, criarReuniao, saveStageChange } from "@/lib/actions"; // Sua server action
+import {
+  criarAgendamento,
+  criarReuniao,
+  salvarAprovacao,
+  saveStageChange,
+} from "@/lib/actions"; // Sua server action
 import { useEffect, useState } from "react";
 import Column from "./Column";
 import { CSS } from "@dnd-kit/utilities";
 import AgendamentoModal from "./AgendamentoModal";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+
+import { AprovacaoStatus } from "@/lib/utils";
 
 type NegocioItem = {
   id: number;
@@ -31,6 +39,8 @@ export default function PipelineBoard({
   const [columns, setColumns] = useState<ColumnData[]>(initialColumns);
   const [selectedNegocio, setSelectedNegocio] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     setColumns(initialColumns);
@@ -65,6 +75,8 @@ export default function PipelineBoard({
     const newEtapaId = +over.id;
     const etapaReuniaoAgendada = 3; // ID da coluna de "Reunião Agendada"
     const etapaReuniao = 4; // ID da coluna de "Reunião"
+    const etapaAprovacoes = 5; // ID da coluna de "Reunião"
+    const etapaFechamento = 7;
 
     // Obtém o id da coluna original onde o negócio está
     const originalColumnId = columns.find((col) =>
@@ -97,6 +109,26 @@ export default function PipelineBoard({
         toast.error(reuniao.msg);
         // Se a reunião falhar ou for cancelada, o estado permanece inalterado
       }
+    } else if (newEtapaId === etapaAprovacoes) {
+      const result = await salvarAprovacao({
+        negocioId,
+        status: AprovacaoStatus.ANALISE,
+      });
+
+      if (result.success) {
+        toast.success(result.msg);
+        // Atualiza o estado para mover o card para a coluna de "Aprovacao"
+        const newEtapaId = 5;
+        setColumns((prev) => updateColumns(prev, negocioId, newEtapaId));
+
+        // Salva na base de dados a mudança de etapa
+        const res = await saveStageChange(negocioId, newEtapaId);
+      } else {
+        toast.error(result.msg);
+        // Se a reunião falhar ou for cancelada, o estado permanece inalterado
+      }
+    } else if (newEtapaId === etapaFechamento) {
+      router.push("/negocios/fechamento?negocio_id=" + negocioId);
     } else {
       // Chama a Server Action para atualizar o negócio
       const res = await saveStageChange(negocioId, newEtapaId);

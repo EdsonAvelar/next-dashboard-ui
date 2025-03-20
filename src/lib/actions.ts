@@ -15,6 +15,7 @@ import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { Decimal } from "@prisma/client/runtime/library";
 import { redirect } from "next/navigation";
+import { parseDateBr, parseDateUsa } from "./utils";
 
 type CurrentState = { success: boolean; msg: string };
 
@@ -29,8 +30,6 @@ export const createNegocio = async (
         telefone: data.telefone,
       },
     });
-
-    console.log(data);
 
     // Se existir o parâmetro proprietario_id, prepara a conexão com o usuário
     const userConnection = data.proprietario_id
@@ -132,9 +131,6 @@ export const updateUser = async (
 ) => {
   try {
     const passwordHash = await bcrypt.hash(data.password, 10);
-
-    console.log("update user");
-    console.log(data);
 
     const newFuncionario = await prisma.user.update({
       where: {
@@ -468,8 +464,6 @@ export async function criarAgendamento({
       },
     });
 
-    console.log("Agendametno criado com suceso 123");
-
     return { success: true, msg: "Agendamento criado com sucesso" };
   } catch (error) {
     console.error("Erro ao criar agendamento:", error);
@@ -673,7 +667,6 @@ export const updateFechamento = async (
       },
     });
 
-    console.log({ fechamentoAtualizado, negocioAtualizado });
     return { success: true, msg: "Fechamento atualizado com sucesso" };
   } catch (error) {
     console.error("Erro ao atualizar fechamento:", error);
@@ -780,9 +773,6 @@ export const createEquipe = async (
   data: EquipeSchema
 ) => {
   try {
-    console.log("Create Equipe: ");
-    console.log(data);
-
     const { name, description, logo, liderId } = data;
     if (!name || !liderId) {
       return { success: false, msg: "Nome e líder são obrigatórios" };
@@ -948,7 +938,6 @@ interface SimulacaoInput {
  */
 export async function salvarSimulacao(dados: SimulacaoInput) {
   try {
-    console.log(dados);
     const simulacao = await prisma.simulacao.create({
       data: {
         tipo: dados.tipo,
@@ -1003,4 +992,72 @@ export async function salvarSimulacao(dados: SimulacaoInput) {
     console.error("Erro ao salvar simulação:", error);
     return { success: false, msg: error.message };
   }
+}
+
+interface SearchParamsDate {
+  data_inicio?: string;
+  data_fim?: string;
+}
+
+export async function getProducaoDates(
+  searchParams: SearchParamsDate
+): Promise<{
+  fromDate: Date;
+  toDate: Date;
+}> {
+  let fromDate: Date, toDate: Date;
+
+  if (!searchParams?.data_inicio || !searchParams?.data_fim) {
+    const activeProduction = await prisma.producao.findFirst({
+      where: { isActive: true },
+    });
+    if (!activeProduction) {
+      throw new Error("Não há produção ativa para usar como intervalo.");
+    }
+    fromDate = activeProduction.startDate;
+    toDate = activeProduction.endDate;
+  } else {
+    fromDate = parseDateUsa(searchParams.data_inicio);
+    toDate = parseDateUsa(searchParams.data_fim);
+  }
+
+  return { fromDate, toDate };
+}
+
+export async function salvarAprovacao({
+  negocioId,
+  status,
+}: {
+  negocioId: number;
+  status: string;
+}) {
+  try {
+    const data_aprovacao = new Date();
+    const aprovacao = await prisma.aprovacao.create({
+      data: {
+        data_aprovacao,
+        status,
+        negocio: { connect: { id: negocioId } },
+      },
+    });
+
+    return { success: true, msg: "Aprovação Salva" };
+  } catch (error: any) {
+    console.error("Erro ao salvar aprovação:", error);
+    return { success: false, msg: error.message };
+  }
+}
+
+export async function getTimeComercialVendedores() {
+  return prisma.user.findMany({
+    where: {
+      status: 1,
+      roles: {
+        some: {
+          name: "time_comercial",
+        },
+      },
+    },
+    select: { id: true, name: true },
+  });
 }

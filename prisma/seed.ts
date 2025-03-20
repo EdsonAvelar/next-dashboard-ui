@@ -1,4 +1,4 @@
-import { Day, PrismaClient, UserSex } from "@prisma/client";
+import { Day, PrismaClient, UserSex, NegocioStatus } from "@prisma/client";
 const prisma = new PrismaClient();
 import bcrypt from "bcryptjs";
 
@@ -43,6 +43,14 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
     const randomCargo = cargos[Math.floor(Math.random() * cargos.length)];
     // 30% de chance de receber a role "gerenciar_equipe"
     let rolesToConnect: { id: number }[] = [];
+
+    const timeComercialRole = await prisma.role.findFirst({
+      where: { name: "time_comercial" },
+    });
+    if (timeComercialRole) {
+      rolesToConnect.push({ id: timeComercialRole.id });
+    }
+
     if (Math.random() < 0.3) {
       const role = await prisma.role.findFirst({
         where: { name: "gerenciar_equipe" },
@@ -132,8 +140,6 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
       funil = await prisma.funil.create({ data: { nome: "VENDAS" } });
     }
 
-    
-
     // Cria o negócio com dono, funil e etapa
     // Obter uma etapa aleatória do funil
     const etapas = await prisma.etapaFunil.findMany({
@@ -141,15 +147,31 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
     });
     const randomEtapa = etapas[Math.floor(Math.random() * etapas.length)];
 
+    // Array com os status possíveis
+    const statusOptions = [
+      NegocioStatus.ATIVO,
+      NegocioStatus.VENDIDO,
+      NegocioStatus.PERDIDO,
+    ];
+
+    // Gera um status aleatório
+    const randomStatus =
+      statusOptions[Math.floor(Math.random() * statusOptions.length)];
+
+    const randomValor = parseFloat(
+      (Math.random() * (500000 - 50000) + 50000).toFixed(2)
+    );
+
     const negocio = await prisma.negocio.create({
       data: {
-      titulo: `Negocio ${randomString(4)}`,
-      tipo: "IMOVEL", // ou randomize entre as opções
-      status: "ATIVO", // ou escolha aleatória dentre "ATIVO", "VENDIDO", "PERDIDO"
-      consorciado: { connect: { id: lead.id } },
-      funil: { connect: { id: funil.id } },
-      etapa_funil: { connect: { id: randomEtapa.id } },
-      user: { connect: { id: randomUser.id } },
+        titulo: `Negocio ${randomString(4)}`,
+        tipo: "IMOVEL", // ou randomize entre as opções
+        status: randomStatus, // ou escolha aleatória dentre "ATIVO", "VENDIDO", "PERDIDO"
+        valor: randomValor,
+        consorciado: { connect: { id: lead.id } },
+        funil: { connect: { id: funil.id } },
+        etapa_funil: { connect: { id: randomEtapa.id } },
+        user: { connect: { id: randomUser.id } },
       },
     });
 
@@ -164,12 +186,19 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
       },
     });
 
+    // Array com os status possíveis
+    const fechamentoStatusOptions = ["FECHADA", "RASCUNHO", "CANCELADA"];
+    const randomFechamentoStatus =
+      fechamentoStatusOptions[
+        Math.floor(Math.random() * fechamentoStatusOptions.length)
+      ];
+
     // Opcional: Cria um fechamento (venda fechada) para 50% dos negócios
     if (Math.random() < 0.5) {
       await prisma.fechamento.create({
         data: {
           data_fechamento: new Date(),
-          status: "FECHADA",
+          status: randomFechamentoStatus,
           grupo: "Grupo " + (i + 1),
           cota: "Cota " + (i + 1),
           especie: "Especie",
@@ -179,7 +208,7 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
           plano_leve: "Plano",
           seguro_prestamista: "Sim",
           codigo_bem: "COD" + randomString(4),
-          preco_bem: 1000.0 + i * 100,
+          preco_bem: randomValor,
           duracao_grupo: 12,
           duracao_plano: 24,
           grupo_em_formacao: false,
@@ -202,39 +231,38 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
   }
   console.log(`${NUM_NEGOCIOS} negócios criados.`);
 
+  const today = new Date();
 
-   const today = new Date();
+  // Produção 1: Inicia 30 dias antes e termina 1 dia antes de hoje
+  const production1Start = new Date(today);
+  production1Start.setDate(today.getDate() - 30);
+  const production1End = new Date(today);
+  production1End.setDate(today.getDate() - 1);
 
-   // Produção 1: Inicia 30 dias antes e termina 1 dia antes de hoje
-   const production1Start = new Date(today);
-   production1Start.setDate(today.getDate() - 30);
-   const production1End = new Date(today);
-   production1End.setDate(today.getDate() - 1);
+  // Produção 2: Inicia hoje e finaliza daqui a 30 dias
+  const production2Start = new Date(today);
+  const production2End = new Date(today);
+  production2End.setDate(today.getDate() + 30);
 
-   // Produção 2: Inicia hoje e finaliza daqui a 30 dias
-   const production2Start = new Date(today);
-   const production2End = new Date(today);
-   production2End.setDate(today.getDate() + 30);
+  await prisma.producao.create({
+    data: {
+      name: "Produção Anterior",
+      startDate: production1Start,
+      endDate: production1End,
+      isActive: false, // Ajuste conforme a lógica de negócio
+    },
+  });
 
-   await prisma.producao.create({
-     data: {
-       name: "Produção Anterior",
-       startDate: production1Start,
-       endDate: production1End,
-       isActive: false, // Ajuste conforme a lógica de negócio
-     },
-   });
+  await prisma.producao.create({
+    data: {
+      name: "Produção Atual",
+      startDate: production2Start,
+      endDate: production2End,
+      isActive: true,
+    },
+  });
 
-   await prisma.producao.create({
-     data: {
-       name: "Produção Atual",
-       startDate: production2Start,
-       endDate: production2End,
-       isActive: true,
-     },
-   });
-
-   console.log("Produções criadas com sucesso!");
+  console.log("Produções criadas com sucesso!");
 }
 
 async function main() {
@@ -387,7 +415,7 @@ async function main() {
 
   console.log('Pipeline "VENDAS" criado com sucesso!');
 
-  populateCRM(20,50);
+  populateCRM(20, 50);
 
   // ####################################################################
   // Exemplos que devem ser apagados

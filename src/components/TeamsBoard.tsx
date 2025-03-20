@@ -162,9 +162,7 @@ function ColumnComponent({ column }: { column: Column }) {
   }, [undoState, router]);
 
   const handleEdit = () => {
-    console.log("Editar equipe", column.id);
     setMenuOpen(false);
-    // Aqui você pode abrir um FormModal para edição
   };
 
   const handleDelete = () => {
