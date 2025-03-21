@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-const TableSearch = () => {
+const InputSearch = () => {
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,7 +42,4 @@ const TableSearch = () => {
   );
 };
 
-export default TableSearch;
-
-
-
+export default InputSearch;

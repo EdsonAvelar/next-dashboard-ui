@@ -78,7 +78,7 @@ const NegocioForm = ({
 
   return (
     <form
-      className="flex flex-col gap-8"
+      className="flex flex-col gap-4"
       onSubmit={onSubmit}
     >
       <h1 className="text-xl font-semibold">Criar Negócio</h1>
@@ -87,7 +87,7 @@ const NegocioForm = ({
       </span>
 
       <div className="flex gap-4">
-        <div className="flex flex-col gap-4 w-1/2">
+        <div className="flex flex-col gap-2 w-1/1 w-full md:w-1/2">
           {proprietarioId && (
             <InputField
               label="Proprietario ID"
@@ -119,7 +119,6 @@ const NegocioForm = ({
           <SelectInput
             label="Tipo de Crédito"
             name="tipo_credito"
-        
             register={register}
             defaultValue="CARRO"
             error={errors?.tipo_credito}
@@ -137,7 +136,7 @@ const NegocioForm = ({
             error={errors?.valor_credito}
           />
         </div>
-        <div className="flex flex-col gap-4 w-1/2">
+        <div className="flex-col gap-4 md:w-1/2 hidden md:block">
           <InputField
             label="Título (opcional)"
             name="titulo"

@@ -8,6 +8,10 @@ import { redirect } from "next/navigation";
 // import PipelineBoard from "@/components/PipelineBoard";
 import dynamic from "next/dynamic";
 import PipelineBoardContainer from "@/components/containers/PipelineBoardContainer";
+import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
+import FormContainer from "@/components/forms/FormContainer";
+import { getTimeComercialVendedores } from "@/lib/actions";
+import InputSearch from "@/components/InputSearch";
 
 const PipelineBoard = dynamic(() => import("@/components/PipelineBoard"), {
   ssr: false,
@@ -68,19 +72,29 @@ export default async function PipelinePage({
     return <div>Funil não encontrado</div>;
   }
 
- 
+  const allUsers = await getTimeComercialVendedores();
 
   return (
-    <div className="p-4">
+    <div className="p-4 mt-1 z-[-10]">
       {/* <h1 className="text-2xl font-semibold mb-4">Pipeline de Negócios</h1> */}
-     
+
+      <div className="top-[60px] md:top-[60px] left-[10px] md:left-[80px] right-0 z-auto  flex gap-4">
+        <div className="hidden md:block">
+          <InputSearch />
+        </div>
+
+        <FormContainer
+          table="negocio"
+          type="create"
+        />
+        <ProprietarioFilterSelect users={allUsers} />
+      </div>
+
       <div className="">
         <PipelineBoardContainer
           columns={columns}
           proprietarioId={+params.proprietario_id}
         />
-
-     
       </div>
     </div>
   );

@@ -29,15 +29,14 @@ const PipelineBoardContainer = async ({
 
   return (
     <>
-      <div className="fixed top-[60px] left-[180px]right-0 z-10  shadow flex gap-4">
-        {/* Conteúdo do header */}
+      {/* <div className="fixed top-[60px] left-[180px]right-0 z-10  shadow flex gap-4">
         <FormContainer
           table="negocio"
           type="create"
         />
         <ProprietarioFilterSelect users={allUsers} />
-      </div>
-      <div className="mt-10">
+      </div> */}
+      <div className="mt-4  ">
         <PipelineBoard
           columns={initialColumns}
           proprietarioId={proprietarioId}

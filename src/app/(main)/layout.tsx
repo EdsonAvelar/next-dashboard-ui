@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
-import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { ToastContainer } from "react-toastify";
 
 import "react-toastify/ReactToastify.css";
 import Header from "@/components/Header";
 import HeaderMobile from "@/components/HeaderMobile";
-import SideNav from "@/components/SideNav";
+import NavbarContainer from "@/components/containers/NavbarContainer";
+import Navbar from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,8 +38,8 @@ export default function RootLayout({
           <Sidebar />
 
           {/* Coluna Direita: flex-1 expande para ocupar todo o espaço restante */}
-          <div className="flex-1 bg-[#F7F8FA] overflow-y-auto">
-            <Navbar />
+          <div className="flex-1 bg-[#F7F8FA] overflow-y-auto mt-[50px]">
+            {/* <Navbar /> */}
 
             {children}
           </div>

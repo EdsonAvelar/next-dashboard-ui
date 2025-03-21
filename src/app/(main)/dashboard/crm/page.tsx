@@ -3,6 +3,8 @@ import AttendanceChart from "@/components/AttendanceCharts";
 import AgendamentosChart from "@/components/charts/AgendamentosChart";
 import AgendamentosMedioChart from "@/components/charts/AgendamentosMedioChart";
 import AprovacoesChart from "@/components/charts/AprovacoesChart";
+import ConversaoAgendamentoAbsoluteChart from "@/components/charts/ConversaoAgendamentoAbsoluteChart";
+import ConversaoAgendamentoChart from "@/components/charts/ConversaoAgendamentoChart";
 import FechamentosChart from "@/components/charts/FechamentosChart";
 import FechamentosModesChart from "@/components/charts/FechamentosModesChart";
 import FechamentosModoAjudaChart from "@/components/charts/FechamentosModoAjudaChart";
@@ -155,12 +157,28 @@ const AdminPage = async ({
               />
             </div>
           </div>
+          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
+            <div className="w-full">
+              <ConversaoAgendamentoChart
+                fromDate={fromDate}
+                toDate={toDate}
+              />
+            </div>
+          </div>
+          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
+            <div className="w-full">
+              <ConversaoAgendamentoAbsoluteChart
+                fromDate={fromDate}
+                toDate={toDate}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Bottom charts */}
-        <div className="w-full h-[500px] bg-white rounded-xl p-4">
+        {/* <div className="w-full h-[500px] bg-white rounded-xl p-4">
           <FinanceChart />
-        </div>
+        </div> */}
       </div>
       {/* Right */}
 

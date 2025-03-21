@@ -1,11 +1,9 @@
 import Badge from "@/components/Badge";
 import ColumnFilter from "@/components/ColumnFilter";
-import FormModal from "@/components/FormModal";
 import FormContainer from "@/components/forms/FormContainer";
 import Pagination from "@/components/Pagination";
 import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
 import Table from "@/components/Table";
-import TableSearch from "@/components/TableSearch";
 import { getCurrentUser, UserProfile } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
@@ -13,6 +11,7 @@ import { hasRole } from "@/lib/user";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
+import InputSearch from "@/components/InputSearch";
 
 const columns = [
   // Título do Negócio
@@ -212,7 +211,7 @@ const Negocios = async ({
   }
 
   // Se o usuário não for admin, forçamos o filtro pelo id do usuário logado
-  
+
   if (!isAdmin && user) {
     where.user = { id: user.id };
   }
@@ -312,7 +311,7 @@ const Negocios = async ({
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">Negócios</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <TableSearch />
+          <InputSearch />
           <div className="flex items-center gap-4">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image
@@ -336,9 +335,8 @@ const Negocios = async ({
             />
           </div>
           {/* Adicionando o select para filtrar por Proprietário */}
-          
-          {isAdmin && <ProprietarioFilterSelect users={allUsers} /> }
 
+          {isAdmin && <ProprietarioFilterSelect users={allUsers} />}
         </div>
       </div>
       {/* LIST */}

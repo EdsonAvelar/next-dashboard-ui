@@ -22,88 +22,79 @@ import { formatNumberShort } from "@/lib/utils";
 
 type FormatType = "contraido" | "inteiro" | "numerico";
 
-interface ChartCardProps {
+export interface Series {
+  dataKey: string;
+  fill: string;
+  label: string;
+}
+
+interface GroupedChartCardProps {
   title: string;
   icon?: string;
   data: any[];
-  xKey: string;
-  valueKey: string;
-  stackId?: string;
-  width?: number;
-  height?: number;
+  xKey: string; // campo categórico, por exemplo, "name"
+  series: Series[]; // ex: [{ dataKey: "faltou", fill: "#ff4d4f", label: "Faltou" }, { dataKey: "compareceu", fill: "#52c41a", label: "Compareceu" }]
   horizontal?: boolean;
   formatType?: FormatType;
   ordered?: boolean;
 }
 
 function spacedColor(id: number | string): string {
-  // Utiliza o ângulo dourado (aprox. 137.508°) para distribuir as cores
-  const goldenAngle: number = 137.508;
-  const numericId: number = Number(id);
-  const hue: number = (numericId * goldenAngle) % 360;
+  const goldenAngle = 137.508;
+  const numericId = Number(id);
+  const hue = (numericId * goldenAngle) % 360;
   return `hsl(${hue}, 60%, 50%)`;
 }
 
-export default function BarChartComponent({
+export default function GroupedBarChartComponent({
   title,
   icon,
   data,
   xKey,
-  valueKey,
-  stackId,
+  series,
   horizontal = false,
-  formatType = "contraido",
+  formatType = "inteiro",
   ordered = false,
-}: ChartCardProps) {
+}: GroupedChartCardProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
 
-  const toggleFullscreen = () => {
-    setIsFullscreen((prev) => !prev);
-  };
-
-  // Define classes e tamanhos conforme o modo
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto shadow-md "
-    : "bg-white rounded-lg ";
-
+    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto shadow-md"
+    : "bg-white rounded-lg p-4";
+  // Se horizontal e não em fullscreen, usa uma altura maior para acomodar os rótulos
   const chartHeight = isFullscreen ? "h-[800px]" : horizontal ? "h-96" : "h-64";
 
   const processedData = useMemo(() => {
-    // Cria uma cópia dos dados com as cores definidas
-    let arr = data.map((item) => {
-      if (!item.color && item.userId) {
-        return { ...item, color: spacedColor(item.userId) };
-      }
-      return item;
-    });
-    // Se for ordenado, ordena do maior para o menor com base na chave de valor
-    if (ordered) {
-      arr = [...arr].sort((a, b) => Number(b[valueKey]) - Number(a[valueKey]));
+    let arr = data.map((item) => ({ ...item }));
+    if (ordered && series.length > 0) {
+      // Ordena com base no primeiro dataKey da série (assumindo que seja representativo)
+      arr = [...arr].sort(
+        (a, b) => Number(b[series[0].dataKey]) - Number(a[series[0].dataKey])
+      );
     }
     return arr;
-  }, [data, ordered, valueKey]);
-
-  const checkZero = (value: string) => {
-    if (value === "0.00") return "";
-    return value;
-  };
+  }, [data, ordered, series]);
 
   const valueFormatter = (value: number) => {
-    if (formatType === "contraido") {
-      return formatNumberShort(value);
-    } else if (formatType === "inteiro") {
-      return checkZero(value.toFixed(0));
-    } else if (formatType === "numerico") {
-      return checkZero(value.toFixed(2));
+    switch (formatType) {
+      case "contraido":
+        return formatNumberShort(value);
+      case "inteiro":
+        return value.toFixed(0);
+      case "numerico":
+        return value.toFixed(2);
+      default:
+        return value.toString();
     }
-    return value.toString();
   };
 
   return (
     <div className={containerClasses}>
-      {/* Cabeçalho do Card */}
+      {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-semibold">{title}</h1>
+
         <button
           onClick={toggleFullscreen}
           className="p-1 bg-gray-50 rounded hover:bg-gray-100"
@@ -116,28 +107,30 @@ export default function BarChartComponent({
         </button>
       </div>
 
-      {/* Gráfico Responsivo */}
-      <div className={isFullscreen ? "w-full h-[90%]" : "w-full h-80"}>
+      <div
+        className={isFullscreen ? "w-full h-[90%]" : `w-full ${chartHeight}`}
+      >
         <ResponsiveContainer
           width="100%"
           height={isFullscreen ? "100%" : 400}
         >
           <BarChart
-            layout={horizontal ? "vertical" : undefined}
             data={processedData}
+            layout={horizontal ? "vertical" : "horizontal"}
             margin={{
               top: 20,
-              right: 5,
+              right: 20,
               left: 20,
-              bottom: horizontal ? 0 : 50,
+              bottom: horizontal ? 20 : 50,
             }}
+            barCategoryGap="20%"
+            // Não usamos stackOffset, para que as barras fiquem lado a lado
           >
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
               stroke="#ccc"
             />
-
             {horizontal ? (
               <>
                 <YAxis
@@ -145,10 +138,12 @@ export default function BarChartComponent({
                   dataKey={xKey}
                   tickMargin={10}
                   axisLine={false}
+                  width={150}
                 />
                 <XAxis
                   type="number"
                   axisLine={false}
+                  tickFormatter={(value: number) => valueFormatter(value)}
                 />
               </>
             ) : (
@@ -164,43 +159,35 @@ export default function BarChartComponent({
                 <YAxis
                   type="number"
                   axisLine={false}
-                  tickMargin={10}
-                  tickFormatter={(value: number) => formatNumberShort(value)}
+                  tickFormatter={(value: number) => valueFormatter(value)}
                 />
               </>
             )}
-
-            {/* <XAxis
-              dataKey={xKey}
-              angle={-45}
-              textAnchor="end"
-              interval={0}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <YAxis axisLine={false} /> */}
             <Tooltip
               contentStyle={{ borderRadius: "10px", borderColor: "lightgray" }}
             />
-
-            <Bar
-              dataKey={valueKey}
-              fill="#8884d8"
-              stackId={stackId}
-              radius={horizontal ? [0, 7, 7, 0] : [7, 7, 0, 0]}
-            >
-              {processedData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color || "#8884d8"}
+            <Legend
+              verticalAlign="top"
+              align="center"
+              layout="horizontal"
+              wrapperStyle={{ marginBottom: 20 }}
+            />
+            {series.map((serie) => (
+              <Bar
+                key={serie.dataKey}
+                dataKey={serie.dataKey}
+                fill={serie.fill}
+              >
+                {processedData.map((_, index) => (
+                  <Cell key={`${serie.dataKey}-${index}`} />
+                ))}
+                <LabelList
+                  dataKey={serie.dataKey}
+                  position={horizontal ? "right" : "top"}
+                  formatter={valueFormatter}
                 />
-              ))}
-              <LabelList
-                dataKey={valueKey}
-                position="top"
-                formatter={valueFormatter}
-              />
-            </Bar>
+              </Bar>
+            ))}
           </BarChart>
         </ResponsiveContainer>
       </div>

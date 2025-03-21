@@ -3,7 +3,7 @@ import ColumnFilter from "@/components/ColumnFilter";
 import FormContainer from "@/components/forms/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
-import TableSearch from "@/components/TableSearch";
+import InputSearch from "@/components/InputSearch";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Prisma } from "@prisma/client";
@@ -170,7 +170,7 @@ const Funcionarios = async ({
           Funcionários Ativos
         </h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <TableSearch />
+          <InputSearch />
           <div className="flex items-center gap-4 self-ebd">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image

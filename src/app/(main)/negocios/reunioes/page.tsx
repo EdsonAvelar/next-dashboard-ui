@@ -2,7 +2,6 @@
 import Badge from "@/components/Badge";
 import ColumnFilter from "@/components/ColumnFilter";
 import Table from "@/components/Table";
-import TableSearch from "@/components/TableSearch";
 import Pagination from "@/components/Pagination";
 import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
 import { getCurrentUser, UserProfile } from "@/lib/actions";
@@ -13,6 +12,7 @@ import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import dayjs from "@/lib/dayjs";
+import InputSearch from "@/components/InputSearch";
 
 // Função para calcular a diferença de tempo entre agendamento e reunião (em dias)
 function calcularDiferenca(dataAgendado: Date, dataReuniao: Date): number {
@@ -193,7 +193,7 @@ export default async function ReunioesPage({
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">Reuniões</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <TableSearch />
+          <InputSearch />
           <div className="flex items-center gap-4">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image

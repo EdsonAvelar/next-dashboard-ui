@@ -1,12 +1,12 @@
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
-import TableSearch from "@/components/TableSearch";
 import { role } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
 import Link from "next/link";
+import InputSearch from "@/components/InputSearch";
 
 type Student = {
   id: number;
@@ -48,8 +48,6 @@ const StudentListPage = async ({
     }),
     prisma.student.count(),
   ]);
-
-  
 
   // Função para renderizar uma linha para um student
   // Pré-renderiza as linhas a partir dos dados
@@ -104,7 +102,7 @@ const StudentListPage = async ({
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Students</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <TableSearch />
+          <InputSearch />
           <div className="flex items-center gap-4 self-ebd">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image

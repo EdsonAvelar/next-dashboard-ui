@@ -117,15 +117,16 @@ export default function FormModal({
   data,
   id,
   relatedData,
-}: FormContainerProps & { relatedData?: any }) {
+}: FormContainerProps & { relatedData?: any } ) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
+  let table2 = table? table: "user"
   // Se for delete, use a actionMap
-  const [state, formAction] = useFormState(deleteActionMap[table], {
-    success: false,
-    msg: "",
-  });
+  const [state, formAction] = useFormState(
+    deleteActionMap[table2] as (state: { success: boolean; msg: string }, payload: FormData) => Promise<{ success: boolean; msg: string }>,
+    { success: false, msg: "" }
+  );
 
   useEffect(() => {
     if (state.success) {

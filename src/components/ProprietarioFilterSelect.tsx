@@ -24,7 +24,7 @@ export default function ProprietarioFilterSelect({ users }: { users: User[] }) {
 
   return (
     <select
-      className="border rounded p-2"
+      className="border rounded-md p-2 hover:bg-lamaPurpleLight"
       value={currentValue}
       onChange={handleChange}
     >

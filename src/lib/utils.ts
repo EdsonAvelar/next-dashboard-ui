@@ -39,7 +39,6 @@ export const ModoFechamentoOptions = [
   { value: "OUTROS", label: "Outros" },
 ];
 
-
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -93,3 +92,4 @@ export function formatNumberShort(num: number): string {
     return `${truncate(value, 2).toFixed(2)}M`;
   }
 }
+

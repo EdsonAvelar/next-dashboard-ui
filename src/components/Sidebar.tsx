@@ -1,18 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import {
-  HomeIcon,
-  UserGroupIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  CogIcon,
-  BriefcaseIcon,
-} from "@heroicons/react/24/outline";
-import { HOMEPAGE } from "@/lib/settings";
-import { useWindowSize } from "@/hooks/useWindowSize"; // ajuste o caminho conforme sua estrutura
+import { useState, useEffect, useRef } from "react";
+import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { useWindowSize } from "@/hooks/useWindowSize";
 import { getCurrentUser, UserProfile } from "@/lib/actions";
+import { getSidenavItems } from "@/lib/sidenavItems";
+import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -25,72 +19,9 @@ export default function Sidebar() {
     fetchUser();
   }, []);
 
-  const menuData = [
-    {
-      title: "Dashboards",
-      icon: HomeIcon,
-      children: [
-        {
-          label: "Geral",
-          href: HOMEPAGE,
-          params: `proprietario_id=${user?.id}`,
-        },
-        { label: "Equipes", href: "/dashboard/equipes" },
-        { label: "Semanal", href: "/dashboard/semanal" },
-        { label: "Produção", href: "/dashboard/producao" },
-      ],
-    },
-    {
-      title: "Negócios",
-      icon: BriefcaseIcon,
-      children: [
-        {
-          label: "Pipeline",
-          href: "/negocios/pipeline",
-          params: `proprietario_id=${user?.id}`,
-        },
-        {
-          label: "Lista",
-          href: "/negocios/lista",
-          params: `proprietario_id=${user?.id}`,
-        },
-        {
-          label: "Agendamentos",
-          href: "/negocios/agendamentos",
-          params: `proprietario_id=${user?.id}`,
-        },
-        {
-          label: "Reunioes",
-          href: "/negocios/reunioes",
-          params: `proprietario_id=${user?.id}`,
-        },
-        {
-          label: "Vendas Fechadas",
-          href: "/negocios/vendas",
-          params: `proprietario_id=${user?.id}`,
-        },
-      ],
-    },
-    {
-      title: "Administrativo",
-      icon: UserGroupIcon,
-      children: [
-        { label: "Funcionarios", href: "/administrativo/funcionario" },
-        { label: "Produções", href: "/administrativo/producoes" },
-        { label: "Equipes", href: "/administrativo/equipes" },
-      ],
-    },
-    {
-      title: "Configurações",
-      icon: CogIcon,
-      children: [
-        { label: "Minha Conta", href: "/profile" },
-        { label: "Permissões", href: "/permissions" },
-        { label: "Empresa", href: "/settings" },
-        { label: "Logout", href: "/logout" },
-      ],
-    },
-  ];
+  // Pega os itens do menu usando o usuário (se disponível)
+  const menuData = getSidenavItems(user?.id);
+  const pathname = usePathname();
 
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
@@ -103,36 +34,39 @@ export default function Sidebar() {
   useEffect(() => {
     if (width < 1000) {
       setIsCollapsed(true);
-    } 
+    }
   }, [width]);
 
   const toggleSubmenu = (idx: number) => {
     setOpenSubmenus((prev) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleMouseEnter = () => {
-    if (isCollapsed) setIsHovered(true);
+    if (isCollapsed) {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+      setIsHovered(true);
+    }
   };
 
   const handleMouseLeave = () => {
-    if (isCollapsed) setIsHovered(false);
+    if (isCollapsed) {
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsHovered(false);
+      }, 200); // atraso de 200ms para suavizar a transição
+    }
   };
 
   return (
     <div
-      className={`h-full mt-[50px]  relative flex-shrink-0 transition-all duration-300 ease-in-out hidden md:block ${
+      className={`h-full mt-[50px]  relative flex-shrink-0 transition-all duration-300 delay-200  ease-in-out hidden md:block ${
         isCollapsed ? "w-16" : "w-[13rem]"
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {!isCollapsed || isHovered ? (
-        <div className="absolute inset-0 z-50 w-[13rem] bg-white border-r border-gray-200 transition-all duration-500 ease-in-out overflow-hidden">
-          {/* <div className="p-4 border-b border-gray-200">
-            <span className="block font-bold overflow-hidden whitespace-nowrap">
-              LOGO
-            </span>
-          </div> */}
+        <div className="absolute inset-0 z-50 w-[13rem] bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden shadow-lg ">
           <div className="overflow-y-auto h-[80%]">
             {menuData.map((menu, idx) => {
               if (menu.children) {
@@ -145,10 +79,17 @@ export default function Sidebar() {
                   >
                     <button
                       onClick={() => toggleSubmenu(idx)}
-                      className="flex items-center w-full gap-2 p-2 rounded-md hover:bg-gray-100 transition-colors"
+                      className="flex items-center w-full gap-2 p-2 rounded-md hover:bg-purple-100 transition-colors"
                     >
                       {menu.icon && <menu.icon className="h-5 w-5" />}
-                      <span className="flex-1 text-left overflow-hidden whitespace-nowrap">
+                      <span
+                        className={`flex-1 text-left overflow-hidden whitespace-nowrap ${
+                          // Se o menu estiver ativo (verifica o primeiro href dos filhos)
+                          menu.children[0].href === pathname
+                            ? "bg-purple-200 rounded-r-full px-2"
+                            : ""
+                        }`}
+                      >
                         {menu.title}
                       </span>
                       <ArrowIcon className="h-4 w-4" />
@@ -167,7 +108,11 @@ export default function Sidebar() {
                               ? `?${child.params}`
                               : "")
                           }
-                          className="block pl-8 pr-2 py-2 text-sm hover:bg-gray-50"
+                          className={`block pl-8 pr-2 py-2 text-sm transition-colors ${
+                            child.href === pathname
+                              ? "bg-purple-100 rounded-r-full "
+                              : "hover:bg-purple-100"
+                          }`}
                         >
                           {child.label}
                         </Link>
@@ -189,11 +134,12 @@ export default function Sidebar() {
           </div>
         </div>
       ) : (
-        <div className="w-full bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden">
+        // Aqui ele volta rápido se o duration for 100
+        <div className="w-full bg-white border-r border-gray-200 transition-all duration-100 ease-in-out overflow-hidden">
           {/* <div className="p-4">
             <span className="block font-bold">LOGO</span>
           </div> */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center ">
             {menuData.map((menu, idx) => (
               <div
                 key={idx}
@@ -203,7 +149,7 @@ export default function Sidebar() {
               </div>
             ))}
           </div>
-          <div className="p-2 border-t border-gray-200">
+          <div className="p-2 border-t border-gray-200 ">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="w-full p-2 rounded-md text-center hover:bg-gray-100 transition-colors"

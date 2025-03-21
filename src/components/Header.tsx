@@ -3,7 +3,7 @@
 import React from "react";
 
 import Link from "next/link";
-import { useSelectedLayoutSegment } from "next/navigation";
+import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 
 import useScroll from "@/hooks/use-scroll";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,25 @@ import { cn } from "@/lib/utils";
 const Header = () => {
   const scrolled = useScroll(5);
   const selectedLayout = useSelectedLayoutSegment();
+  const pathname = usePathname();
+
+  // Define uma variável tools, que renderiza botões específicos dependendo do path.
+  let tools = null;
+  if (pathname.includes("/pipeline")) {
+    tools = (
+      <div className="flex space-x-2 items-center">
+        <button
+          className="px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
+          onClick={() => {
+            // Lógica para abrir modal ou redirecionamento para adicionar novo negócio no pipeline.
+            console.log("Adicionar novo negócio no pipeline");
+          }}
+        >
+          Add++
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -23,7 +42,7 @@ const Header = () => {
       )}
     >
       <div className="flex h-[47px] items-center justify-between px-4 bg-zync-300">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 hidden md:block">
           <Link
             href="/"
             className="flex flex-row space-x-3 items-center justify-center "
@@ -32,6 +51,8 @@ const Header = () => {
             <span className="font-bold text-xl flex ">Logo</span>
           </Link>
         </div>
+
+        <div className="">{tools}</div>
 
         <div className="hidden md:block">
           <div className="h-8 w-8 rounded-full bg-zync-300 flex items-center justify-center text-center">

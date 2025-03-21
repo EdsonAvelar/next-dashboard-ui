@@ -20,68 +20,54 @@ import {
 } from "@heroicons/react/24/outline";
 import { formatNumberShort } from "@/lib/utils";
 
-type FormatType = "contraido" | "inteiro" | "numerico";
+type FormatType = "contraido" | "inteiro" | "numerico" | "porcentagem";
 
-interface ChartCardProps {
+export interface Series {
+  dataKey: string;
+  fill: string;
+  label: string;
+}
+
+interface StackedChartCardProps {
   title: string;
   icon?: string;
   data: any[];
   xKey: string;
-  valueKey: string;
-  stackId?: string;
-  width?: number;
-  height?: number;
+  series: Series[];
   horizontal?: boolean;
   formatType?: FormatType;
   ordered?: boolean;
 }
 
-function spacedColor(id: number | string): string {
-  // Utiliza o ângulo dourado (aprox. 137.508°) para distribuir as cores
-  const goldenAngle: number = 137.508;
-  const numericId: number = Number(id);
-  const hue: number = (numericId * goldenAngle) % 360;
-  return `hsl(${hue}, 60%, 50%)`;
-}
-
-export default function BarChartComponent({
+export default function StackedBarChartComponent({
   title,
   icon,
   data,
   xKey,
-  valueKey,
-  stackId,
+  series,
   horizontal = false,
-  formatType = "contraido",
+  formatType = "numerico",
   ordered = false,
-}: ChartCardProps) {
+}: StackedChartCardProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
 
-  const toggleFullscreen = () => {
-    setIsFullscreen((prev) => !prev);
-  };
-
-  // Define classes e tamanhos conforme o modo
-  const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto shadow-md "
-    : "bg-white rounded-lg ";
-
+  // Para gráficos horizontais, aumenta a altura para evitar corte dos rótulos
   const chartHeight = isFullscreen ? "h-[800px]" : horizontal ? "h-96" : "h-64";
+  const containerClasses = isFullscreen
+    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto shadow-md"
+    : "bg-white rounded-lg p-4";
 
+  // Se ordered, ordena com base no primeiro série (assumindo que todas as séries tenham o mesmo total por item)
   const processedData = useMemo(() => {
-    // Cria uma cópia dos dados com as cores definidas
-    let arr = data.map((item) => {
-      if (!item.color && item.userId) {
-        return { ...item, color: spacedColor(item.userId) };
-      }
-      return item;
-    });
-    // Se for ordenado, ordena do maior para o menor com base na chave de valor
-    if (ordered) {
-      arr = [...arr].sort((a, b) => Number(b[valueKey]) - Number(a[valueKey]));
+    let arr = data.map((item) => ({ ...item }));
+    if (ordered && series.length > 0) {
+      arr = [...arr].sort(
+        (a, b) => Number(b[series[0].dataKey]) - Number(a[series[0].dataKey])
+      );
     }
     return arr;
-  }, [data, ordered, valueKey]);
+  }, [data, ordered, series]);
 
   const checkZero = (value: string) => {
     if (value === "0.00") return "";
@@ -93,6 +79,8 @@ export default function BarChartComponent({
       return formatNumberShort(value);
     } else if (formatType === "inteiro") {
       return checkZero(value.toFixed(0));
+    } else if (formatType === "porcentagem") {
+      return `${value.toFixed(0)} %`;
     } else if (formatType === "numerico") {
       return checkZero(value.toFixed(2));
     }
@@ -101,7 +89,7 @@ export default function BarChartComponent({
 
   return (
     <div className={containerClasses}>
-      {/* Cabeçalho do Card */}
+      {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-semibold">{title}</h1>
         <button
@@ -116,28 +104,30 @@ export default function BarChartComponent({
         </button>
       </div>
 
-      {/* Gráfico Responsivo */}
-      <div className={isFullscreen ? "w-full h-[90%]" : "w-full h-80"}>
+      <div
+        className={isFullscreen ? "w-full h-[90%]" : `w-full ${chartHeight}`}
+      >
         <ResponsiveContainer
           width="100%"
-          height={isFullscreen ? "100%" : 400}
+          height={isFullscreen ? "100%" : 450}
         >
           <BarChart
-            layout={horizontal ? "vertical" : undefined}
+            stackOffset="expand"
+            layout={horizontal ? "vertical" : "horizontal"}
             data={processedData}
             margin={{
               top: 20,
-              right: 5,
+              right: 20,
               left: 20,
-              bottom: horizontal ? 0 : 50,
+              bottom: horizontal ? 20 : 50,
             }}
+            barCategoryGap="20%"
           >
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
               stroke="#ccc"
             />
-
             {horizontal ? (
               <>
                 <YAxis
@@ -145,10 +135,12 @@ export default function BarChartComponent({
                   dataKey={xKey}
                   tickMargin={10}
                   axisLine={false}
+                  width={150}
                 />
                 <XAxis
                   type="number"
                   axisLine={false}
+                  tickFormatter={(value: number) => formatNumberShort(value)}
                 />
               </>
             ) : (
@@ -164,43 +156,36 @@ export default function BarChartComponent({
                 <YAxis
                   type="number"
                   axisLine={false}
-                  tickMargin={10}
                   tickFormatter={(value: number) => formatNumberShort(value)}
                 />
               </>
             )}
-
-            {/* <XAxis
-              dataKey={xKey}
-              angle={-45}
-              textAnchor="end"
-              interval={0}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <YAxis axisLine={false} /> */}
             <Tooltip
               contentStyle={{ borderRadius: "10px", borderColor: "lightgray" }}
             />
-
-            <Bar
-              dataKey={valueKey}
-              fill="#8884d8"
-              stackId={stackId}
-              radius={horizontal ? [0, 7, 7, 0] : [7, 7, 0, 0]}
-            >
-              {processedData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color || "#8884d8"}
+            <Legend
+              verticalAlign="top"
+              align="center"
+              layout="horizontal"
+              wrapperStyle={{ marginBottom: 40, paddingBottom: 30 }}
+            />
+            {series.map((serie) => (
+              <Bar
+                key={serie.dataKey}
+                dataKey={serie.dataKey}
+                stackId="a"
+                fill={serie.fill}
+              >
+                {processedData.map((_, index) => (
+                  <Cell key={`${serie.dataKey}-${index}`} />
+                ))}
+                <LabelList
+                  dataKey={serie.dataKey}
+                  position={horizontal ? "right" : "top"}
+                  formatter={valueFormatter}
                 />
-              ))}
-              <LabelList
-                dataKey={valueKey}
-                position="top"
-                formatter={valueFormatter}
-              />
-            </Bar>
+              </Bar>
+            ))}
           </BarChart>
         </ResponsiveContainer>
       </div>

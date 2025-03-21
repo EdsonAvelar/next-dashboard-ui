@@ -1,19 +1,11 @@
 "use client";
 
 import React, { ReactNode, useEffect, useRef, useState } from "react";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-import { SIDENAV_ITEMS } from "@/constants";
-import { SideNavItem } from "@/types";
-import { Icon } from "@iconify/react";
+import { getSidenavItems } from "@/lib/sidenavItems"; // itens centralizados
 import { motion, useCycle } from "framer-motion";
-
-type MenuItemWithSubMenuProps = {
-  item: SideNavItem;
-  toggleOpen: () => void;
-};
+import { Icon } from "@iconify/react";
 
 const sidebar = {
   open: (height = 1000) => ({
@@ -34,9 +26,28 @@ const sidebar = {
   },
 };
 
+const variants = {
+  open: { transition: { staggerChildren: 0.02, delayChildren: 0.15 } },
+  closed: { transition: { staggerChildren: 0.01, staggerDirection: -1 } },
+};
+
+const MenuItemVariants = {
+  open: {
+    y: 0,
+    opacity: 1,
+    transition: { y: { stiffness: 1000, velocity: -100 } },
+  },
+  closed: {
+    y: 50,
+    opacity: 0,
+    transition: { y: { stiffness: 1000 }, duration: 0.02 },
+  },
+};
+
 const HeaderMobile = () => {
   const pathname = usePathname();
-  const containerRef = useRef(null);
+  const menuData = getSidenavItems(); // Usando o formato centralizado (com "children")
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const { height } = useDimensions(containerRef);
   const [isOpen, toggleOpen] = useCycle(false, true);
 
@@ -45,9 +56,7 @@ const HeaderMobile = () => {
       initial={false}
       animate={isOpen ? "open" : "closed"}
       custom={height}
-      className={`fixed inset-0 z-50 w-full md:hidden ${
-        isOpen ? "" : "pointer-events-none"
-      }`}
+      className={`fixed inset-0 z-50 w-full md:hidden ${isOpen ? "" : "pointer-events-none"}`}
       ref={containerRef}
     >
       <motion.div
@@ -58,12 +67,11 @@ const HeaderMobile = () => {
         variants={variants}
         className="absolute grid w-full gap-3 px-10 py-16 max-h-screen overflow-y-auto"
       >
-        {SIDENAV_ITEMS.map((item, idx) => {
-          const isLastItem = idx === SIDENAV_ITEMS.length - 1; // Check if it's the last item
-
+        {menuData.map((item, idx) => {
+          const isLastItem = idx === menuData.length - 1;
           return (
             <div key={idx}>
-              {item.submenu ? (
+              {item.children && item.children.length > 0 ? (
                 <MenuItemWithSubMenu
                   item={item}
                   toggleOpen={toggleOpen}
@@ -71,17 +79,18 @@ const HeaderMobile = () => {
               ) : (
                 <MenuItem>
                   <Link
-                    href={item.path}
+                    href={item.children?.[0].href || "#"}
                     onClick={() => toggleOpen()}
                     className={`flex w-full text-2xl ${
-                      item.path === pathname ? "font-bold" : ""
+                      item.children && item.children[0].href === pathname
+                        ? "font-bold"
+                        : ""
                     }`}
                   >
                     {item.title}
                   </Link>
                 </MenuItem>
               )}
-
               {!isLastItem && (
                 <MenuItem className="my-3 h-px w-full bg-gray-300" />
               )}
@@ -96,7 +105,7 @@ const HeaderMobile = () => {
 
 export default HeaderMobile;
 
-const MenuToggle = ({ toggle }: { toggle: any }) => (
+const MenuToggle = ({ toggle }: { toggle: () => void }) => (
   <button
     onClick={toggle}
     className="pointer-events-auto absolute right-4 top-[14px] z-30"
@@ -157,10 +166,16 @@ const MenuItem = ({
   );
 };
 
-const MenuItemWithSubMenu: React.FC<MenuItemWithSubMenuProps> = ({
-  item,
-  toggleOpen,
-}) => {
+interface SidenavItem {
+  title: string;
+  icon?: any;
+  children?: { label: string; href: string; params?: string }[];
+}
+
+const MenuItemWithSubMenu: React.FC<{
+  item: SidenavItem;
+  toggleOpen: () => void;
+}> = ({ item, toggleOpen }) => {
   const pathname = usePathname();
   const [subMenuOpen, setSubMenuOpen] = useState(false);
 
@@ -173,11 +188,11 @@ const MenuItemWithSubMenu: React.FC<MenuItemWithSubMenuProps> = ({
         >
           <div className="flex flex-row justify-between w-full items-center">
             <span
-              className={`${pathname.includes(item.path) ? "font-bold" : ""}`}
+              className={`${pathname === (item.children?.[0].href || "") ? "font-bold" : ""}`}
             >
               {item.title}
             </span>
-            <div className={`${subMenuOpen && "rotate-180"}`}>
+            <div className={`${subMenuOpen ? "rotate-180" : ""}`}>
               <Icon
                 icon="lucide:chevron-down"
                 width="24"
@@ -188,67 +203,30 @@ const MenuItemWithSubMenu: React.FC<MenuItemWithSubMenuProps> = ({
         </button>
       </MenuItem>
       <div className="mt-2 ml-2 flex flex-col space-y-2">
-        {subMenuOpen && (
-          <>
-            {item.subMenuItems?.map((subItem, subIdx) => {
-              return (
-                <MenuItem key={subIdx}>
-                  <Link
-                    href={subItem.path}
-                    onClick={() => toggleOpen()}
-                    className={` ${
-                      subItem.path === pathname ? "font-bold" : ""
-                    }`}
-                  >
-                    {subItem.title}
-                  </Link>
-                </MenuItem>
-              );
-            })}
-          </>
-        )}
+        {subMenuOpen &&
+          item.children?.map((subItem, subIdx) => (
+            <MenuItem key={subIdx}>
+              <Link
+                href={subItem.href}
+                onClick={() => toggleOpen()}
+                className={`${subItem.href === pathname ? "font-bold" : ""}`}
+              >
+                {subItem.label}
+              </Link>
+            </MenuItem>
+          ))}
       </div>
     </>
   );
 };
 
-const MenuItemVariants = {
-  open: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      y: { stiffness: 1000, velocity: -100 },
-    },
-  },
-  closed: {
-    y: 50,
-    opacity: 0,
-    transition: {
-      y: { stiffness: 1000 },
-      duration: 0.02,
-    },
-  },
-};
-
-const variants = {
-  open: {
-    transition: { staggerChildren: 0.02, delayChildren: 0.15 },
-  },
-  closed: {
-    transition: { staggerChildren: 0.01, staggerDirection: -1 },
-  },
-};
-
 const useDimensions = (ref: any) => {
   const dimensions = useRef({ width: 0, height: 0 });
-
   useEffect(() => {
     if (ref.current) {
       dimensions.current.width = ref.current.offsetWidth;
       dimensions.current.height = ref.current.offsetHeight;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ref]);
-
   return dimensions.current;
 };

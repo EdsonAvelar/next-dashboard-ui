@@ -1,8 +1,8 @@
 import ColumnFilter from "@/components/ColumnFilter";
 import FormModal from "@/components/FormModal";
+import InputSearch from "@/components/InputSearch";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
-import TableSearch from "@/components/TableSearch";
 import { role } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
@@ -186,7 +186,7 @@ const TeacherListPage = async ({
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Teachers</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <TableSearch />
+          <InputSearch />
           <div className="flex items-center gap-4 self-ebd">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image

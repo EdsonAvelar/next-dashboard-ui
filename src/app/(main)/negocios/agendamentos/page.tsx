@@ -4,7 +4,7 @@ import FormContainer from "@/components/forms/FormContainer";
 import Pagination from "@/components/Pagination";
 import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
 import Table from "@/components/Table";
-import TableSearch from "@/components/TableSearch";
+import InputSearch from "@/components/InputSearch";
 import { getCurrentUser, UserProfile } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
@@ -13,9 +13,7 @@ import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
-
 import dayjs from "@/lib/dayjs";
-
 
 import AgendamentoActions from "@/components/AgendamentoActions";
 
@@ -254,7 +252,7 @@ export default async function AgendamentoPage({
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">Agendamentos</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <TableSearch />
+          <InputSearch />
           {/* Exemplo de botões de filtro, etc. */}
           <div className="flex items-center gap-4">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
