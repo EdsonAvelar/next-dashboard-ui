@@ -56,7 +56,7 @@ export default function Column({ column, onOpenPopover }: ColumnProps) {
       style={style}
       className="w-72 min-w-[18rem] bg-gray-100 rounded p-1 flex flex-col"
     >
-      <div className="mb-4 pl-2 px-1 py-1 bg-gray-200">
+      <div className="mb-4 pl-2 px-1 py-1 bg-lamaPurpleLight">
         <h2 className="font-semibold">
           {column.name} ({itemCount})
         </h2>

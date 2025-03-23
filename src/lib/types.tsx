@@ -19,3 +19,13 @@ export type NegocioItem = {
   tipo: String;
   daysDifference: number;
 };
+
+export type BadgeType =
+  | "gray"
+  | "red"
+  | "yellow"
+  | "green"
+  | "blue"
+  | "indigo"
+  | "purple"
+  | "pink";

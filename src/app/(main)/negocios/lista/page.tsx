@@ -249,7 +249,7 @@ const Negocios = async ({
       </td> */}
       {/* Título do Negócio */}
       <td className="">
-        <Link href={`/negocios/${negocio.id}`}>
+        <Link href={`/negocios/editar?negocio_id=${negocio.id}`}>
           <h1 className="text-primary font-medium">{negocio.titulo}</h1>
         </Link>
       </td>
@@ -262,7 +262,9 @@ const Negocios = async ({
         {negocio.consorciado?.telefone || "N/A"}
       </td>
       {/* Valor do Crédito */}
-      <td className="hidden md:table-cell">{negocio.valor || "N/A"}</td>
+      <td className="hidden md:table-cell">
+        {negocio.valor ? negocio.valor.toString() : "N/A"}
+      </td>
       {/* Etapa do Cliente */}
       <td className="hidden md:table-cell">
         {negocio.etapa_funil?.nome || "N/A"}

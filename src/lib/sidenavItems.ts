@@ -13,44 +13,46 @@ export function getSidenavItems(userId?: number | string) {
     {
       title: "Dashboards",
       icon: HomeIcon,
+      prefix: "/dashboard",
       children: [
         {
           label: "Geral",
-          href: HOMEPAGE,
+          href: "/geral",
           params: userId ? `proprietario_id=${userId}` : "",
         },
-        { label: "Equipes", href: "/dashboard/equipes" },
-        { label: "Semanal", href: "/dashboard/semanal" },
-        { label: "Produção", href: "/dashboard/producao" },
+        { label: "Equipes", href: "/equipes" },
+        { label: "Semanal", href: "/semanal" },
+        { label: "Produção", href: "/producao" },
       ],
     },
     {
       title: "Negócios",
       icon: BriefcaseIcon,
+      prefix: "/negocios",
       children: [
         {
           label: "Pipeline",
-          href: "/negocios/pipeline",
+          href: "/pipeline",
           params: userId ? `proprietario_id=${userId}` : "",
         },
         {
           label: "Lista",
-          href: "/negocios/lista",
+          href: "/lista",
           params: userId ? `proprietario_id=${userId}` : "",
         },
         {
           label: "Agendamentos",
-          href: "/negocios/agendamentos",
+          href: "/agendamentos",
           params: userId ? `proprietario_id=${userId}` : "",
         },
         {
           label: "Reunioes",
-          href: "/negocios/reunioes",
+          href: "/reunioes",
           params: userId ? `proprietario_id=${userId}` : "",
         },
         {
-          label: "Vendas Fechadas",
-          href: "/negocios/vendas",
+          label: "Vendas",
+          href: "/vendas",
           params: userId ? `proprietario_id=${userId}` : "",
         },
       ],
@@ -58,19 +60,21 @@ export function getSidenavItems(userId?: number | string) {
     {
       title: "Administrativo",
       icon: UserGroupIcon,
+      prefix: "/administrativo",
       children: [
-        { label: "Funcionarios", href: "/administrativo/funcionario" },
-        { label: "Produções", href: "/administrativo/producoes" },
-        { label: "Equipes", href: "/administrativo/equipes" },
+        { label: "Funcionarios", href: "/funcionario" },
+        { label: "Produções", href: "/producoes" },
+        { label: "Equipes", href: "/equipes" },
       ],
     },
     {
       title: "Configurações",
       icon: CogIcon,
+      prefix: "/configuracoes",
       children: [
         { label: "Minha Conta", href: "/profile" },
         { label: "Permissões", href: "/permissions" },
-        { label: "Empresa", href: "/settings" },
+        { label: "Empresa", href: "/empresa" },
         { label: "Logout", href: "/logout" },
       ],
     },

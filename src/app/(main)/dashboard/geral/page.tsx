@@ -50,7 +50,10 @@ const AdminPage = async ({
       {/* Left */}
 
       <div className="w-full lg:w-3/3 flex flex-col gap-8 ">
-        <ProductioNav searchParams={searchParams} />
+        <ProductioNav
+          searchParams={searchParams}
+          dest={"/dashboard/geral"}
+        />
         {/* User Cards */}
 
         <div className="grid grid-cols-2 gap-4 lg:flex lg:gap-4 lg:justify-between">

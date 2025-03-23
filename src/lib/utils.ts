@@ -103,3 +103,9 @@ export function formatNumberShort(num: number): string {
     return `${value.toFixed(2)}M`;
   }
 }
+
+export function toPath(...parts: string[]): string {
+  // Remove as barras iniciais e finais de cada parte e filtra strings vazias
+  const trimmed = parts.map((p) => p.replace(/^\/+|\/+$/g, "")).filter(Boolean);
+  return "/" + trimmed.join("/");
+}

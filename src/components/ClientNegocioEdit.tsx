@@ -2,13 +2,17 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/utils";
 
 interface Negocio {
   titulo: string;
   tipo: string;
   valor: number;
+  user?: {
+    name: string;
+  };
   levantamento?: { status: string };
-  lead?: {
+  consorciado?: {
     nome?: string;
     telefone?: string;
     email?: string;
@@ -46,18 +50,18 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
   const [activeTab, setActiveTab] = useState("perfil");
 
   // Exemplo de submit para os formulários (a implementação real deverá integrar com sua API)
-interface HandleSubmitEvent extends React.FormEvent<HTMLFormElement> {}
+  interface HandleSubmitEvent extends React.FormEvent<HTMLFormElement> {}
 
-const handleSubmit = (e: HandleSubmitEvent): void => {
+  const handleSubmit = (e: HandleSubmitEvent): void => {
     e.preventDefault();
     // Aqui você pode capturar os dados dos formulários e enviar via fetch/axios para sua API
     console.log("Dados salvos!");
-};
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 shadow-2xl">
       {/* Cabeçalho */}
-      <header className="bg-white shadow">
+      <header className="bg-gray-200 shadow">
         <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between">
           <div className="flex items-center">
             <div className="relative w-20 h-20 mr-4">
@@ -92,8 +96,17 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
           </div>
           <div className="mt-4 md:mt-0">
             <div className="text-right">
+              <span className="flex flex-row gap-2 p-2">
+                <h2 className="font-semibold text-sm pt-1 text-gray-400">
+                  Proprietário:{" "}
+                </h2>
+
+                <h2 className="text-lg semibold">
+                  {negocio.user ? negocio.user.name : "Sem Proprietário"}
+                </h2>
+              </span>
               <h2 className="text-xl font-semibold text-gray-800">
-                R$ {Number(negocio.valor).toFixed(2)}
+                {formatCurrency(negocio.valor)}
               </h2>
               <p className="text-gray-500">Valor do Crédito</p>
             </div>
@@ -102,79 +115,101 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
       </header>
 
       {/* Conteúdo principal com abas */}
-      <main className="container mx-auto px-4 py-6 flex gap-2">
+      <main className="mx-auto px-4 py-6 flex gap-4 ">
         {/* Painel de Informações do cliente (sidebar) */}
-        <div className="bg-white rounded-lg shadow w-full md:w-1/4 p-4">
+        <div className="bg-white rounded-xl shadow-lg w-full md:w-1/4 p-6 space-y-6">
           {/* PESSOA */}
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-gray-700 mb-2">Pessoa</h3>
-            <p className="text-sm text-gray-600">
-              <strong>Nome:</strong> {negocio.lead?.nome || "--"}
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-gray-800">Pessoa</h3>
+            <hr className="py-2"></hr>
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Nome:</span>{" "}
+              {negocio.consorciado?.nome || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Telefone:</strong> {negocio.lead?.telefone || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Telefone:</span>{" "}
+              {negocio.consorciado?.telefone || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Email:</strong> {negocio.lead?.email || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Email:</span>{" "}
+              {negocio.consorciado?.email || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>WhatsApp:</strong> {negocio.lead?.whatsapp || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">WhatsApp:</span>{" "}
+              {negocio.consorciado?.whatsapp || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Endereço:</strong> {negocio.lead?.endereco || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Endereço:</span>{" "}
+              {negocio.consorciado?.endereco || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Complemento:</strong> {negocio.lead?.complemento || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Complemento:</span>{" "}
+              {negocio.consorciado?.complemento || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>CEP:</strong> {negocio.lead?.cep || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">CEP:</span>{" "}
+              {negocio.consorciado?.cep || "--"}
             </p>
           </div>
 
           {/* NEGÓCIO */}
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-gray-700 mb-2">Negócio</h3>
-            <p className="text-sm text-gray-600">
-              <strong>Idade do Negócio:</strong> Inativo por X dias
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-gray-800">Negócio</h3>
+            <hr className="py-2"></hr>
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Idade do Negócio:</span>{" "}
+              Inativo por X dias
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Criado em:</strong>{" "}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Criado em:</span>{" "}
               {negocio.createdAt
                 ? new Date(negocio.createdAt).toLocaleDateString()
                 : "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Funil Atual:</strong> {negocio.funil || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Funil Atual:</span>{" "}
+              {negocio.funil || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Etapa do Funil:</strong> {negocio.etapa || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Etapa do Funil:</span>{" "}
+              {negocio.etapa || "--"}
             </p>
           </div>
 
           {/* CLIENTE */}
-          <div>
-            <h3 className="text-lg font-bold text-gray-700 mb-2">Cliente</h3>
-            <p className="text-sm text-gray-600">
-              <strong>Grupo:</strong> {negocio.grupo || "--"}
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-gray-800">
+              Adminstrativo
+            </h3>
+            <hr className="py-2"></hr>
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Grupo:</span>{" "}
+              {negocio.grupo || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Cota(s):</strong> {negocio.cota || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Cota(s):</span>{" "}
+              {negocio.cota || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Assembleia:</strong> {negocio.assembleia || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Assembleia:</span>{" "}
+              {negocio.assembleia || "--"}
             </p>
-            <p className="text-sm text-gray-600">
-              <strong>Contrato:</strong> {negocio.contrato || "--"}
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-sm">Contrato:</span>{" "}
+              {negocio.contrato || "--"}
             </p>
 
-            {/* Se houver dados de fechamento, exiba */}
+            {/* Dados de fechamento */}
             {negocio.fechamento && (
-              <div className="mt-4">
-                <p className="text-sm text-gray-600">
-                  <strong>Fechamento ID:</strong> {negocio.fechamento.id}
+              <div className="mt-4 border-t pt-4">
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold text-sm">Fechamento ID:</span>{" "}
+                  {negocio.fechamento.id}
                 </p>
-                <p className="text-sm text-gray-600">
-                  <strong>Valor do Fechamento:</strong>{" "}
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold text-sm">
+                    Valor do Fechamento:
+                  </span>{" "}
                   {negocio.fechamento.valor
                     ? `R$ ${Number(negocio.fechamento.valor).toFixed(2)}`
                     : "--"}
@@ -191,7 +226,7 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
         </div>
 
         {/* Área principal (conteúdo das abas) */}
-        <div className="bg-white rounded-lg shadow w-full md:w-3/4">
+        <div className="bg-white rounded-lg shadow-2xl w-full md:w-3/4">
           {/* Navegação por abas */}
           <nav className="border-b">
             <ul className="flex flex-wrap -mb-px">
@@ -293,7 +328,7 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
                     <input
                       type="text"
                       name="nome"
-                      defaultValue={negocio.lead?.nome || ""}
+                      defaultValue={negocio.consorciado?.nome || ""}
                       className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -304,7 +339,7 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
                     <input
                       type="text"
                       name="telefone"
-                      defaultValue={negocio.lead?.telefone || ""}
+                      defaultValue={negocio.consorciado?.telefone || ""}
                       className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -315,7 +350,7 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
                     <input
                       type="email"
                       name="email"
-                      defaultValue={negocio.lead?.email || ""}
+                      defaultValue={negocio.consorciado?.email || ""}
                       className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -326,7 +361,7 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
                     <input
                       type="text"
                       name="whatsapp"
-                      defaultValue={negocio.lead?.whatsapp || ""}
+                      defaultValue={negocio.consorciado?.whatsapp || ""}
                       className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -339,7 +374,7 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
                     <input
                       type="text"
                       name="endereco"
-                      defaultValue={negocio.lead?.endereco || ""}
+                      defaultValue={negocio.consorciado?.endereco || ""}
                       className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -350,7 +385,7 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
                     <input
                       type="text"
                       name="complemento"
-                      defaultValue={negocio.lead?.complemento || ""}
+                      defaultValue={negocio.consorciado?.complemento || ""}
                       className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -361,7 +396,7 @@ const handleSubmit = (e: HandleSubmitEvent): void => {
                     <input
                       type="text"
                       name="cep"
-                      defaultValue={negocio.lead?.cep || ""}
+                      defaultValue={negocio.consorciado?.cep || ""}
                       className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>

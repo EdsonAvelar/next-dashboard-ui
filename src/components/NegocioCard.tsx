@@ -8,9 +8,7 @@ import { useRouter } from "next/navigation";
 import { formatCurrency, NegocioTipo, NegocioTipoOptions } from "@/lib/utils";
 import { useMemo } from "react";
 import { Icon } from "@iconify/react";
-import { NegocioItem } from "@/lib/types";
-
-type BadgeType = "green" | "blue" | "yellow" | "red" | "gray";
+import { BadgeType, NegocioItem } from "@/lib/types";
 
 interface NegocioCardProps {
   negocio: NegocioItem;
@@ -38,12 +36,12 @@ export default function NegocioCard({
     if (daysDifference === 0) {
       return { color: "green" as BadgeType, label: "HOJE" };
     } else if (daysDifference <= 2) {
-      return { color: "green" as BadgeType, label: "NOVO" };
+      return { color: "indigo" as BadgeType, label: "NOVO" };
     } else if (daysDifference <= 3) {
-      return { color: "blue" as BadgeType, label: "RECENTE" };
+      return { color: "yellow" as BadgeType, label: "RECENTE" };
     } else if (daysDifference <= 6) {
-      return { color: "yellow" as BadgeType, label: "ATENÇÃO" };
-    } else if (daysDifference <= 20) {
+      return { color: "purple" as BadgeType, label: "ATENÇÃO" };
+    } else if (daysDifference <= 10) {
       return { color: "red" as BadgeType, label: "URGENTE" };
     } else {
       return { color: "gray" as BadgeType, label: `${daysDifference} dias` };
@@ -51,7 +49,6 @@ export default function NegocioCard({
   }, [daysDifference]);
 
   const icon = () => {
-
     if (negocio.tipo === NegocioTipo.CARRO) {
       return (
         <Icon
@@ -95,7 +92,9 @@ export default function NegocioCard({
               </div>
             )}
           </div>
-          <div className="text-sm text-gray-500">{valorFormatado}</div>
+          <div className="text-sm text-green-400 font-semibold">
+            {valorFormatado}
+          </div>
         </div>
       </div>
       {/* Botão para abrir o popover global */}

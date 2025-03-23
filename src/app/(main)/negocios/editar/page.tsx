@@ -2,8 +2,11 @@
 import ClientNegocioEdit from "@/components/ClientNegocioEdit";
 import { prisma } from "@/lib/prisma"; // ajuste o caminho conforme sua estrutura
 
-
-export default async function NegocioEditPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function NegocioEditPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const negocioId = searchParams.negocio_id;
 
   if (!negocioId) {
@@ -26,6 +29,16 @@ export default async function NegocioEditPage({ searchParams }: { searchParams: 
     ? {
         ...rawNegocio,
         valor: rawNegocio.valor ? Number(rawNegocio.valor) : 0,
+        consorciado: rawNegocio.consorciado
+          ? {
+              ...rawNegocio.consorciado,
+              email: rawNegocio.consorciado.email ?? undefined,
+              whatsapp: rawNegocio.consorciado.whatsapp ?? undefined,
+              endereco: rawNegocio.consorciado.endereco ?? undefined,
+              complemento: rawNegocio.consorciado.complemento ?? undefined,
+              cep: rawNegocio.consorciado.cep ?? undefined,
+            }
+          : undefined,
         fechamento: rawNegocio.fechamento
           ? {
               id: String(rawNegocio.fechamento.id),
@@ -34,6 +47,7 @@ export default async function NegocioEditPage({ searchParams }: { searchParams: 
                 : 0,
             }
           : undefined,
+        user: rawNegocio.user ? { name: rawNegocio.user.name } : undefined,
       }
     : null;
 

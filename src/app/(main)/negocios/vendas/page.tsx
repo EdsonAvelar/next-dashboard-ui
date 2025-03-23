@@ -8,6 +8,7 @@ import ProductionSelector, {
   Production,
 } from "@/components/ProductionSelector";
 import { redirect } from "next/navigation";
+import ProductioNav from "@/components/ProductioNav";
 
 type Props = {
   searchParams?: {
@@ -174,12 +175,10 @@ export default async function FechamentosPage({ searchParams }: Props) {
       </header>
 
       {/* Seletor de Produção */}
-      <div className="bg-white shadow rounded-lg p-6 mb-8">
-        <ProductionSelector
-          productions={productions}
-          dest={"/negocios/vendas"}
-        />
-      </div>
+      <ProductioNav
+        searchParams={searchParams || {}}
+        dest={"/negocios/vendas"}
+      />
 
       {/* Seções dos grupos de vendas */}
       <section className="bg-white shadow rounded-lg p-6 mb-8">

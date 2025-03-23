@@ -18,7 +18,8 @@ interface DashboardHeaderProps {
 
 export default async function ProductioNav({
   searchParams,
-}: DashboardHeaderProps) {
+  dest,
+}: DashboardHeaderProps & { dest: string }) {
   // Se houver production_name na URL, tenta buscar essa produção
   const productionNameFromUrl = searchParams?.production_name;
   let production: Production | null = null;
@@ -87,11 +88,11 @@ export default async function ProductioNav({
       <div className="flex items-center space-x-2">
         <ProductionSelector
           productions={productions}
-          dest={"/dashboard/crm"}
+          dest={dest}
         />
         {/* Botão "Hoje": redireciona com data_inicio e data_fim iguais a hoje e production_name vazio */}
         <Link
-          href={`/dashboard/crm?data_inicio=${today}&data_fim=${today}&production_name=`}
+          href={`${dest}?data_inicio=${today}&data_fim=${today}&production_name=`}
           className="bg-green-500 text-white text-sm px-3 py-2 rounded hover:bg-green-600 transition"
         >
           Hoje

@@ -7,6 +7,7 @@ import { useWindowSize } from "@/hooks/useWindowSize";
 import { getCurrentUser, UserProfile } from "@/lib/actions";
 import { getSidenavItems } from "@/lib/sidenavItems";
 import { usePathname } from "next/navigation";
+import { toPath } from "@/lib/utils";
 
 export default function Sidebar() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -25,7 +26,9 @@ export default function Sidebar() {
 
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
-  const [openSubmenus, setOpenSubmenus] = useState<Record<number, boolean>>({});
+
+  // Em vez de um objeto, controlamos qual menu (índice) está aberto
+  const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
 
   // Usa o hook customizado para monitorar o tamanho da janela
   const { width } = useWindowSize();
@@ -37,8 +40,9 @@ export default function Sidebar() {
     }
   }, [width]);
 
+  // Ao trocar o submenu, fecha os outros
   const toggleSubmenu = (idx: number) => {
-    setOpenSubmenus((prev) => ({ ...prev, [idx]: !prev[idx] }));
+    setOpenSubmenu((prev) => (prev === idx ? null : idx));
   };
 
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,7 +63,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`h-full mt-[50px]  relative flex-shrink-0 transition-all duration-300 delay-200  ease-in-out hidden md:block ${
+      className={`h-full mt-[50px] relative flex-shrink-0 transition-all duration-300 delay-200 ease-in-out hidden md:block ${
         isCollapsed ? "w-16" : "w-[13rem]"
       }`}
       onMouseEnter={handleMouseEnter}
@@ -69,8 +73,16 @@ export default function Sidebar() {
         <div className="absolute inset-0 z-50 w-[13rem] bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden shadow-lg ">
           <div className="overflow-y-auto h-[80%]">
             {menuData.map((menu, idx) => {
+              console.log(menu);
+
               if (menu.children) {
-                const isOpen = !!openSubmenus[idx];
+                const active = pathname.startsWith(menu.prefix)
+                  ? "bg-gray-200"
+                  : "";
+
+                console.log(pathname, menu.prefix);
+
+                const isOpen = openSubmenu === idx;
                 const ArrowIcon = isOpen ? ChevronDownIcon : ChevronRightIcon;
                 return (
                   <div
@@ -79,14 +91,13 @@ export default function Sidebar() {
                   >
                     <button
                       onClick={() => toggleSubmenu(idx)}
-                      className="flex items-center w-full gap-2 p-2 rounded-md hover:bg-purple-100 transition-colors"
+                      className={`${active} flex items-center w-full gap-2 p-2 rounded-md hover:bg-gray-100 rounded-r-full transition-colors`}
                     >
                       {menu.icon && <menu.icon className="h-5 w-5" />}
                       <span
                         className={`flex-1 text-left overflow-hidden whitespace-nowrap ${
-                          // Se o menu estiver ativo (verifica o primeiro href dos filhos)
                           menu.children[0].href === pathname
-                            ? "bg-purple-200 rounded-r-full px-2"
+                            ? "hover:bg-gray-100 rounded-r-full px-2"
                             : ""
                         }`}
                       >
@@ -99,24 +110,29 @@ export default function Sidebar() {
                         isOpen ? "max-h-96" : "max-h-0"
                       }`}
                     >
-                      {menu.children.map((child, cIdx) => (
-                        <Link
-                          key={cIdx}
-                          href={
-                            child.href +
-                            ("params" in child && child.params
-                              ? `?${child.params}`
-                              : "")
-                          }
-                          className={`block pl-8 pr-2 py-2 text-sm transition-colors ${
-                            child.href === pathname
-                              ? "bg-purple-100 rounded-r-full "
-                              : "hover:bg-purple-100"
-                          }`}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
+                      {menu.children.map((child, cIdx) => {
+                        const finalpath = toPath(menu.prefix, child.href);
+                        return (
+                          <Link
+                            key={cIdx}
+                            href={
+                              finalpath +
+                              ("params" in child && child.params
+                                ? `?${child.params}`
+                                : "")
+                            }
+                            className={`block pl-8 pr-2 p-2 text-md transition-colors ${
+                              finalpath === pathname
+                                ? "bg-gradient-to-r from-purple-300 to-purple-600 rounded-r-full text-white"
+                                : "hover:bg-gray-100 rounded-r-full"
+                            }`}
+                          >
+                            {/* {child.label} */}
+                            <span className="inline-block w-3 h-3 border border-gray-500 rounded-full mr-2"></span>
+                            {child.label}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -124,7 +140,7 @@ export default function Sidebar() {
               return null;
             })}
           </div>
-          <div className="p-2 border-t border-gray-200">
+          <div className="p-2 border-t border-gray-200 ">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="w-full p-2 rounded-md text-center hover:bg-gray-100 transition-colors"
@@ -134,11 +150,7 @@ export default function Sidebar() {
           </div>
         </div>
       ) : (
-        // Aqui ele volta rápido se o duration for 100
         <div className="w-full bg-white border-r border-gray-200 transition-all duration-100 ease-in-out overflow-hidden">
-          {/* <div className="p-4">
-            <span className="block font-bold">LOGO</span>
-          </div> */}
           <div className="flex flex-col items-center ">
             {menuData.map((menu, idx) => (
               <div
