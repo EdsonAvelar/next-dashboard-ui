@@ -1,16 +1,13 @@
-// FormModal.tsx
 "use client";
 
 import Image from "next/image";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-
 import dynamic from "next/dynamic";
-import { deleteFuncionario } from "@/lib/actions";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./forms/FormContainer";
-import { deleteProduction } from "@/lib/actions"; // <-- importamos a action de produção
+import { deleteFuncionario, deleteProduction } from "@/lib/actions";
 import { deleteEquipe } from "@/lib/actions";
 
 // Import dinâmico dos forms já existentes
@@ -21,19 +18,19 @@ const NegocioForm = dynamic(() => import("./forms/NegocioForm"), {
   loading: () => <h1>Carregando...</h1>,
 });
 
-const EquipeForm = dynamic(() => import("./forms/EquipeForm"), {
+const NegocioMassForm = dynamic(() => import("./forms/NegocioMassForm"), {
   loading: () => <h1>Carregando...</h1>,
 });
 
-// Import dinâmico do novo form de atribuição
+const EquipeForm = dynamic(() => import("./forms/EquipeForm"), {
+  loading: () => <h1>Carregando...</h1>,
+});
 const NegocioAtribuirForm = dynamic(
   () => import("./forms/NegocioAtribuirForm"),
   {
     loading: () => <h1>Carregando...</h1>,
   }
 );
-
-// Import dinâmico do novo form de Produções
 const ProductionForm = dynamic(() => import("./forms/ProductionForm"), {
   loading: () => <h1>Carregando...</h1>,
 });
@@ -41,11 +38,10 @@ const ProductionForm = dynamic(() => import("./forms/ProductionForm"), {
 const deleteActionMap = {
   user: deleteFuncionario,
   negocio: deleteFuncionario,
-  producao: deleteProduction, // <--- Adicionamos aqui
+  producao: deleteProduction,
   equipe: deleteEquipe,
 };
 
-// Função para mapear table+type -> componente
 function getFormComponent(
   table: string,
   type: string,
@@ -63,9 +59,7 @@ function getFormComponent(
       />
     );
   }
-
   if (table === "negocio") {
-    // Se for 'assign', usamos NegocioAtribuirForm
     if (type === "assign") {
       return (
         <NegocioAtribuirForm
@@ -74,8 +68,10 @@ function getFormComponent(
           relatedData={relatedData}
         />
       );
+    }
+    if (type === "createmassive") {
+      return <NegocioMassForm setOpen={setOpen} />;
     } else {
-      // create/update
       return (
         <NegocioForm
           type={type as "create" | "update"}
@@ -86,7 +82,6 @@ function getFormComponent(
       );
     }
   }
-
   if (table === "producao") {
     return (
       <ProductionForm
@@ -96,7 +91,6 @@ function getFormComponent(
       />
     );
   }
-
   if (table === "equipe") {
     return (
       <EquipeForm
@@ -107,7 +101,6 @@ function getFormComponent(
       />
     );
   }
-
   return null;
 }
 
@@ -117,14 +110,23 @@ export default function FormModal({
   data,
   id,
   relatedData,
-}: FormContainerProps & { relatedData?: any } ) {
+  button, // nova prop opcional para renderização do botão
+  title, // nova prop opcional para o texto do botão
+}: FormContainerProps & {
+  type: "create" | "update" | "delete" | "assign" | "createmassive";
+  relatedData?: any;
+  button?: boolean;
+  title?: string;
+}) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  let table2 = table? table: "user"
-  // Se for delete, use a actionMap
+  const table2 = table ? table : "user";
   const [state, formAction] = useFormState(
-    deleteActionMap[table2] as (state: { success: boolean; msg: string }, payload: FormData) => Promise<{ success: boolean; msg: string }>,
+    deleteActionMap[table2] as (
+      state: { success: boolean; msg: string },
+      payload: FormData
+    ) => Promise<{ success: boolean; msg: string }>,
     { success: false, msg: "" }
   );
 
@@ -152,13 +154,17 @@ export default function FormModal({
           <span className="text-center font-medium">
             All data will be lost. Are you sure you want to delete this {table}?
           </span>
-          <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center ">
+          <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
             Delete
           </button>
         </form>
       );
-    }
-    if (type === "create" || type === "update" || type === "assign") {
+    } else if (
+      type === "create" ||
+      type === "update" ||
+      type === "assign" ||
+      type === "createmassive"
+    ) {
       const FormCmp = getFormComponent(table, type, setOpen, data, relatedData);
       if (!FormCmp) return <div>Form not found</div>;
       return FormCmp;
@@ -178,17 +184,32 @@ export default function FormModal({
 
   return (
     <>
-      <button
-        className={`${size} flex items-center justify-center rounded-full ${bgColor}`}
-        onClick={() => setOpen(true)}
-      >
-        <Image
-          src={`/${type}.png`}
-          alt=""
-          width={16}
-          height={16}
-        />
-      </button>
+      {button ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-green-700 hover:text-white border
+           border-green-700 hover:bg-green-800 focus:ring-4
+            focus:outline-none focus:ring-green-300 font-medium
+             rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2
+              dark:border-green-500 dark:text-green-500
+               dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-800"
+        >
+          {title || "Abrir Formulário"}
+        </button>
+      ) : (
+        <button
+          className={`${size} flex items-center justify-center rounded-full ${bgColor}`}
+          onClick={() => setOpen(true)}
+        >
+          <Image
+            src={`/${type}.png`}
+            alt=""
+            width={16}
+            height={16}
+          />
+        </button>
+      )}
 
       {open && (
         <div className="w-screen h-screen absolute left-0 top-0 bg-black bg-opacity-45 z-50 flex items-center justify-center">
@@ -200,7 +221,7 @@ export default function FormModal({
             >
               <Image
                 src="/close.png"
-                alt=""
+                alt="Fechar"
                 width={14}
                 height={14}
               />

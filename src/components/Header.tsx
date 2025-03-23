@@ -7,6 +7,7 @@ import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 
 import useScroll from "@/hooks/use-scroll";
 import { cn } from "@/lib/utils";
+import InputSearch from "./InputSearch";
 
 const Header = () => {
   const scrolled = useScroll(5);
@@ -17,17 +18,18 @@ const Header = () => {
   let tools = null;
   if (pathname.includes("/pipeline")) {
     tools = (
-      <div className="flex space-x-2 items-center">
-        <button
-          className="px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
-          onClick={() => {
-            // Lógica para abrir modal ou redirecionamento para adicionar novo negócio no pipeline.
-            console.log("Adicionar novo negócio no pipeline");
-          }}
-        >
-          Add++
-        </button>
-      </div>
+      <InputSearch />
+      // <div className="flex space-x-2 items-center">
+      //   <button
+      //     className="px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
+      //     onClick={() => {
+      //       // Lógica para abrir modal ou redirecionamento para adicionar novo negócio no pipeline.
+      //       console.log("Adicionar novo negócio no pipeline");
+      //     }}
+      //   >
+      //     Add++
+      //   </button>
+      // </div>
     );
   }
 

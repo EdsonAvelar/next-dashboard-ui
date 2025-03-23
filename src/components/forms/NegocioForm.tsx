@@ -11,15 +11,7 @@ import { NegocioSchema, negocioSchema } from "@/lib/formValidationSchema";
 import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
-
-export const NegocioTipoOptions = [
-  { value: "CARRO", label: "Carro" },
-  { value: "MOTO", label: "Moto" },
-  { value: "CAMINHAO", label: "Caminhão" },
-  { value: "TERRENO", label: "Terreno" },
-  { value: "MAQUINARIO", label: "Maquinário" },
-  { value: "SERVICO", label: "Serviço" },
-];
+import { NegocioTipoOptions } from "@/lib/utils";
 
 const NegocioForm = ({
   type,
@@ -120,10 +112,11 @@ const NegocioForm = ({
             label="Tipo de Crédito"
             name="tipo_credito"
             register={register}
-            defaultValue="CARRO"
+            isRequired={true}
+            defaultValue={data?.telefone}
             error={errors?.tipo_credito}
             options={[
-              { value: "IMOVEL", label: "Imóvel" },
+              { value: "", label: "Selecione o Crédito" },
               ...tipoCreditoOptions,
             ]}
           />

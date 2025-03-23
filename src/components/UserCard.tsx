@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { CurrencyDollarIcon } from "@heroicons/react/24/solid";
+import { BriefcaseIcon, CurrencyDollarIcon } from "@heroicons/react/24/solid";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, parseDateBr } from "@/lib/utils";
 import { getProducaoDates } from "@/lib/actions";
+import { ChartBarIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
 
 interface SearchParams {
   data_inicio: string;
@@ -15,9 +16,33 @@ interface UserCardProps {
   toDate?: Date;
 }
 
+function getIconByType(type: string) {
+  switch (type) {
+    case "Negócios Ativos":
+      return (
+        <BriefcaseIcon className="absolute right-2 -translate-y-[70%] text-white h-10 w-10" />
+      );
+    case "Em Aprovação":
+      return (
+        <ChartBarIcon className="absolute right-2 -translate-y-[70%] text-white h-10 w-10" />
+      );
+    case "Vendas em Conclusão":
+      return (
+        <ShoppingCartIcon className="absolute right-2 -translate-y-[70%] text-white h-10 w-10" />
+      );
+    case "Total Vendido":
+      return (
+        <CurrencyDollarIcon className="absolute right-2 -translate-y-[70%] text-white h-10 w-10" />
+      );
+    default:
+      return (
+        <CurrencyDollarIcon className="absolute right-2 -translate-y-[70%] text-white h-10 w-10" />
+      );
+  }
+}
+
 const UserCard = async ({
   type,
-
   fromDate,
   toDate,
 }: UserCardProps) => {
@@ -70,12 +95,13 @@ const UserCard = async ({
     data = await prisma.admin.count();
   }
 
+  // Escolhe o ícone com base no 'type'
+  const Icon = getIconByType(type);
+
   return (
-    <div className="relative rounded-2xl odd:bg-lamaPurple even:bg-lamaYellow p-4 flex-1 min-w-[130px]">
+    <div className="relative rounded-2xl odd:bg-lamaPurple even:bg-lamaYellow p-4 flex-1 min-w-[130px] shadow-md">
       <div className="flex justify-between items-center">
-        <span className="text-[10px] bg-white px-2 py-1 rounded-full text-green-600">
-          1%
-        </span>
+        <h4 className="capitalize text-sm font-medium text-gray-500">{type}</h4>
         <Image
           src="/more.png"
           alt="More"
@@ -84,8 +110,11 @@ const UserCard = async ({
         />
       </div>
       <h1 className="text-2xl font-semibold my-4">{data?.toString()}</h1>
-      <h4 className="capitalize text-sm font-medium text-gray-500">{type}</h4>
-      <CurrencyDollarIcon className="absolute right-2  -translate-y-[70%] text-white h-10 w-10" />
+
+      <span className="text-[10px] bg-white px-2 py-1 rounded-full text-green-600">
+        1%
+      </span>
+      {Icon}
     </div>
   );
 };

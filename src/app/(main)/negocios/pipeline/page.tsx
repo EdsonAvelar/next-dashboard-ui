@@ -11,7 +11,7 @@ import PipelineBoardContainer from "@/components/containers/PipelineBoardContain
 import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
 import FormContainer from "@/components/forms/FormContainer";
 import { getTimeComercialVendedores } from "@/lib/actions";
-import InputSearch from "@/components/InputSearch";
+import FormModal from "@/components/FormModal";
 
 const PipelineBoard = dynamic(() => import("@/components/PipelineBoard"), {
   ssr: false,
@@ -64,6 +64,10 @@ export default async function PipelinePage({
           titulo: n.titulo,
           valor: n.valor !== null ? Number(n.valor) : 0,
           cliente: n.consorciado.nome, // ajuste conforme seu schema
+          updatedAt: n.updatedAt,
+          tipo: n.tipo,
+          telefone: n.consorciado.telefone,
+          whatsapp: n.consorciado.whatsapp,
         })),
     };
   });
@@ -79,13 +83,22 @@ export default async function PipelinePage({
       {/* <h1 className="text-2xl font-semibold mb-4">Pipeline de Negócios</h1> */}
 
       <div className="top-[60px] md:top-[60px] left-[10px] md:left-[80px] right-0 z-auto  flex gap-4">
-        <div className="hidden md:block">
+        {/* <div className="hidden md:block">
           <InputSearch />
-        </div>
+        </div> */}
 
         <FormContainer
           table="negocio"
           type="create"
+          button={true}
+          title="+Add"
+        />
+
+        <FormModal
+          table="negocio"
+          type="createmassive"
+          button={true}
+          title="++Add"
         />
         <ProprietarioFilterSelect users={allUsers} />
       </div>

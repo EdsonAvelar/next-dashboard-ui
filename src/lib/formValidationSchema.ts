@@ -35,6 +35,7 @@ export const negocioSchema = z.object({
   valor_credito: z.string().optional(),
   titulo: z.string().optional(),
   whatsapp: z.string().optional(),
+  email: z.string().optional(),
   proprietario_id: z.string().optional(),
 });
 

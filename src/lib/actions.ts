@@ -15,7 +15,7 @@ import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { Decimal } from "@prisma/client/runtime/library";
 import { redirect } from "next/navigation";
-import { parseDateBr, parseDateUsa } from "./utils";
+import { formatNumberShort, parseDateBr, parseDateUsa } from "./utils";
 
 type CurrentState = { success: boolean; msg: string };
 
@@ -28,6 +28,8 @@ export const createNegocio = async (
       data: {
         nome: data.nome_contato,
         telefone: data.telefone,
+        whatsapp: data.whatsapp || "",
+        email: data.email || ""
       },
     });
 
@@ -97,6 +99,72 @@ export const updateNegocio = async (
   } catch (error) {
     console.log(error);
     return { success: false, msg: "Erro ao Atualizar Negocio" };
+  }
+};
+
+// Tipo para os registros importados em massa
+type MassNegocioData = {
+  tipo_credito: string;
+  proprietario_id?: string;
+  registros: {
+    name: string;
+    telefone: string;
+    credito?: number | null;
+  }[];
+};
+
+export const createMassNegocio = async (
+  currentState: CurrentState,
+  data: MassNegocioData
+) => {
+  try {
+    // Para cada registro, cria o Lead e o Negócio correspondente
+    for (const registro of data.registros) {
+      // Criação do lead
+      const lead = await prisma.lead.create({
+        data: {
+          nome: registro.name,
+          telefone: registro.telefone,
+        },
+      });
+
+      console.log(registro);
+
+      // Se existir o parâmetro proprietario_id, prepara a conexão com o usuário
+      const userConnection = data.proprietario_id
+        ? { user: { connect: { id: parseInt(data.proprietario_id, 10) } } }
+        : {};
+
+      // Cria um título padrão, combinando o primeiro nome com o tipo de crédito
+      const titulo =
+        `${registro.name.split(" ")[0]} - ${data.tipo_credito}` +
+        (registro.credito ? ` - ${formatNumberShort(registro.credito)}` : "");
+
+      // Criação do negócio
+      await prisma.negocio.create({
+        data: {
+          titulo,
+          // Define o tipo conforme o enum; ajuste se necessário
+          tipo: data.tipo_credito as NegocioTipo,
+          status: "ATIVO", // ou outro valor padrão conforme seu enum de status
+          // Conectando o Lead criado
+          consorciado: { connect: { id: lead.id } },
+          // Conexões padrão com Funil e Etapa do Funil (ajuste conforme sua lógica)
+          funil: { connect: { id: 1 } },
+          etapa_funil: { connect: { id: 1 } },
+          valor: registro.credito || null,
+          ...userConnection,
+        },
+      });
+    }
+
+    // Caso esteja usando revalidation, descomente a linha abaixo:
+    // revalidatePath("/negocios/lista");
+
+    return { success: true, msg: "" };
+  } catch (error) {
+    console.error("Erro ao criar negócios massivos:", error);
+    return { success: false, msg: "Erro ao criar negócios" };
   }
 };
 
@@ -495,7 +563,7 @@ export async function saveStageChange(negocioId: number, etapaId: number) {
     return { success: true };
   } catch (error) {
     console.error("Erro ao mover negócio:", error);
-    return { success: false };
+    return { success: false, msg: error };
   }
 }
 

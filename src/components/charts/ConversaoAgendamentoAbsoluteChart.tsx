@@ -70,7 +70,6 @@ export default async function ConversaoAgendamentoAbsoluteChart({
     };
   });
 
-  console.log(data);
 
   // 3. Calcula os totais, se necessário para exibir no título
   const totalFaltou = data.reduce((acc, item) => acc + item.faltou, 0);

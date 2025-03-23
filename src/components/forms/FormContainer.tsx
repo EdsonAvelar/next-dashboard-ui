@@ -3,11 +3,20 @@ import FormModal from "../FormModal";
 
 export type FormContainerProps = {
   table: "user" | "negocio" | "producao" | "equipe";
-  type: "create" | "update" | "delete" | "assign";
+  type: "create" | "update" | "delete" | "assign" | "createmassive";
   data?: any;
   id?: number;
+  button?: boolean;
+  title?: string;
 };
-const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
+const FormContainer = async ({
+  table,
+  type,
+  data,
+  id,
+  button,
+  title,
+}: FormContainerProps) => {
   let relatedData = {};
 
   // Carrega dados relacionados conforme a ação
@@ -53,6 +62,8 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         type={type}
         data={data}
         id={id}
+        button={button}
+        title={title}
         relatedData={relatedData}
       />
     </div>

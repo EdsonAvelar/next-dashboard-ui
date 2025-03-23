@@ -17,19 +17,6 @@ export default async function FechamentosModesChart({
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
   const vendedores = await getTimeComercialVendedores();
 
-  // 2. Busca os fechamentos com status "FECHADA" no intervalo,
-  // incluindo o negócio para acessar preco_bem e os vendedores (para ver quem tem modo MODO_AJUDA).
-  //   const fechamentos = await prisma.fechamento.findMany({
-  //     where: {
-  //       status: "FECHADA", // ou FechamentoStatus.FECHADA, dependendo de como está definido
-  //       data_fechamento: { gte: fromDate, lte: toDate },
-  //     },
-  //     include: {
-  //       negocio: { select: { user_id: true, preco_bem: true } },
-  //       vendedores: true, // traz a relação FechamentoUser, onde consta userId e modo
-  //     },
-  //   });
-
   const fechamentos = await prisma.fechamento.findMany({
     where: {
       status: FechamentoStatus.FECHADA,

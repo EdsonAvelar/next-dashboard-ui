@@ -5,7 +5,9 @@ import AgendamentosMedioChart from "@/components/charts/AgendamentosMedioChart";
 import AprovacoesChart from "@/components/charts/AprovacoesChart";
 import ConversaoAgendamentoAbsoluteChart from "@/components/charts/ConversaoAgendamentoAbsoluteChart";
 import ConversaoAgendamentoChart from "@/components/charts/ConversaoAgendamentoChart";
+import ConversaoVendasFunil from "@/components/charts/ConversaoVendasFunil";
 import FechamentosChart from "@/components/charts/FechamentosChart";
+import FechamentosCotasChart from "@/components/charts/FechamentosCotasChart";
 import FechamentosModesChart from "@/components/charts/FechamentosModesChart";
 import FechamentosModoAjudaChart from "@/components/charts/FechamentosModoAjudaChart";
 import OportunidadesChart from "@/components/charts/OportunidadesChart";
@@ -17,6 +19,7 @@ import CountChartContainer from "@/components/containers/CountChartContainer";
 import EventCalendarContainer from "@/components/containers/EventCalendarContainer";
 import EventCalendar from "@/components/EventCalendar";
 import FinanceChart from "@/components/FinanceChart";
+import ProductioNav from "@/components/ProductioNav";
 import UserCard from "@/components/UserCard";
 import { getProducaoDates } from "@/lib/actions";
 import { parseDateUsa } from "@/lib/utils";
@@ -47,6 +50,7 @@ const AdminPage = async ({
       {/* Left */}
 
       <div className="w-full lg:w-3/3 flex flex-col gap-8 ">
+        <ProductioNav searchParams={searchParams} />
         {/* User Cards */}
 
         <div className="grid grid-cols-2 gap-4 lg:flex lg:gap-4 lg:justify-between">
@@ -64,16 +68,6 @@ const AdminPage = async ({
           />
         </div>
 
-        {/* <div className="flex gap-4 flex-col lg:flex-row">
-          <div className="w-full lg:w-1/3 h-[450px]">
-            <CountChartContainer />
-          </div>
-
-          <div className="w-full lg:w-2/3 h-[450px]">
-            <AttendanceChartContainer />
-          </div>
-
-        </div> */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="w-full h-[500px] bg-white rounded-xl p-4 shadow-md">
             <div className="w-full h-[450px]">
@@ -168,6 +162,22 @@ const AdminPage = async ({
           <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
             <div className="w-full">
               <ConversaoAgendamentoAbsoluteChart
+                fromDate={fromDate}
+                toDate={toDate}
+              />
+            </div>
+          </div>
+          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
+            <div className="w-full">
+              <ConversaoVendasFunil
+                fromDate={fromDate}
+                toDate={toDate}
+              />
+            </div>
+          </div>
+          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
+            <div className="w-full">
+              <FechamentosCotasChart
                 fromDate={fromDate}
                 toDate={toDate}
               />

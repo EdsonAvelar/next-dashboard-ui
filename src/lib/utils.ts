@@ -8,6 +8,16 @@ export const NegocioTipoOptions = [
   { value: "SERVICO", label: "Serviço" },
 ];
 
+export const NegocioTipo = {
+  IMOVEL: "IMOVEL",
+  CARRO: "CARRO",
+  MOTO: "MOTO",
+  CAMINHAO: "CAMINHAO",
+  TERRENO: "TERRENO",
+  MAQUINARIO: "MAQUINARIO",
+  SERVICO: "SERVICO",
+};
+
 export const UserStatus = {
   ATIVO: 1,
   INATIVO: 0,
@@ -60,9 +70,12 @@ export function parseDateUsa(value: string): Date {
 
 // Função auxiliar para formatar valores em reais
 export const formatCurrency = (value: number): string => {
-  return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+  }).format(value);
 };
-
 /**
  * Trunca um número para a quantidade de casas decimais especificada.
  * Ex.: truncate(2.568, 2) retorna 2.56.
@@ -84,12 +97,9 @@ export function formatNumberShort(num: number): string {
   if (num < 1000) return num.toString();
   if (num < 1e6) {
     const value = num / 1000;
-    return value < 10
-      ? `${truncate(value, 1)}K`
-      : `${truncate(value, 2).toFixed(2)}K`;
+    return value < 10 ? `${value.toFixed(1)}K` : `${value.toFixed(2)}K`;
   } else {
     const value = num / 1e6;
-    return `${truncate(value, 2).toFixed(2)}M`;
+    return `${value.toFixed(2)}M`;
   }
 }
-
