@@ -50,7 +50,10 @@ export default async function ReunioesMedioChart({
   return (
     <div className="p-4">
       <BarChartComponent
-        title={`Média de Reuniões (${days} dias úteis)`}
+        title={`Média de Reuniões`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Média de reuniões da empresa: ${totalAverage.toFixed(2)} por dia`}
+        bottomSubtitle={`Mostra média dos reuniões da produção ativa ( ${days} dias úteis)`}
         data={data}
         xKey="name"
         valueKey="value"

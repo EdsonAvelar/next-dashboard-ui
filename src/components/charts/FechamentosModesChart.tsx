@@ -51,17 +51,25 @@ export default async function FechamentosModesChart({
   const totalAjuda = data.reduce((acc, item) => acc + item.value, 0);
   const formattedTotal = formatCurrency(totalAjuda);
 
+  const modoFormatted = modo
+    .replace(/_/g, " ")
+    .replace(
+      /\w\S*/g,
+      (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+    );
+
   return (
     <div className="p-4">
       <BarChartComponent
-      title={`Vendas ${modo
-        .replace(/_/g, " ")
-        .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())} (${formattedTotal})`}
-      data={data}
-      xKey="name"
-      valueKey="value"
-      icon="/icons/help.png" // ajuste conforme necessário
-
+        // title={`Vendas (${formattedTotal})`}
+        title={`Vendas no ${modoFormatted}`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Total em vendas ${formattedTotal}`}
+        bottomSubtitle={`Mostra o total de vendas no papel: ${modoFormatted}`}
+        data={data}
+        xKey="name"
+        valueKey="value"
+        icon="/icons/help.png" // ajuste conforme necessário
       />
     </div>
   );

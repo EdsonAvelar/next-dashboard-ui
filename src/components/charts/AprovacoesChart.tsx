@@ -11,10 +11,8 @@ export default async function AprovacoesChart({
   fromDate: Date;
   toDate: Date;
 }) {
-
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
-    const vendedores = await getTimeComercialVendedores();
-  
+  const vendedores = await getTimeComercialVendedores();
 
   // 2. Busca todas as aprovações dentro do intervalo, incluindo o negócio para pegar o user_id
   const aprovas = await prisma.aprovacao.findMany({
@@ -55,7 +53,10 @@ export default async function AprovacoesChart({
   return (
     <div className="p-4">
       <BarChartComponent
-        title={`${totalAprovacoes} Aprovações`}
+        title={`Aprovações`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Total de ${totalAprovacoes} Propostas`}
+        bottomSubtitle={`Mostra o total de propostas feitas por vendedor`}
         data={data}
         xKey="name"
         valueKey="value"

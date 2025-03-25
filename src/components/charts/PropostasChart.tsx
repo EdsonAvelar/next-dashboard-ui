@@ -42,14 +42,16 @@ export default async function PropostasChart({
     value: groupedMap[vendedor.id] || 0,
   }));
 
-
   // 5. Calcula o total de propostas
   const totalPropostas = data.reduce((acc, item) => acc + item.value, 0);
 
   return (
     <div className="p-4">
       <BarChartComponent
-        title={`${totalPropostas} Propostas`}
+        title={`Propostas`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Total de ${totalPropostas} Propostas`}
+        bottomSubtitle={`Mostra o total de aprovações feitas por vendedor`}
         data={data}
         xKey="name"
         valueKey="value"

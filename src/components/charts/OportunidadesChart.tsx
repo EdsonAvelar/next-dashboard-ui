@@ -52,13 +52,15 @@ export default async function OportunidadesChart({
 
   // 6. Renderiza o ChartCard
   return (
-    <div className="p-4 ">
+    <div className="p-4">
       <BarChartComponent
-        title={`${totalOportunidades} Oportunidades`}
+        title={`Oportunidades`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Total de ${totalOportunidades} Oportunidades`}
+        bottomSubtitle={`Mostra o total de oportunidades criadas por vendedor`}
         data={data}
         xKey="name"
         valueKey="value"
-       
         icon="/icons/briefcase.png"
       />
     </div>

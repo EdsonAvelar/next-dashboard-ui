@@ -24,6 +24,9 @@ type FormatType = "contraido" | "inteiro" | "numerico";
 
 interface ChartCardProps {
   title: string;
+  subtitle?: string;
+  bottomTitle?: string;
+  bottomSubtitle?: string;
   icon?: string;
   data: any[];
   xKey: string;
@@ -46,6 +49,9 @@ function spacedColor(id: number | string): string {
 
 export default function BarChartComponent({
   title,
+  subtitle,
+  bottomTitle,
+  bottomSubtitle,
   icon,
   data,
   xKey,
@@ -103,7 +109,10 @@ export default function BarChartComponent({
     <div className={containerClasses}>
       {/* Cabeçalho do Card */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-lg font-semibold">{title}</h1>
+        <div className="">
+          <h1 className="text-lg font-semibold">{title}</h1>
+          <p className="font-sm text-neutral-400">{subtitle}</p>
+        </div>
         <button
           onClick={toggleFullscreen}
           className="p-1 bg-gray-50 rounded hover:bg-gray-100"
@@ -120,7 +129,7 @@ export default function BarChartComponent({
       <div className={isFullscreen ? "w-full h-[90%]" : "w-full h-80"}>
         <ResponsiveContainer
           width="100%"
-          height={isFullscreen ? "100%" : 400}
+          height={isFullscreen ? "100%" : 300}
         >
           <BarChart
             layout={horizontal ? "vertical" : undefined}
@@ -133,9 +142,9 @@ export default function BarChartComponent({
             }}
           >
             <CartesianGrid
-              strokeDasharray="3 3"
+              strokeDasharray="0"
               vertical={false}
-              stroke="#ccc"
+              stroke="#eee"
             />
 
             {horizontal ? (
@@ -160,12 +169,16 @@ export default function BarChartComponent({
                   interval={0}
                   tickMargin={10}
                   axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#aaa" }}
                 />
                 <YAxis
                   type="number"
                   axisLine={false}
+                  tickLine={false}
                   tickMargin={10}
                   tickFormatter={(value: number) => formatNumberShort(value)}
+                  tick={{ fill: "#ccc" }}
                 />
               </>
             )}
@@ -203,6 +216,12 @@ export default function BarChartComponent({
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+      </div>
+      <div className="flex justify-between items-center mb-4">
+        <div className="">
+          <h1 className="text-lg font-semibold">{bottomTitle || ""}</h1>
+          <p className="font-sm text-neutral-400">{bottomSubtitle || ""}</p>
+        </div>
       </div>
     </div>
   );

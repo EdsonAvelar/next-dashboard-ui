@@ -41,7 +41,6 @@ export default async function FechamentosModoAjudaChart({
     },
   });
 
-
   const groupedMap: Record<number, number> = {};
   fechamentos.forEach((fechamento) => {
     fechamento.vendedores.forEach((vend) => {
@@ -68,7 +67,11 @@ export default async function FechamentosModoAjudaChart({
   return (
     <div className="p-4">
       <BarChartComponent
-        title={`Vendas Modo Ajuda (${formattedTotal})`}
+        // title={`Vendas Modo Ajuda (${formattedTotal})`}
+        title={`Vendas no Modo Ajuda`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Total em vendas ${formattedTotal}`}
+        bottomSubtitle={`Mostra o total de vendas no papel: Modo Ajuda`}
         data={data}
         xKey="name"
         valueKey="value"

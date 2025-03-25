@@ -48,7 +48,10 @@ export default async function ReunioesChart({
   return (
     <div className="p-4">
       <BarChartComponent
-        title={`${totalReunioes} Reuniões`}
+        title={`Reuniões`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Total de ${totalReunioes} Reuniões`}
+        bottomSubtitle={`Mostra o total de reuniões realizadas por vendedor`}
         data={data}
         xKey="name"
         valueKey="value"

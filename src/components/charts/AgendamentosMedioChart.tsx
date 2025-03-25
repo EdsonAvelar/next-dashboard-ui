@@ -49,7 +49,11 @@ export default async function AgendamentosMedioChart({
   return (
     <div className="p-4">
       <BarChartComponent
-        title={`Média de Agendamentos ( ${days} dias úteis)`}
+        // title={`Média de Agendamentos ( ${days} dias úteis)`}
+        title={`Média de Agendamentos`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Média de agendamentos da empresa: ${totalAverage.toFixed(2)} por dia`}
+        bottomSubtitle={`Mostra média dos agendamentos da produção Ativa ( ${days} dias úteis)`}
         data={data}
         xKey="name"
         valueKey="value"

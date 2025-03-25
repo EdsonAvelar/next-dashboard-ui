@@ -99,7 +99,7 @@ const UserCard = async ({
   const Icon = getIconByType(type);
 
   return (
-    <div className="relative rounded-2xl odd:bg-lamaPurple even:bg-lamaYellow p-4 flex-1 min-w-[130px] shadow-md">
+    <div className="relative rounded-2xl odd:bg-blue-300 even:bg-lamaYellow p-4 flex-1 min-w-[130px] shadow-md border border-gray-300">
       <div className="flex justify-between items-center">
         <h4 className="capitalize text-sm font-medium text-gray-500">{type}</h4>
         <Image

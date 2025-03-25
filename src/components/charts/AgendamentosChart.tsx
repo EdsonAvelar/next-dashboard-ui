@@ -47,7 +47,10 @@ export default async function AgendamentosChart({
   return (
     <div className="p-4">
       <BarChartComponent
-        title={`${totalAgendamentos} Agendamentos`}
+        title={`Agendamentos`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Total de ${totalAgendamentos} Oportunidades`}
+        bottomSubtitle={`Mostra o total de agendamentos criadas por vendedor`}
         data={data}
         xKey="name"
         valueKey="value"

@@ -6,7 +6,6 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { HOMEPAGE } from "./settings";
 
 export function getSidenavItems(userId?: number | string) {
   return [

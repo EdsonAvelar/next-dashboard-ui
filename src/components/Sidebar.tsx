@@ -1,13 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { getCurrentUser, UserProfile } from "@/lib/actions";
 import { getSidenavItems } from "@/lib/sidenavItems";
 import { usePathname } from "next/navigation";
 import { toPath } from "@/lib/utils";
+
+// Função debounce: aguarda um delay antes de executar a função
+function debounce<T extends (...args: any[]) => void>(func: T, delay: number) {
+  let timeout: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+}
 
 export default function Sidebar() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -21,7 +32,10 @@ export default function Sidebar() {
   }, []);
 
   // Pega os itens do menu usando o usuário (se disponível)
-  const menuData = getSidenavItems(user?.id);
+  // const menuData = getSidenavItems(user?.id);
+
+  const menuData = useMemo(() => getSidenavItems(user?.id), [user?.id]);
+
   const pathname = usePathname();
 
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -45,19 +59,18 @@ export default function Sidebar() {
     setOpenSubmenu((prev) => (prev === idx ? null : idx));
   };
 
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Cria uma versão debounced da função de atualização do estado de hover (200ms de atraso)
+  const debouncedSetHovered = useMemo(() => debounce(setIsHovered, 200), []);
+
   const handleMouseEnter = () => {
     if (isCollapsed) {
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-      setIsHovered(true);
+      debouncedSetHovered(true);
     }
   };
 
   const handleMouseLeave = () => {
     if (isCollapsed) {
-      hoverTimeoutRef.current = setTimeout(() => {
-        setIsHovered(false);
-      }, 200); // atraso de 200ms para suavizar a transição
+      debouncedSetHovered(false);
     }
   };
 
@@ -73,15 +86,10 @@ export default function Sidebar() {
         <div className="absolute inset-0 z-50 w-[13rem] bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden shadow-lg ">
           <div className="overflow-y-auto h-[80%]">
             {menuData.map((menu, idx) => {
-              console.log(menu);
-
               if (menu.children) {
                 const active = pathname.startsWith(menu.prefix)
                   ? "bg-gray-200"
                   : "";
-
-                console.log(pathname, menu.prefix);
-
                 const isOpen = openSubmenu === idx;
                 const ArrowIcon = isOpen ? ChevronDownIcon : ChevronRightIcon;
                 return (
@@ -113,24 +121,34 @@ export default function Sidebar() {
                       {menu.children.map((child, cIdx) => {
                         const finalpath = toPath(menu.prefix, child.href);
                         return (
-                          <Link
-                            key={cIdx}
-                            href={
-                              finalpath +
-                              ("params" in child && child.params
-                                ? `?${child.params}`
-                                : "")
-                            }
-                            className={`block pl-8 pr-2 p-2 text-md transition-colors ${
-                              finalpath === pathname
-                                ? "bg-gradient-to-r from-purple-300 to-purple-600 rounded-r-full text-white"
-                                : "hover:bg-gray-100 rounded-r-full"
-                            }`}
-                          >
-                            {/* {child.label} */}
-                            <span className="inline-block w-3 h-3 border border-gray-500 rounded-full mr-2"></span>
-                            {child.label}
-                          </Link>
+                          <>
+                            <div className=" space-y-1  gap-y-2  pb-1 pt-1">
+                              <div
+                                className={`flex justify-start gap-1 pl-5  gap-y-2 ${
+                                  finalpath === pathname
+                                    ? "bg-gradient-to-r from-purple-300 to-purple-600 rounded-r-full text-white"
+                                    : "hover:bg-gray-100 rounded-r-full"
+                                } `}
+                              >
+                                <span className="menu-item flex items-center"></span>
+                                <Link
+                                  key={cIdx}
+                                  href={
+                                    finalpath +
+                                    ("params" in child && child.params
+                                      ? `?${child.params}`
+                                      : "")
+                                  }
+                                  className={`block w-full p-1 text-md transition-colors  gap-y-2`}
+                                >
+                                  {/* {child.label} */}
+                                  {/* <span className="inline-block w-3 h-3 border border-gray-500 rounded-full mr-2"></span> */}
+
+                                  {child.label}
+                                </Link>
+                              </div>
+                            </div>
+                          </>
                         );
                       })}
                     </div>
@@ -150,8 +168,10 @@ export default function Sidebar() {
           </div>
         </div>
       ) : (
-        <div className="w-full bg-white border-r border-gray-200 transition-all duration-100 ease-in-out overflow-hidden">
-          <div className="flex flex-col items-center ">
+        // <div className="absolute inset-0 z-50  bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden shadow-lg ">
+
+        <div className="w-full h-full bg-white border-r border-gray-200 transition-all duration-200 ease-in-out overflow-hidden shadow-lg">
+          <div className="h-[80%] items-center flex flex-col justify-start">
             {menuData.map((menu, idx) => (
               <div
                 key={idx}

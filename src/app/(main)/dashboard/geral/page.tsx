@@ -1,5 +1,6 @@
 import Announcements from "@/components/Announcements";
 import AttendanceChart from "@/components/AttendanceCharts";
+import CardComponent from "@/components/CardComponent";
 import AgendamentosChart from "@/components/charts/AgendamentosChart";
 import AgendamentosMedioChart from "@/components/charts/AgendamentosMedioChart";
 import AprovacoesChart from "@/components/charts/AprovacoesChart";
@@ -72,120 +73,96 @@ const AdminPage = async ({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="w-full h-[500px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full h-[450px]">
-              <OportunidadesChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </div>
-          </div>
-          <div className="w-full h-[500px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full h-[450px]">
-              <AgendamentosChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </div>
-          </div>
-          <div className="w-full h-[500px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full h-[450px]">
-              <ReunioesChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </div>
-          </div>
-          <div className="w-full h-[500px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full h-[450px]">
-              <PropostasChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </div>
-          </div>
-          <div className="w-full h-[500px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full h-[450px]">
-              <AprovacoesChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </div>
-          </div>
-          <div className="w-full h-[500px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full h-[450px]">
-              <FechamentosChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </div>
-          </div>
-          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full">
-              <AgendamentosMedioChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </div>
-          </div>
-          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full">
-              <ReunioesMedioChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </div>
-          </div>
-          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full">
-              <FechamentosModesChart
-                fromDate={fromDate}
-                toDate={toDate}
-                modo="MODO_AJUDA"
-              />
-            </div>
-          </div>
-          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full">
-              <FechamentosModesChart
-                fromDate={fromDate}
-                toDate={toDate}
-                modo="TELEMARKETING"
-              />
-            </div>
-          </div>
-          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full">
+          <CardComponent>
+            <OportunidadesChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+
+          <CardComponent>
+            <AgendamentosChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+
+          <CardComponent>
+            <ReunioesChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+          <CardComponent>
+            <PropostasChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+
+          <CardComponent>
+            <AprovacoesChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+          <CardComponent>
+            <FechamentosChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+          <CardComponent>
+            <AgendamentosMedioChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+          <CardComponent>
+            <ReunioesMedioChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+          <CardComponent>
+            <FechamentosModesChart
+              fromDate={fromDate}
+              toDate={toDate}
+              modo="MODO_AJUDA"
+            />
+          </CardComponent>
+          <CardComponent>
+            <FechamentosModesChart
+              fromDate={fromDate}
+              toDate={toDate}
+              modo="TELEMARKETING"
+            />
+          </CardComponent>
+          <CardComponent>
               <ConversaoAgendamentoChart
                 fromDate={fromDate}
                 toDate={toDate}
               />
-            </div>
-          </div>
-          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full">
+           </CardComponent>
+           <CardComponent>
               <ConversaoAgendamentoAbsoluteChart
                 fromDate={fromDate}
                 toDate={toDate}
               />
-            </div>
-          </div>
-          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full">
+            </CardComponent>
+
+         <CardComponent>
               <ConversaoVendasFunil
                 fromDate={fromDate}
                 toDate={toDate}
               />
-            </div>
-          </div>
-          <div className="w-full h-[600px] bg-white rounded-xl p-4 shadow-md">
-            <div className="w-full">
+           </CardComponent>
+           <CardComponent>
               <FechamentosCotasChart
                 fromDate={fromDate}
                 toDate={toDate}
               />
-            </div>
-          </div>
+           </CardComponent>
         </div>
 
         {/* Bottom charts */}

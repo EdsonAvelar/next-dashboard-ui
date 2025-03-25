@@ -2,7 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import BarChartComponent from "./BarChartComponent";
-import { FechamentoStatus, formatCurrency, formatNumberShort } from "@/lib/utils";
+import {
+  FechamentoStatus,
+  formatCurrency,
+  formatNumberShort,
+} from "@/lib/utils";
 import { getTimeComercialVendedores } from "@/lib/actions";
 
 export default async function FechamentosChart({
@@ -52,7 +56,10 @@ export default async function FechamentosChart({
   return (
     <div className="p-4">
       <BarChartComponent
-        title={`Vendas (${formattedTotal})`}
+        title={`Vendas`}
+        subtitle={`${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`}
+        bottomTitle={`Total em vendas ${formattedTotal}`}
+        bottomSubtitle={`Mostra o total de vendas feitas no papel: Vendedor Principal`}
         data={data}
         xKey="name"
         valueKey="value"

@@ -49,7 +49,7 @@ export default function FunnelChartComponent({ steps }: FunnelChartProps) {
   const stepHeight = (chartHeight / data.length).toFixed(0);
 
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row overflow-hidden">
       {/* Coluna de labels */}
       <div
         className="flex flex-col justify-between pr-2"
@@ -72,11 +72,21 @@ export default function FunnelChartComponent({ steps }: FunnelChartProps) {
       </div>
       {/* Coluna do gráfico */}
       <div style={{ width: "70%" }}>
-        <FunnelChart width={500} height={chartHeight}>
+        <FunnelChart
+          width={500}
+          height={chartHeight}
+        >
           <Tooltip />
-          <Funnel dataKey="value" data={data} isAnimationActive={true}>
+          <Funnel
+            dataKey="value"
+            data={data}
+            isAnimationActive={true}
+          >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.color}
+              />
             ))}
           </Funnel>
         </FunnelChart>

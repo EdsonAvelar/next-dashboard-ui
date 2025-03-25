@@ -1,3 +1,3 @@
 export const ITEM_PER_PAGE = 10;
 
-export const HOMEPAGE = "/dashboard/crm";
+export const HOMEPAGE = "/dashboard/geral";

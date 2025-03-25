@@ -142,3 +142,14 @@
   color: gray !important;
   margin-bottom: 5px;
 }
+
+.menu-item::before {
+  content: "";
+  display: inline-block;
+  width: 0.75rem; /* equivalente a w-3 */
+  height: 0.75rem; /* equivalente a h-3 */
+  border: 1px solid #6b7280; /* border-gray-500 */
+  border-radius: 9999px; /* fully rounded */
+  margin-right: 0.5rem; /* equivalente a mr-2 */
+  vertical-align: middle;
+}
