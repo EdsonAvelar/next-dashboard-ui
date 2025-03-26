@@ -139,30 +139,30 @@ const AdminPage = async ({
             />
           </CardComponent>
           <CardComponent>
-              <ConversaoAgendamentoChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-           </CardComponent>
-           <CardComponent>
-              <ConversaoAgendamentoAbsoluteChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            </CardComponent>
+            <ConversaoAgendamentoChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+          <CardComponent>
+            <ConversaoAgendamentoAbsoluteChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
 
-         <CardComponent>
-              <ConversaoVendasFunil
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-           </CardComponent>
-           <CardComponent>
-              <FechamentosCotasChart
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-           </CardComponent>
+          <CardComponent>
+            <ConversaoVendasFunil
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
+          <CardComponent>
+            <FechamentosCotasChart
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          </CardComponent>
         </div>
 
         {/* Bottom charts */}

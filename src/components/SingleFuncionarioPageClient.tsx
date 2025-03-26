@@ -6,6 +6,7 @@ import AddRolesForm from "@/components/forms/AddRolesForm";
 import { useState } from "react";
 import ProfileForm from "./forms/ProfileForm";
 import { prisma } from "@/lib/prisma";
+import ImageUploadCrop from "./ImageUploadCrop";
 
 // Precisamos transformar este componente em client para controlar o modal
 // ou podemos dividir em server + client. Aqui, farei tudo em client para simplificar.
@@ -43,8 +44,6 @@ export default function SingleFuncionarioPageClient({
 }: SingleFuncionarioPageClientProps) {
   const [showAddRoles, setShowAddRoles] = useState(false);
 
-  
-
   return (
     <div className="min-h-screen bg-gray-50 p-6 gap-4 flex flex-col">
       <div className="">
@@ -57,10 +56,15 @@ export default function SingleFuncionarioPageClient({
           {/* Coluna Esquerda (Cartão de Informações) */}
           <div className="md:w-1/3 bg-white rounded-md shadow-lg p-4">
             <div className="flex flex-col items-center gap-2">
-              <div className="w-24 h-24 rounded-full overflow-hidden">
-                <ImageUpload
-                  userId={user.id ?? ""}
+              <div className="h-64 w-30 overflow-hidden flex items-center justify-center">
+                <ImageUploadCrop
+                  aspect={1}
+                  id={user.id}
+                  database="user"
+                  field="avatar"
                   defaultImage={user.avatar || "/noAvatar.png"}
+                  filename={`avatar_user_${user.id}`}
+                  folder="avatars" // se desejar que o arquivo seja salvo em public/avatars
                 />
               </div>
               <h2 className="text-lg font-semibold">{user.name}</h2>

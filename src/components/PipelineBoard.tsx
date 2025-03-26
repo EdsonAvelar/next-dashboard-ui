@@ -154,11 +154,17 @@ export default function PipelineBoard({
 
   // Filtra os negócios de cada coluna mantendo todas as propriedades
   const filteredColumns = columns.map((col) => {
-    const filteredNegocios = col.negocios.filter((negocio) => {
-      const titulo = negocio.titulo.toLowerCase();
-      const cliente = negocio.cliente ? negocio.cliente.toLowerCase() : "";
-      return titulo.includes(search) || cliente.includes(search);
-    });
+    const filteredNegocios = col.negocios
+      .filter((negocio) => {
+        const titulo = negocio.titulo.toLowerCase();
+        const cliente = negocio.cliente ? negocio.cliente.toLowerCase() : "";
+        return titulo.includes(search) || cliente.includes(search);
+      })
+      // Ordena pelos negócios.updatedAt (mais recentes primeiro)
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
     return { ...col, negocios: filteredNegocios };
   });
 

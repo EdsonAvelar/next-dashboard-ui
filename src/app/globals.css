@@ -153,3 +153,31 @@
   margin-right: 0.5rem; /* equivalente a mr-2 */
   vertical-align: middle;
 }
+
+
+/* Estilização moderna para scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Remove setas e deixa o fundo transparente */
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Define a cor e formato do "thumb" (a parte que desliza) */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #211c52;
+  
+  border-radius: 9999px;
+}
+
+/* Para Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #211c52 transparent;
+}

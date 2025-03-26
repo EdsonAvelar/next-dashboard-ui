@@ -7,6 +7,8 @@ import { useMemo } from "react";
 import { differenceInDays } from "date-fns";
 import dayjs from "@/lib/dayjs";
 import { NegocioItem } from "@/lib/types";
+import LazyLoadWrapper from "./LazyLoadWrapper";
+import SpinIcon from "./ui/SpinIcon";
 
 type ColumnProps = {
   column: {
@@ -54,23 +56,28 @@ export default function Column({ column, onOpenPopover }: ColumnProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="w-72 min-w-[18rem] bg-gray-100 rounded p-1 flex flex-col"
+      className="w-72 min-w-[18rem] bg-gray-100 rounded p-1 flex flex-col shadow-sm border border-gray-200"
     >
-      <div className="mb-4 pl-2 px-1 py-1 bg-lamaPurpleLight">
+      <div className="mb-4 pl-2 px-1 py-1 bg-gray-200 rounded-md ">
         <h2 className="font-semibold">
           {column.name} ({itemCount})
         </h2>
-        {/* Exibe a soma total em formato abreviado */}
         <div className="text-sm text-gray-600">R$ {formattedTotal}</div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* Adiciona uma altura máxima e overflow-y-auto para rolagem nessa área */}
+      <div className="flex flex-col gap-2  ">
         {extendedNegocios.map((negocio) => (
-          <NegocioCard
+          <LazyLoadWrapper
             key={negocio.id}
-            negocio={negocio}
-            onOpenPopover={onOpenPopover}
-          />
+            placeholder={<SpinIcon />}
+          >
+            <NegocioCard
+              key={negocio.id}
+              negocio={negocio}
+              onOpenPopover={onOpenPopover}
+            />
+          </LazyLoadWrapper>
         ))}
       </div>
     </div>

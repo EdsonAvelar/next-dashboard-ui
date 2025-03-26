@@ -101,7 +101,7 @@ export default function Sidebar() {
                       onClick={() => toggleSubmenu(idx)}
                       className={`${active} flex items-center w-full gap-2 p-2 rounded-md hover:bg-gray-100 rounded-r-full transition-colors`}
                     >
-                      {menu.icon && <menu.icon className="h-5 w-5" />}
+                      {menu.icon && <menu.icon className="h-7 w-7" />}
                       <span
                         className={`flex-1 text-left overflow-hidden whitespace-nowrap ${
                           menu.children[0].href === pathname
@@ -121,7 +121,7 @@ export default function Sidebar() {
                       {menu.children.map((child, cIdx) => {
                         const finalpath = toPath(menu.prefix, child.href);
                         return (
-                          <>
+                          <div key={cIdx}>
                             <div className=" space-y-1  gap-y-2  pb-1 pt-1">
                               <div
                                 className={`flex justify-start gap-1 pl-5  gap-y-2 ${
@@ -148,7 +148,7 @@ export default function Sidebar() {
                                 </Link>
                               </div>
                             </div>
-                          </>
+                          </div>
                         );
                       })}
                     </div>
@@ -171,13 +171,13 @@ export default function Sidebar() {
         // <div className="absolute inset-0 z-50  bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden shadow-lg ">
 
         <div className="w-full h-full bg-white border-r border-gray-200 transition-all duration-200 ease-in-out overflow-hidden shadow-lg">
-          <div className="h-[80%] items-center flex flex-col justify-start">
+          <div className="h-[80%] items-center flex flex-col justify-start space-y-3 pt-2">
             {menuData.map((menu, idx) => (
               <div
                 key={idx}
                 className="p-2"
               >
-                {menu.icon && <menu.icon className="h-5 w-5" />}
+                {menu.icon && <menu.icon className="h-7 w-7" />}
               </div>
             ))}
           </div>

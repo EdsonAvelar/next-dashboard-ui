@@ -69,5 +69,5 @@ export default async function getCroppedImg(
   );
 
   // Retorna a imagem final como Data URL (pode ser convertida para blob se necessário)
-  return canvas.toDataURL("image/jpeg");
+  return canvas.toDataURL("image/png");
 }

@@ -109,7 +109,11 @@ const Funcionarios = async ({
     >
       <td className="flex items-center gap-4 p-4">
         <Image
-          src={item.avatar || "/noAvatar.png"}
+          src={
+            item.avatar && item.avatar !== "null"
+              ? item.avatar
+              : "/noAvatar.png"
+          }
           alt={item.name}
           width={40}
           height={40}

@@ -29,7 +29,7 @@ export const createNegocio = async (
         nome: data.nome_contato,
         telefone: data.telefone,
         whatsapp: data.whatsapp || "",
-        email: data.email || ""
+        email: data.email || "",
       },
     });
 
@@ -1128,4 +1128,97 @@ export async function getTimeComercialVendedores() {
     },
     select: { id: true, name: true },
   });
+}
+
+import { promises as fs } from "fs";
+import path from "path";
+import sharp from "sharp";
+
+export async function saveImageLocally(
+  croppedImage: string,
+  providedFilename?: string,
+  providedFolder?: string
+): Promise<{ fileUrl: string }> {
+  // Verifica se a imagem está no formato Data URL (ex.: data:image/png;base64,...)
+  const matches = croppedImage.match(/^data:(.+);base64,(.+)$/);
+  if (!matches || matches.length < 3) {
+    throw new Error("Formato inválido de imagem");
+  }
+  const mime = matches[1]; // exemplo: image/png
+  const base64Data = matches[2];
+  const ext = mime.split("/")[1];
+  const buffer = Buffer.from(base64Data, "base64");
+
+  // Converte o buffer para PNG garantindo a transparência
+  // Força saída em PNG mantendo a transparência
+  const pngBuffer = await sharp(buffer)
+    .ensureAlpha() // Garante canal alfa
+    .png({
+      compressionLevel: 9,
+      adaptiveFiltering: true,
+      force: true,
+    })
+    .toBuffer();
+
+  // Gera um nome único e define o caminho para salvar a imagem (ex.: public/uploads)
+  const filename = providedFilename
+    ? `${providedFilename}.png`
+    : `img_${Date.now()}.png`;
+
+  
+  // Se "providedFolder" existir, usamos ele; senão, padrão "uploads"
+  const folder = providedFolder ? providedFolder : "uploads";
+  const filePath = path.join(process.cwd(), "public", folder, filename);
+
+  // Salva a imagem na pasta public/uploads
+  await fs.writeFile(filePath, pngBuffer);
+
+  // Retorna a URL pública
+  return { fileUrl: `/${folder}/${filename}` };
+}
+
+export async function saveCroppedImageAction(
+  croppedImage: string,
+  options?: {
+    id?: string;
+    database?: string;
+    field?: string;
+    filename?: string;
+    folder?: string;
+  }
+): Promise<CurrentState & { fileUrl?: string }> {
+  try {
+    const { fileUrl } = await saveImageLocally(
+      croppedImage,
+      options?.filename,
+      options?.folder
+    );
+
+    // Se os parâmetros opcionais forem fornecidos, atualize o registro no banco de dados
+    if (options && options.id && options.database && options.field) {
+      const model = prisma[options.database as keyof typeof prisma];
+      if (model === undefined) {
+        return {
+          success: false,
+          msg: `Modelo ${options.database} não existe`,
+        };
+      }
+      if (typeof model.update !== "function") {
+        throw new Error(
+          `O modelo "${options.database}" não suporta a função "update".`
+        );
+      }
+      await model.update({
+        where: { id: Number(options.id) },
+        data: { [options.field]: fileUrl },
+      });
+    } else {
+      // Lança uma exceção se algum parâmetro estiver faltando
+      throw new Error("Parâmetros faltando na requisição");
+    }
+
+    return { success: true, msg: fileUrl };
+  } catch (error: any) {
+    return { success: false, msg: error.message || "Erro ao salvar imagem" };
+  }
 }

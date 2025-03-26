@@ -5,18 +5,33 @@ import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import { Area } from "react-easy-crop";
 import getCroppedImg from "../helpers/cropImageHelper";
+import { toast } from "react-toastify";
 
 type ImageUploadCropProps = {
   aspect: number; // Ratio permitido para o crop (ex: 1 para quadrado, 16/9 para widescreen)
-  onCropComplete?: (croppedImage: string) => void; // Callback com a imagem final cortada
+  id: number; // ID do registro a ser atualizado (ex: "3")
+  database: string; // Nome da entidade (ex: "user")
+  field: string; // Campo que será atualizado (ex: "avatar")
+  defaultImage?: string; // Imagem padrão a ser exibida (ex: "/noAvatar.png")
+  filename?: string; // nome do arquivo final
+  folder?: string; //pasta onde será salvo o arquivo final
+  onCropComplete?: (croppedImageUrl: string) => void; // Callback com a imagem final cortada
 };
 
 const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
   aspect,
+  id,
+  database,
+  field,
+  defaultImage,
+  filename,
+  folder,
   onCropComplete,
 }) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(
+    defaultImage || null
+  );
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -49,17 +64,40 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
       const croppedImg = await getCroppedImg(imageSrc, croppedAreaPixels);
       setCroppedImage(croppedImg);
       setShowCropper(false);
-      if (onCropComplete) {
-        onCropComplete(croppedImg);
+
+      // Chama a Server Action usando fetch (POST para /api/saveCroppedImage)
+      const response = await fetch("/api/saveCroppedImage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          croppedImage: croppedImg,
+          id, // Ex: "3"
+          database, // Ex: "user"
+          field, // Ex: "avatar"
+          filename,
+          folder,
+        }),
+      });
+
+      if (response.ok) {
+        const { fileUrl } = await response.json();
+        if (onCropComplete) {
+          onCropComplete(fileUrl);
+        }
+        toast.success("Imagem atualizada com sucesso");
+      } else {
+        toast.error(response.statusText || "Falha ao salvar a imagem");
+        console.error("Erro ao salvar a imagem:", response);
       }
     } catch (e) {
       console.error(e);
+      toast.error(e + " Falha ao salvar a imagem");
     }
-  }, [imageSrc, croppedAreaPixels, onCropComplete]);
+  }, [imageSrc, croppedAreaPixels, id, database, field, onCropComplete]);
 
   return (
     <div>
-      {/* Botão de upload: um label com a imagem padrão ou a imagem já cortada */}
+      {/* Botão de upload: label exibindo a imagem padrão, a imagem cortada ou o "Upload Image" */}
       <label
         htmlFor="upload-input"
         className="cursor-pointer"
@@ -68,10 +106,12 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
           <img
             src={croppedImage}
             alt="Cropped"
-            className="w-32 h-32 object-cover rounded-full border"
+            // className="w-32 h-32 object-cover rounded-full border"
+            className=""
           />
         ) : (
-          <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-full border">
+          // <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-full border">
+          <div className="">
             <span className="text-sm text-gray-600">Upload Image</span>
           </div>
         )}

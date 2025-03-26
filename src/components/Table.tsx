@@ -163,7 +163,7 @@ const Table = ({
       )}
       <table className="w-full mt-4">
         <thead className="bg-gray-50 p-2">
-          <tr className="text-left text-gray-500 text-xs">
+          <tr className="text-left text-gray-500 text-xs ">
             {selectable && (
               <th
                 key="checkbox"
@@ -171,6 +171,7 @@ const Table = ({
               >
                 <input
                   type="checkbox"
+                  className="space-x-2 p-5"
                   checked={isAllSelected}
                   onChange={handleSelectAll}
                 />
