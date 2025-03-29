@@ -401,8 +401,14 @@ model SimulacaoFinanciamento {
   updatedAt       DateTime @updatedAt
 }
 
-
-
+model Config {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String   // ou use Json para dados mais complexos
+  description String?  // opcional, para documentar a configuração
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
 
 // ###############################################################################
 // ###############################################################################

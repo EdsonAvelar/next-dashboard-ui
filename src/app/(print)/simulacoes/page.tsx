@@ -1,6 +1,7 @@
 import ProposalViewer, {
   SimulationData,
 } from "@/components/simulacoes/ProposalViewer";
+import { getConfigurations } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
 
 type Props = {
@@ -30,7 +31,6 @@ export default async function FechamentosPage({ searchParams }: Props) {
   if (!simulationRecord) {
     return <div>Simulação não encontrada.</div>;
   }
-
 
   const simulation: SimulationData = {
     id: simulationRecord.id,
@@ -76,5 +76,29 @@ export default async function FechamentosPage({ searchParams }: Props) {
     })),
   };
 
-  return <ProposalViewer simulation={simulation} />;
+  // pegar dentro do model config simulacao_folha_proposta
+  const configKeyMap: Record<string, string> = {
+    IMOVEL: "simulacao_imovel",
+    CAMINHAO: "simulacao_caminhao",
+    MAQUINARIO: "simulacao_maquinario",
+    CARRO: "simulacao_veiculo",
+  };
+
+
+  const configKey = configKeyMap[simulation.tipo] || "simulacao_imovel";
+  const fields = ["simulacao_folha_proposta", configKey];
+  const fetchedConfigs = await getConfigurations(fields);
+
+  // Cria uma chave única "Icon" com o valor de fetchedConfigs usando configKey
+  const configs = {
+    ...fetchedConfigs,
+    icon: fetchedConfigs[configKey],
+  };
+
+  return (
+    <ProposalViewer
+      simulation={simulation}
+      configs={configs}
+    />
+  );
 }

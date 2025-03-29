@@ -56,7 +56,6 @@ export default async function ProductioNav({
   const isCurrentProduction =
     production && activeProduction && production.id === activeProduction.id;
 
-  console.log(isCurrentProduction);
 
   // Define a cor do container: vermelho claro se não for a produção corrente, branco caso contrário.
   const containerBg = isCurrentProduction ? "text-blue-500" : "text-red-500";

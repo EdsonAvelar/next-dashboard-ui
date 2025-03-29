@@ -141,7 +141,6 @@ const Table = ({
       newSelected.delete(id);
     }
 
-    console.log(newSelected);
 
     setSelectedRows(newSelected);
   };

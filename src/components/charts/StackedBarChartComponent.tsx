@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Image from "next/image";
 import {
   BarChart,
   Bar,
@@ -28,7 +27,7 @@ export interface Series {
   label: string;
 }
 
-interface StackedChartCardProps {
+export interface StackedChartCardProps {
   title: string;
   icon?: string;
   data: any[];
@@ -37,6 +36,7 @@ interface StackedChartCardProps {
   horizontal?: boolean;
   formatType?: FormatType;
   ordered?: boolean;
+  exibirZerados?: boolean;
 }
 
 export default function StackedBarChartComponent({
@@ -48,26 +48,38 @@ export default function StackedBarChartComponent({
   horizontal = false,
   formatType = "numerico",
   ordered = false,
+  exibirZerados = false,
 }: StackedChartCardProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
 
-  // Para gráficos horizontais, aumenta a altura para evitar corte dos rótulos
+  // Define tamanhos
   const chartHeight = isFullscreen ? "h-[800px]" : horizontal ? "h-96" : "h-64";
   const containerClasses = isFullscreen
     ? "fixed inset-0 z-50 bg-white p-4 overflow-auto shadow-md"
     : "bg-white rounded-lg p-4";
 
-  // Se ordered, ordena com base no primeiro série (assumindo que todas as séries tenham o mesmo total por item)
+  // Processa os dados
   const processedData = useMemo(() => {
     let arr = data.map((item) => ({ ...item }));
+    // Se não deve exibir vendedores com todos os valores zerados, filtra os itens
+    if (!exibirZerados) {
+      arr = arr.filter((item) => {
+        const total = series.reduce(
+          (acc, s) => acc + Number(item[s.dataKey]),
+          0
+        );
+        return total !== 0;
+      });
+    }
+    // Se for ordenado, ordena com base no primeiro série
     if (ordered && series.length > 0) {
       arr = [...arr].sort(
         (a, b) => Number(b[series[0].dataKey]) - Number(a[series[0].dataKey])
       );
     }
     return arr;
-  }, [data, ordered, series]);
+  }, [data, ordered, series, exibirZerados]);
 
   const checkZero = (value: string) => {
     if (value === "0.00") return "";

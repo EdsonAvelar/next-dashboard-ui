@@ -31,7 +31,6 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
       // Ignora erro se já existir
     }
   }
-  console.log("Cargos criados ou já existentes.");
 
   // 2. Cria usuários (Funcionários)
   const cargos = await prisma.cargo.findMany();

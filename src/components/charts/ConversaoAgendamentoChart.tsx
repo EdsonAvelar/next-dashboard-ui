@@ -8,9 +8,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function ConversaoAgendamentoChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // 0. Obtém todos os agendamentos no período, incluindo a relação com Reunião
   const agendamentos = await prisma.agendamento.findMany({
@@ -97,6 +99,7 @@ export default async function ConversaoAgendamentoChart({
           { dataKey: "realizado", fill: "#52c41a", label: "Compareceu" },
         ]}
         icon="/icons/conversion.png"
+        exibirZerados={exibirZerados} // Adicione a propriedade exibirZerados aqui
       />
     </div>
   );

@@ -28,7 +28,7 @@ export interface Series {
   label: string;
 }
 
-interface GroupedChartCardProps {
+export interface GroupedChartCardProps {
   title: string;
   icon?: string;
   data: any[];
@@ -37,6 +37,7 @@ interface GroupedChartCardProps {
   horizontal?: boolean;
   formatType?: FormatType;
   ordered?: boolean;
+  exibirZerados?: boolean;
 }
 
 function spacedColor(id: number | string): string {
@@ -55,6 +56,7 @@ export default function GroupedBarChartComponent({
   horizontal = false,
   formatType = "inteiro",
   ordered = false,
+  exibirZerados = true,
 }: GroupedChartCardProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
@@ -67,6 +69,16 @@ export default function GroupedBarChartComponent({
 
   const processedData = useMemo(() => {
     let arr = data.map((item) => ({ ...item }));
+    // Caso exibirZerados seja false, filtra os itens cujo somatório de todas as séries seja zero
+    if (!exibirZerados) {
+      arr = arr.filter((item) => {
+        const total = series.reduce(
+          (acc, serie) => acc + Number(item[serie.dataKey]),
+          0
+        );
+        return total !== 0;
+      });
+    }
     if (ordered && series.length > 0) {
       // Ordena com base no primeiro dataKey da série (assumindo que seja representativo)
       arr = [...arr].sort(
@@ -74,7 +86,7 @@ export default function GroupedBarChartComponent({
       );
     }
     return arr;
-  }, [data, ordered, series]);
+  }, [data, ordered, series, exibirZerados]);
 
   const valueFormatter = (value: number) => {
     switch (formatType) {
@@ -124,7 +136,6 @@ export default function GroupedBarChartComponent({
               bottom: horizontal ? 20 : 50,
             }}
             barCategoryGap="20%"
-            // Não usamos stackOffset, para que as barras fiquem lado a lado
           >
             <CartesianGrid
               strokeDasharray="3 3"

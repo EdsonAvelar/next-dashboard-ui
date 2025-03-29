@@ -8,9 +8,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function ConversaoAgendamentoAbsoluteChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // 0. Obtém todos os agendamentos no período, incluindo a relação com Reunião
   const agendamentos = await prisma.agendamento.findMany({
@@ -70,7 +72,6 @@ export default async function ConversaoAgendamentoAbsoluteChart({
     };
   });
 
-
   // 3. Calcula os totais, se necessário para exibir no título
   const totalFaltou = data.reduce((acc, item) => acc + item.faltou, 0);
   const totalRealizado = data.reduce((acc, item) => acc + item.realizado, 0);
@@ -89,6 +90,7 @@ export default async function ConversaoAgendamentoAbsoluteChart({
         horizontal={false} // ajuste para true se preferir barras horizontais
         formatType="inteiro"
         ordered={true}
+        exibirZerados={exibirZerados} // Adicione a prop exibirZerados
       />
     </div>
   );

@@ -128,7 +128,6 @@ export const createMassNegocio = async (
         },
       });
 
-      console.log(registro);
 
       // Se existir o parâmetro proprietario_id, prepara a conexão com o usuário
       const userConnection = data.proprietario_id
@@ -1165,7 +1164,6 @@ export async function saveImageLocally(
     ? `${providedFilename}.png`
     : `img_${Date.now()}.png`;
 
-  
   // Se "providedFolder" existir, usamos ele; senão, padrão "uploads"
   const folder = providedFolder ? providedFolder : "uploads";
   const filePath = path.join(process.cwd(), "public", folder, filename);
@@ -1177,48 +1175,168 @@ export async function saveImageLocally(
   return { fileUrl: `/${folder}/${filename}` };
 }
 
-export async function saveCroppedImageAction(
-  croppedImage: string,
-  options?: {
-    id?: string;
-    database?: string;
-    field?: string;
-    filename?: string;
-    folder?: string;
-  }
-): Promise<CurrentState & { fileUrl?: string }> {
+export async function saveCroppedImageAction(options?: {
+  id?: string;
+  database?: string;
+  field?: string;
+  value: string;
+  filename?: string;
+  folder?: string;
+  configType?: "avatar" | "system_image" | "config_value"; // Tipo de configuração
+}): Promise<CurrentState & { fileUrl?: string }> {
   try {
-    const { fileUrl } = await saveImageLocally(
-      croppedImage,
-      options?.filename,
-      options?.folder
-    );
+    let storedValue: string = options?.value ?? "";
 
-    // Se os parâmetros opcionais forem fornecidos, atualize o registro no banco de dados
-    if (options && options.id && options.database && options.field) {
+    // Determina se deve processar como imagem com base no configType
+    const isImage =
+      options?.configType === "avatar" ||
+      options?.configType === "system_image";
+
+    // Se for imagem (avatar ou system_image), salva localmente primeiro
+    if (isImage) {
+      const { fileUrl } = await saveImageLocally(
+        storedValue, // Contém o data URL da imagem
+        options?.filename,
+        options?.folder ||
+          (options?.configType === "avatar" ? "avatars" : "system")
+      );
+      storedValue = fileUrl; // URL do arquivo para armazenar
+    }
+
+    // Determina onde salvar com base no configType
+    if (
+      options?.configType === "system_image" ||
+      options?.configType === "config_value"
+    ) {
+      // CASO 1: Salvar na tabela Config (para imagens do sistema ou valores de configuração)
+      const key = options.field || options.filename;
+      if (!key) {
+        throw new Error(
+          "É necessário fornecer field ou filename como key para configurações"
+        );
+      }
+
+      // Verifica se já existe uma configuração com esta chave
+      const existingConfig = await prisma.config.findUnique({
+        where: { key },
+      });
+
+      if (existingConfig) {
+        // Atualiza a configuração existente
+        await prisma.config.update({
+          where: { key },
+          data: {
+            value: storedValue,
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        // Cria nova configuração
+        await prisma.config.create({
+          data: {
+            key,
+            value: storedValue,
+            description: isImage ? `Imagem: ${key}` : `Configuração: ${key}`,
+          },
+        });
+      }
+    }
+    // CASO 2: Atualizar avatar de usuário
+    else if (options?.configType === "avatar" && options?.id) {
+      await prisma.user.update({
+        where: { id: Number(options.id) },
+        data: { avatar: storedValue },
+      });
+    }
+    // CASO 3: Compatibilidade com código antigo ou outros usos específicos
+    else if (options?.id && options?.database && options?.field) {
       const model = prisma[options.database as keyof typeof prisma];
+
       if (model === undefined) {
         return {
           success: false,
           msg: `Modelo ${options.database} não existe`,
         };
       }
-      if (typeof model.update !== "function") {
+
+      if (typeof (model as any).update !== "function") {
         throw new Error(
           `O modelo "${options.database}" não suporta a função "update".`
         );
       }
-      await model.update({
+
+      await (model as any).update({
         where: { id: Number(options.id) },
-        data: { [options.field]: fileUrl },
+        data: { [options.field]: storedValue },
       });
     } else {
-      // Lança uma exceção se algum parâmetro estiver faltando
-      throw new Error("Parâmetros faltando na requisição");
+      throw new Error("Parâmetros inválidos ou configType não reconhecido");
     }
 
-    return { success: true, msg: fileUrl };
+    // Resposta consistente
+    const response: CurrentState & { fileUrl?: string } = {
+      success: true,
+      msg: isImage
+        ? "Imagem salva com sucesso"
+        : "Configuração salva com sucesso",
+    };
+
+    // Adiciona fileUrl quando é uma imagem
+    if (isImage) {
+      response.fileUrl = storedValue;
+    }
+
+    return response;
   } catch (error: any) {
-    return { success: false, msg: error.message || "Erro ao salvar imagem" };
+    console.error("Erro em saveCroppedImageAction:", error);
+    return {
+      success: false,
+      msg: error.message || "Erro ao salvar",
+    };
   }
+}
+
+function getConfigDictionary<T extends { key: string; value: string }>(
+  configs: T[],
+  keys: string[]
+): Record<string, string> {
+  return keys.reduce(
+    (dict, key) => {
+      const config = configs.find((c) => c.key === key);
+      dict[key] = config ? config.value : "";
+      return dict;
+    },
+    {} as Record<string, string>
+  );
+}
+
+export async function getConfigurations(keysToFind: string[]) {
+  const configs = await prisma.config.findMany({
+    where: {
+      key: { in: keysToFind },
+    },
+  });
+
+  const configDict = getConfigDictionary(configs, keysToFind);
+  return configDict;
+}
+
+interface UpdateConfigParams {
+  key: string;
+  value: boolean;
+}
+
+export async function updateBooleanConfigAction({
+  key,
+  value,
+}: UpdateConfigParams) {
+  // Exemplo: se for do model "Config", atualiza pelo campo "key"
+
+  await prisma.config.upsert({
+    where: { key },
+    update: { value: value ? "true" : "false" },
+    create: { key, value: value ? "true" : "false" },
+  });
+
+  // Caso haja outros models, adicione as condições necessárias.
 }

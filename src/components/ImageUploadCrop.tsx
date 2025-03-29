@@ -8,14 +8,17 @@ import getCroppedImg from "../helpers/cropImageHelper";
 import { toast } from "react-toastify";
 
 type ImageUploadCropProps = {
-  aspect: number; // Ratio permitido para o crop (ex: 1 para quadrado, 16/9 para widescreen)
+  aspect: number; // Ratio permitido para o crop (ex: 1, 16/9, etc.)
   id: number; // ID do registro a ser atualizado (ex: "3")
-  database: string; // Nome da entidade (ex: "user")
+  database: string; // Nome da entidade (ex: "user" ou "config")
   field: string; // Campo que será atualizado (ex: "avatar")
+  configType: string; // Tipo de configuração (ex: "avatar", "system_image", etc.)
   defaultImage?: string; // Imagem padrão a ser exibida (ex: "/noAvatar.png")
-  filename?: string; // nome do arquivo final
-  folder?: string; //pasta onde será salvo o arquivo final
+  filename?: string; // Nome do arquivo final
+  folder?: string; // Pasta onde será salvo o arquivo final
   onCropComplete?: (croppedImageUrl: string) => void; // Callback com a imagem final cortada
+  width?: number; // Largura da thumbnail
+  height?: number; // Altura da thumbnail
 };
 
 const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
@@ -23,10 +26,13 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
   id,
   database,
   field,
+  configType,
   defaultImage,
   filename,
   folder,
   onCropComplete,
+  width = 150, // valor padrão se não for informado
+  height = 150,
 }) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(
@@ -57,7 +63,7 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
     []
   );
 
-  // Processa o crop e define a imagem final
+  // Processa o crop e envia a imagem final ao backend
   const showCroppedImage = useCallback(async () => {
     try {
       if (!imageSrc || !croppedAreaPixels) return;
@@ -72,8 +78,9 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
         body: JSON.stringify({
           croppedImage: croppedImg,
           id, // Ex: "3"
-          database, // Ex: "user"
+          database, // Ex: "user" ou "config"
           field, // Ex: "avatar"
+          configType,
           filename,
           folder,
         }),
@@ -84,7 +91,6 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
         if (onCropComplete) {
           onCropComplete(fileUrl);
         }
-        toast.success("Imagem atualizada com sucesso");
       } else {
         toast.error(response.statusText || "Falha ao salvar a imagem");
         console.error("Erro ao salvar a imagem:", response);
@@ -93,31 +99,45 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
       console.error(e);
       toast.error(e + " Falha ao salvar a imagem");
     }
-  }, [imageSrc, croppedAreaPixels, id, database, field, onCropComplete]);
+  }, [
+    imageSrc,
+    croppedAreaPixels,
+    id,
+    database,
+    field,
+    configType,
+    filename,
+    folder,
+    onCropComplete,
+  ]);
 
   return (
     <div>
-      {/* Botão de upload: label exibindo a imagem padrão, a imagem cortada ou o "Upload Image" */}
+      {/* Botão de upload: label exibindo a imagem cortada ou uma thumbnail placeholder */}
       <label
-        htmlFor="upload-input"
+        htmlFor={`upload-input-${id}`}
         className="cursor-pointer"
       >
         {croppedImage ? (
           <img
             src={croppedImage}
             alt="Cropped"
-            // className="w-32 h-32 object-cover rounded-full border"
-            className=""
+            width={width}
+            height={height}
+            className="object-cover"
           />
         ) : (
-          // <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-full border">
-          <div className="">
-            <span className="text-sm text-gray-600">Upload Image</span>
-          </div>
+          <img
+            src={`https://placehold.co/${width}x${height}?text=Upload+Image`}
+            alt="Placeholder"
+            width={width}
+            height={height}
+            className="object-cover"
+          />
         )}
       </label>
       <input
-        id="upload-input"
+        id={`upload-input-${id}`}
         type="file"
         accept="image/*"
         className="hidden"

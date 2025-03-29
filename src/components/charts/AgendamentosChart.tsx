@@ -7,9 +7,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function AgendamentosChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
   const vendedores = await getTimeComercialVendedores();
@@ -55,6 +57,7 @@ export default async function AgendamentosChart({
         xKey="name"
         valueKey="value"
         icon="/icons/agenda.png" // Altere para o ícone desejado
+        exibirZerados={exibirZerados}
       />
     </div>
   );

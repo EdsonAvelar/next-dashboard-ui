@@ -8,9 +8,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function AgendamentosMedioChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // Define "fim" como a menor data entre toDate e hoje
   const today = new Date();
@@ -61,6 +63,7 @@ export default async function AgendamentosMedioChart({
         horizontal={true}
         ordered={true}
         icon="/icons/agenda.png" // ajuste conforme necessário
+        exibirZerados={exibirZerados} // Adicione a prop exibirZerados
       />
     </div>
   );

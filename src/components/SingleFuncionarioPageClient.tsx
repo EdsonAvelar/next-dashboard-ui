@@ -62,6 +62,7 @@ export default function SingleFuncionarioPageClient({
                   id={user.id}
                   database="user"
                   field="avatar"
+                  configType="avatar"
                   defaultImage={user.avatar || "/noAvatar.png"}
                   filename={`avatar_user_${user.id}`}
                   folder="avatars" // se desejar que o arquivo seja salvo em public/avatars

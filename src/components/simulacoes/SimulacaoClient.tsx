@@ -149,11 +149,11 @@ export default function SimulacaoClient({
     startTransition(async () => {
       try {
         // A função salvarSimulacao é uma server action que, se bem-sucedida,
-        // redireciona internamente para /propostas/exibir?simulacao_id=<id>
+        // redireciona internamente para /simulacoes/exibir?simulacao_id=<id>
         const ret = await salvarSimulacao(payload);
 
         if (ret.success && ret.simulacaoId) {
-          router.push(`/propostas?simulacao_id=${ret.simulacaoId}`);
+          router.push(`/simulacoes?simulacao_id=${ret.simulacaoId}`);
         } else {
           toast.error("Erro ao salvar simulação: " + ret.msg);
         }

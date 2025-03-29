@@ -39,8 +39,6 @@ export default function GlobalPopover({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose, anchor]);
 
-
-
   if (!negocio || !anchor) return null;
 
   const rect = anchor.getBoundingClientRect();
@@ -164,7 +162,7 @@ export default function GlobalPopover({
           />
           Perdeu
         </li>
-        <li
+        {/* <li
           className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center text-green-500"
           onClick={() => {
             onClose();
@@ -178,7 +176,7 @@ export default function GlobalPopover({
             className="mr-2"
           />
           Ganhou
-        </li>
+        </li> */}
       </ul>
     </div>,
     document.body

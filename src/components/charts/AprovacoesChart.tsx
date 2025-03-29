@@ -3,13 +3,15 @@
 import { prisma } from "@/lib/prisma";
 import BarChartComponent from "./BarChartComponent";
 import { UserStatus } from "@/lib/utils";
-import { getTimeComercialVendedores } from "@/lib/actions";
+import { getConfigurations, getTimeComercialVendedores } from "@/lib/actions";
 export default async function AprovacoesChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
   const vendedores = await getTimeComercialVendedores();
@@ -61,6 +63,7 @@ export default async function AprovacoesChart({
         xKey="name"
         valueKey="value"
         icon="/icons/approval.png" // Ajuste para o caminho do ícone desejado
+        exibirZerados={exibirZerados} // Adicione a propriedade exibirZerados aqui
       />
     </div>
   );

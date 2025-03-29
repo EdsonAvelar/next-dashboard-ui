@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      boxShadow: {
+        all: "0 0 8px rgba(156,163,175,0.5)", // Cria a classe shadow-all
+      },
       keyframes: {
         loadingBar: {
           "0%": { transform: "translateX(0%)" },

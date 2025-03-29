@@ -9,10 +9,12 @@ export default async function FechamentosModesChart({
   fromDate,
   toDate,
   modo,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
   modo: string;
+  exibirZerados: boolean;
 }) {
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
   const vendedores = await getTimeComercialVendedores();
@@ -70,6 +72,7 @@ export default async function FechamentosModesChart({
         xKey="name"
         valueKey="value"
         icon="/icons/help.png" // ajuste conforme necessário
+        exibirZerados={exibirZerados} // Adicione a propriedade exibirZerados aqui
       />
     </div>
   );

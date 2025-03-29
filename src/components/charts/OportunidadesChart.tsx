@@ -8,9 +8,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function OportunidadesChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
   const vendedores = await getTimeComercialVendedores();
@@ -62,6 +64,7 @@ export default async function OportunidadesChart({
         xKey="name"
         valueKey="value"
         icon="/icons/briefcase.png"
+        exibirZerados={exibirZerados}
       />
     </div>
   );

@@ -37,6 +37,7 @@ interface ChartCardProps {
   horizontal?: boolean;
   formatType?: FormatType;
   ordered?: boolean;
+  exibirZerados?: boolean;
 }
 
 function spacedColor(id: number | string): string {
@@ -60,6 +61,7 @@ export default function BarChartComponent({
   horizontal = false,
   formatType = "contraido",
   ordered = false,
+  exibirZerados = true,
 }: ChartCardProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -67,13 +69,7 @@ export default function BarChartComponent({
     setIsFullscreen((prev) => !prev);
   };
 
-  // Define classes e tamanhos conforme o modo
-  const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto shadow-md "
-    : "bg-white rounded-lg ";
-
-  const chartHeight = isFullscreen ? "h-[800px]" : horizontal ? "h-96" : "h-64";
-
+  // Processa os dados, definindo cores e aplicando ordenação
   const processedData = useMemo(() => {
     // Cria uma cópia dos dados com as cores definidas
     let arr = data.map((item) => {
@@ -82,12 +78,16 @@ export default function BarChartComponent({
       }
       return item;
     });
+    // Se não deve exibir os vendedores zerados, filtra os itens cujo valor é zero
+    if (!exibirZerados) {
+      arr = arr.filter((item) => Number(item[valueKey]) !== 0);
+    }
     // Se for ordenado, ordena do maior para o menor com base na chave de valor
     if (ordered) {
       arr = [...arr].sort((a, b) => Number(b[valueKey]) - Number(a[valueKey]));
     }
     return arr;
-  }, [data, ordered, valueKey]);
+  }, [data, ordered, valueKey, exibirZerados]);
 
   const checkZero = (value: string) => {
     if (value === "0.00") return "";
@@ -105,11 +105,18 @@ export default function BarChartComponent({
     return value.toString();
   };
 
+  // Define classes e tamanhos conforme o modo
+  const containerClasses = isFullscreen
+    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto shadow-md "
+    : "bg-white rounded-lg ";
+
+  const chartHeight = isFullscreen ? "h-[800px]" : horizontal ? "h-96" : "h-64";
+
   return (
     <div className={containerClasses}>
       {/* Cabeçalho do Card */}
       <div className="flex justify-between items-center mb-4">
-        <div className="">
+        <div>
           <h1 className="text-lg font-semibold">{title}</h1>
           <p className="font-sm text-neutral-400">{subtitle}</p>
         </div>
@@ -183,15 +190,6 @@ export default function BarChartComponent({
               </>
             )}
 
-            {/* <XAxis
-              dataKey={xKey}
-              angle={-45}
-              textAnchor="end"
-              interval={0}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <YAxis axisLine={false} /> */}
             <Tooltip
               contentStyle={{ borderRadius: "10px", borderColor: "lightgray" }}
             />
@@ -218,7 +216,7 @@ export default function BarChartComponent({
         </ResponsiveContainer>
       </div>
       <div className="flex justify-between items-center mb-4">
-        <div className="">
+        <div>
           <h1 className="text-lg font-semibold">{bottomTitle || ""}</h1>
           <p className="font-sm text-neutral-400">{bottomSubtitle || ""}</p>
         </div>

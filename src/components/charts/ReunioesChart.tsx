@@ -7,9 +7,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function ReunioesChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // 1. Busca todos os vendedores ativos (ajuste os filtros conforme necessário)
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
@@ -56,6 +58,7 @@ export default async function ReunioesChart({
         xKey="name"
         valueKey="value"
         icon="/icons/meeting.png" // Altere para o caminho do ícone desejado
+        exibirZerados={exibirZerados} // Adicione a propriedade exibirZerados aqui
       />
     </div>
   );

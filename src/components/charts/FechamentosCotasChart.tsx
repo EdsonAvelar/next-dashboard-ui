@@ -8,9 +8,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function FechamentosCotasChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
   const vendedores = await getTimeComercialVendedores();
@@ -56,6 +58,7 @@ export default async function FechamentosCotasChart({
         formatType="inteiro"
         valueKey="value"
         icon="/icons/sales.png" // ajuste para o ícone desejado
+        exibirZerados={exibirZerados}
       />
     </div>
   );

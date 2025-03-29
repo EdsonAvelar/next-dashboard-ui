@@ -55,7 +55,6 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
   const handleSubmit = (e: HandleSubmitEvent): void => {
     e.preventDefault();
     // Aqui você pode capturar os dados dos formulários e enviar via fetch/axios para sua API
-    console.log("Dados salvos!");
   };
 
   return (

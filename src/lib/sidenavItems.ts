@@ -72,7 +72,7 @@ export function getSidenavItems(userId?: number | string) {
       prefix: "/configuracoes",
       children: [
         { label: "Minha Conta", href: "/profile" },
-        { label: "Permissões", href: "/permissions" },
+        // { label: "Permissões", href: "/permissions" },
         { label: "Empresa", href: "/empresa" },
         { label: "Logout", href: "/logout" },
       ],

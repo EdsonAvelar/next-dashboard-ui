@@ -8,9 +8,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function ReunioesMedioChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // Define "fim" como a menor data entre toDate e hoje
   const today = new Date();
@@ -61,6 +63,7 @@ export default async function ReunioesMedioChart({
         horizontal={true} // barras na horizontal
         ordered={true} // ordena do maior para o menor
         icon="/icons/meeting.png"
+        exibirZerados={exibirZerados} // Adicione a propriedade exibirZerados aqui
       />
     </div>
   );

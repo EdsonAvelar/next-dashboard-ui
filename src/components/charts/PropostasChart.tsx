@@ -7,9 +7,11 @@ import { getTimeComercialVendedores } from "@/lib/actions";
 export default async function PropostasChart({
   fromDate,
   toDate,
+  exibirZerados,
 }: {
   fromDate: Date;
   toDate: Date;
+  exibirZerados: boolean;
 }) {
   // 1. Obtém todos os vendedores com a permissão "time_comercial"
   const vendedores = await getTimeComercialVendedores();
@@ -56,6 +58,7 @@ export default async function PropostasChart({
         xKey="name"
         valueKey="value"
         icon="/icons/proposals.png" // ajuste o caminho para o ícone desejado
+        exibirZerados={exibirZerados} // Adicione a prop exibirZerados
       />
     </div>
   );

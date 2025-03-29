@@ -1,7 +1,8 @@
 "use client";
 
+import { Icon } from "@iconify/react/dist/iconify.js";
 import { useRef } from "react";
-import ActionButtons from "@/components/simulacoes/ActionButtons";
+
 export interface SimulationData {
   id: number;
   tipo: string;
@@ -43,20 +44,18 @@ export interface SimulationConsortiumData {
 
 export default function ProposalViewer({
   simulation,
+  configs,
 }: {
   simulation: SimulationData;
+  configs: Record<string, string>;
 }) {
   const printRef = useRef<HTMLDivElement>(null);
 
-  const printPage = () => {
-    window.print();
-  };
+  const printPage = () => window.print();
 
   // Funções auxiliares para formatação
-  const capitalize = (s: string) => {
-    if (!s) return s;
-    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-  };
+  const capitalize = (s: string) =>
+    s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
 
   const formatDate = (date: Date) => {
     const day = ("0" + date.getDate()).slice(-2);
@@ -70,421 +69,353 @@ export default function ProposalViewer({
   const formatPhone = (phone: string) => {
     const regex = /(\d{2})(\d{1})(\d{4})(\d{4})/;
     const match = phone.match(regex);
-    if (match) {
-      return `(${match[1]}) ${match[2]} ${match[3]}-${match[4]}`;
-    }
-    return phone;
+    return match ? `(${match[1]}) ${match[2]} ${match[3]}-${match[4]}` : phone;
   };
 
   return (
     <>
+      {/* Regras de impressão: esconde elementos não impressos e define margens para A4 */}
       <style jsx>{`
-        h4 {
-        font-family: Helvetica;
-           padding: 0px 2px 1px 0px;
-           margin: 0px 2px 1px 0px;
-           #background-color: #ccc; /* uso correto da propriedade */
-        }
-
-        .pad {
-          margin-top: 150px;
-        }
-        .mascote-img {
-          padding-right: 50px;
-          width: 250px;
-          height: 150px;
-          position: fixed;
-          right: -50px;
-        }
-        .back-img {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: -5;
-        }
-        p {
-          font-family: "Times New Roman", Times, serif;
-          font-size: 100%;
-        }
-        .container {
-          width: 100%;
-          height: 100%;
-        }
-        hr.proposta {
-          border-color: #c69316;
-          border-width: 3px 0;
-        }
-        hr.titulo {
-          border-color: #c69316;
-          border-style: solid none;
-          border-width: 5px 0;
-          margin: 16px 0;
-        }
-        /* Regras para impressão: somente a div .print-me será visível e o conteúdo não ficará centralizado */
-       @media print {
-        /* 1. Esconde sidebar e header */
-        .no-printme {
-            display: none !important;
-            visibility: hidden !important;
-        }
-
-        /* 2. Garante que somente a .print-me apareça */
-        body * {
-            visibility: hidden !important;
-        }
-        .print-me,
-        .print-me * {
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-area,
+          .print-area * {
             visibility: visible !important;
-        }
+            
+          }
+          .no-print {
+            display: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            
 
-        .print-me {
-           
-        }
-
-        /* 3. Ajustes de margem e formato da página */
-        @page {
-            size: A4 portrait; /* ou A4 landscape */
-            margin: 5mm;
-        }
-        }
-        .print-button {
-          top: 20px;
-          right: 20px;
-          padding: 10px 20px;
-          background: #0070f3;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 0mm;
+            
+          }
         }
       `}</style>
 
-      {/* <ActionButtons /> */}
+      <div className="relative ">
+        {/* Botão de impressão fixo (não será impresso) */}
+        <button
+          onClick={printPage}
+          className="no-print fixed top-5 right-5 px-4 py-2 bg-purple-600 text-white rounded shadow flex items-center gap-2"
+        >
+          <Icon
+            icon="heroicons-outline:printer"
+            className="h-5 w-5"
+          />
+          Imprimir
+        </button>
+        <button
+          onClick={() => window.history.back()}
+          className="no-print fixed top-5 left-5 px-4 py-2 bg-gray-600 text-white rounded shadow flex items-center gap-2"
+        >
+          <Icon
+            icon="heroicons-outline:arrow-left"
+            className="h-5 w-5"
+          />
+          Voltar
+        </button>
 
-      <div className="">
-        <div className="print-me">
-          {/* Imagem de background cobrindo toda a página */}
+        {/* Área de visualização da proposta com aparência de folha A4 */}
+        <div
+          ref={printRef}
+          className="print-area mx-auto bg-white border border-gray-300 rounded shadow-lg relative"
+          style={{
+            width: "210mm",
+            height: "297mm",
+            padding: "10mm",
+          }}
+        >
+          {/* Imagem de fundo posicionada atrás de todo o conteúdo */}
           <img
-            className="back-img"
-            src="https://jlasolucoesfinanceiras.com/images/empresa/proposta/fundo_proposta.png"
-            alt="Background Proposta"
+            src={configs.simulacao_folha_proposta}
+            alt="Background da proposta"
+            className="absolute inset-0 w-full h-full object-contain z-0 pointer-events-none"
           />
 
-          {/* Área que será impressa */}
-          <div
-            className=""
-            ref={printRef}
-          >
-            <div className="row pad">
-              <div className="col-md-12">
-                {/* Imagem flutuante indicando o tipo da simulação */}
+          {/* Conteúdo da proposta em camada superior */}
+          <div className="relative z-10">
+            <div className="flex flex-col h-full pt-32">
+              {/* Cabeçalho com imagem e título */}
+              <div className="relative">
                 <img
-                  className="mascote-img"
-                  src={`/images/empresa/proposta/${simulation.tipo.toLowerCase()}.png`}
+                  src={configs.icon}
                   alt="Tipo de Simulação"
+                  className="absolute -top-14 -right-4 object-contain z-1000"
+                  style={{ width: "128px", height: "128px" }}
                 />
-
-                <h2 className="text-left font-sans text-2xl">
-                  PROPOSTA DE CRÉDITO
-                </h2>
-                <hr className="titulo" />
-
-                <table width="100%">
-                  <tbody>
-                    <tr>
-                      <td align="left">
-                        <h4>
-                          Consultor Financeiro:{" "}
-                          <span style={{ fontWeight: "bold" }}>
-                            {simulation.user.name}
-                          </span>
-                        </h4>
-                        <h4>
-                          Cliente:{" "}
-                          <span style={{ fontWeight: "bold" }}>
-                            {simulation.negocio.lead.nome}
-                          </span>
-                        </h4>
-                        <h4>
-                          Telefone:{" "}
-                          <span style={{ fontWeight: "bold" }}>
-                            {formatPhone(simulation.negocio.lead.telefone)}
-                          </span>
-                        </h4>
-                        <h4>
-                          CPF:{" "}
-                          <span style={{ fontWeight: "bold" }}>
-                            {simulation.negocio.lead.cpf || ""}
-                          </span>
-                        </h4>
-                      </td>
-                      <td align="left">
-                        <h4>
-                          Protocolo:{" "}
-                          <span style={{ fontWeight: "bold" }}>
-                            {new Date().getFullYear()}/{simulation.id}
-                          </span>
-                        </h4>
-                        <h4>
-                          Tipo do Bem:{" "}
-                          <span style={{ fontWeight: "bold" }}>
-                            {capitalize(simulation.tipo)}
-                          </span>
-                        </h4>
-                        {simulation.tipo.toUpperCase() !== "IMOVEL" && (
-                          <h4>
-                            Fabricante/Modelo:{" "}
-                            <span style={{ fontWeight: "bold" }}>
-                              {/* Insira dados de modelo/ano, se disponíveis */}
-                            </span>
-                          </h4>
-                        )}
-                        <h4>
-                          Data da Criação:{" "}
-                          <span style={{ fontWeight: "bold" }}>
-                            {formatDate(new Date())}
-                          </span>
-                        </h4>
-                        <h4>
-                          Validade da Proposta:{" "}
-                          <span style={{ fontWeight: "bold" }}>
-                            {formatDate(new Date())}
-                          </span>
-                        </h4>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                {/* Exibição das propostas de Financiamento */}
-                {simulation.financiamentos &&
-                  simulation.financiamentos.map((financiamento, index) => (
-                    <div key={`fin-${index}`} className="py-3">
-                      <hr className="proposta " />
-                      <h3 className="text-center text-lg mx-auto w-fit py-3">
-                        PROPOSTA {index + 1}: {financiamento.titulo}
-                      </h3>
-                      <table width="100%">
-                        <tbody>
-                          <tr>
-                            <td align="left">
-                              <h4>
-                                Modalidade de Crédito: FINANCIAMENTO BANCÁRIO
-                              </h4>
-                              <h4>
-                                Empresa:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {financiamento.empresa}
-                                </span>
-                              </h4>
-                              <h4>
-                                Valor do Bem:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {financiamento.credito}
-                                </span>
-                              </h4>
-                              <h4>
-                                Entrada:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {financiamento.entrada}
-                                </span>
-                              </h4>
-                              {financiamento.ultimaParcela === 0 ? (
-                                <h4>
-                                  Parcela:{" "}
-                                  <span style={{ fontWeight: "bold" }}>
-                                    {financiamento.parcelas}
-                                  </span>
-                                </h4>
-                              ) : (
-                                <>
-                                  <h4>
-                                    Primeira Parcela:{" "}
-                                    <span style={{ fontWeight: "bold" }}>
-                                      {financiamento.parcelas}
-                                    </span>
-                                  </h4>
-                                  <h4>
-                                    Última Parcela:{" "}
-                                    <span style={{ fontWeight: "bold" }}>
-                                      {financiamento.ultimaParcela}
-                                    </span>
-                                  </h4>
-                                </>
-                              )}
-                              <h4>
-                                Prazo:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {financiamento.prazo} Meses (
-                                  {Math.round(financiamento.prazo / 12)} Anos)
-                                </span>
-                              </h4>
-                            </td>
-                            <td align="left">
-                              {simulation.tipo.toUpperCase() === "IMOVEL" && (
-                                <>
-                                  <h4>
-                                    Despesas Cartoriais/ITBI:{" "}
-                                    <span style={{ fontWeight: "bold" }}>
-                                      {financiamento.cartorio}
-                                    </span>
-                                  </h4>
-                                  <h4>
-                                    Tarifa de avaliação, reavaliação:{" "}
-                                    <span style={{ fontWeight: "bold" }}>
-                                      R$ 2.400,00
-                                    </span>
-                                  </h4>
-                                </>
-                              )}
-                              <h4>
-                                Renda líquida mínima exigida:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {financiamento.rendaExigida}
-                                </span>
-                              </h4>
-                              <h4>
-                                Total de Juros:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {financiamento.jurosPagos}
-                                </span>
-                              </h4>
-                              <h4>
-                                Valor Final do Bem:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {financiamento.valPagoTotal}
-                                </span>
-                              </h4>
-                              <h4>
-                                Sistema de Amortização:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {financiamento.amortizacao.toUpperCase()}
-                                </span>
-                              </h4>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  ))}
-
-                {/* Exibição das propostas de Consórcio */}
-                {simulation.consorcios &&
-                  simulation.consorcios.map((consorcio, index) => (
-                    <div key={`con-${index}`} className="py-3">
-                      <hr className="proposta" />
-
-                      <div className="flex justify-center">
-                        <h3 className="text-lg py-3">
-                          PROPOSTA {index + 1}: {consorcio.titulo}
-                        </h3>
-                      </div>
-
-                      <table width="100%">
-                        <tbody>
-                          <tr>
-                            <td align="left">
-                              <h4>Modalidade de Crédito: CONSÓRCIO</h4>
-                              <h4>
-                                Empresa:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.empresa}
-                                </span>
-                              </h4>
-                              <h4>
-                                Valor do Bem:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.credito}
-                                </span>
-                              </h4>
-                              <h4>
-                                Adesão:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.entrada}
-                                </span>
-                              </h4>
-                              <h4>
-                                Parcela:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.parcelaCheia}
-                                </span>
-                              </h4>
-                              <h4>
-                                *Parcela Reduzida:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.parcelaReduzida}
-                                </span>
-                              </h4>
-                              <h4>
-                                Prazo:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.prazo} Meses (
-                                  {Math.round(consorcio.prazo / 12)} Anos)
-                                </span>
-                              </h4>
-                            </td>
-                            <td align="left">
-                              {consorcio.lance &&
-                                Number(consorcio.lance) > 0 && (
-                                  <>
-                                    <h4>
-                                      *Lance:{" "}
-                                      <span style={{ fontWeight: "bold" }}>
-                                        {consorcio.lance}
-                                      </span>
-                                    </h4>
-                                    {consorcio.creditoPosContemplacao && (
-                                      <h4>
-                                        Crédito Após Contemplação:{" "}
-                                        <span style={{ fontWeight: "bold" }}>
-                                          {consorcio.creditoPosContemplacao}
-                                        </span>
-                                      </h4>
-                                    )}
-                                  </>
-                                )}
-                              {simulation.tipo.toUpperCase() === "IMOVEL" && (
-                                <h4>
-                                  Despesas Cartoriais:{" "}
-                                  <span style={{ fontWeight: "bold" }}>
-                                    até 10% do Crédito
-                                  </span>
-                                </h4>
-                              )}
-                              <h4>
-                                Renda Mínima Exigida:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.rendaExigida}
-                                </span>
-                              </h4>
-                              <h4>
-                                Total de Taxas:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.jurosPagos}
-                                </span>
-                              </h4>
-                              <h4>
-                                Valor Final do Bem:{" "}
-                                <span style={{ fontWeight: "bold" }}>
-                                  {consorcio.valorPago}
-                                </span>
-                              </h4>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  ))}
-
-                <p>
-                  * Sujeito à aprovação de crédito.
-                  <br />
-                  ** Esta proposta é uma simulação, não gerando qualquer espécie
-                  de obrigação entre as partes.
-                </p>
+                <h2 className="text-2xl text-gray-800">PROPOSTA DE CRÉDITO</h2>
+                <hr className="border-t-4 border-yellow-600 my-2" />
               </div>
+
+              {/* Dados do consultor e cliente */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1 text-sm text-gray-700">
+                  <p>
+                    <span className="font-bold">Consultor Financeiro:</span>{" "}
+                    {simulation.user.name}
+                  </p>
+                  <p>
+                    <span className="font-bold">Cliente:</span>{" "}
+                    {simulation.negocio.lead.nome}
+                  </p>
+                  <p>
+                    <span className="font-bold">Telefone:</span>{" "}
+                    {formatPhone(simulation.negocio.lead.telefone)}
+                  </p>
+                  <p>
+                    <span className="font-bold">CPF:</span>{" "}
+                    {simulation.negocio.lead.cpf || ""}
+                  </p>
+                </div>
+                <div className="space-y-1 text-sm text-gray-700">
+                  <p>
+                    <span className="font-bold">Protocolo:</span>{" "}
+                    {new Date().getFullYear()}/{simulation.id}
+                  </p>
+                  <p>
+                    <span className="font-bold">Tipo do Bem:</span>{" "}
+                    {capitalize(simulation.tipo)}
+                  </p>
+                  {simulation.tipo.toUpperCase() !== "IMOVEL" && (
+                    <p>
+                      <span className="font-bold">Fabricante/Modelo:</span>{" "}
+                      {/* Inserir dados se disponíveis */}
+                    </p>
+                  )}
+                  <p>
+                    <span className="font-bold">Data da Criação:</span>{" "}
+                    {formatDate(new Date())}
+                  </p>
+                  <p>
+                    <span className="font-bold">Validade da Proposta:</span>{" "}
+                    {formatDate(new Date())}
+                  </p>
+                </div>
+              </div>
+
+              {/* Financiamentos */}
+              {simulation.financiamentos &&
+                simulation.financiamentos.map((financiamento, index) => (
+                  <div
+                    key={`fin-${index}`}
+                    className="py-4 border-t border-yellow-600"
+                  >
+                    <h3 className="text-lg text-center font-semibold ">
+                      PROPOSTA {index + 1}: {financiamento.titulo}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                      <div className="space-y-1">
+                        <p>
+                          Modalidade:{" "}
+                          <span className="font-bold">
+                            FINANCIAMENTO BANCÁRIO
+                          </span>
+                        </p>
+                        <p>
+                          Empresa:{" "}
+                          <span className="font-bold">
+                            {financiamento.empresa}
+                          </span>
+                        </p>
+                        <p>
+                          Valor do Bem:{" "}
+                          <span className="font-bold">
+                            {financiamento.credito}
+                          </span>
+                        </p>
+                        <p>
+                          Entrada:{" "}
+                          <span className="font-bold">
+                            {financiamento.entrada}
+                          </span>
+                        </p>
+                        {financiamento.ultimaParcela === 0 ? (
+                          <p>
+                            Parcela:{" "}
+                            <span className="font-bold">
+                              {financiamento.parcelas}
+                            </span>
+                          </p>
+                        ) : (
+                          <>
+                            <p>
+                              Primeira Parcela:{" "}
+                              <span className="font-bold">
+                                {financiamento.parcelas}
+                              </span>
+                            </p>
+                            <p>
+                              Última Parcela:{" "}
+                              <span className="font-bold">
+                                {financiamento.ultimaParcela}
+                              </span>
+                            </p>
+                          </>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <p>
+                          Prazo:{" "}
+                          <span className="font-bold">
+                            {financiamento.prazo} Meses (
+                            {Math.round(financiamento.prazo / 12)} Anos)
+                          </span>
+                        </p>
+                        {simulation.tipo.toUpperCase() === "IMOVEL" && (
+                          <>
+                            <p>
+                              Despesas Cartoriais/ITBI:{" "}
+                              <span className="font-bold">
+                                {financiamento.cartorio}
+                              </span>
+                            </p>
+                            <p>
+                              Tarifa de avaliação, reavaliação:{" "}
+                              <span className="font-bold">R$ 2.400,00</span>
+                            </p>
+                          </>
+                        )}
+                        <p>
+                          Renda líquida mínima exigida:{" "}
+                          <span className="font-bold">
+                            {financiamento.rendaExigida}
+                          </span>
+                        </p>
+                        <p>
+                          Total de Juros:{" "}
+                          <span className="font-bold">
+                            {financiamento.jurosPagos}
+                          </span>
+                        </p>
+                        <p>
+                          Valor Final do Bem:{" "}
+                          <span className="font-bold">
+                            {financiamento.valPagoTotal}
+                          </span>
+                        </p>
+                        <p>
+                          Sistema de Amortização:{" "}
+                          <span className="font-bold">
+                            {financiamento.amortizacao.toUpperCase()}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+              {/* Consórcios */}
+              {simulation.consorcios &&
+                simulation.consorcios.map((consorcio, index) => (
+                  <div
+                    key={`con-${index}`}
+                    className="py-4 border-t border-yellow-600"
+                  >
+                    <h3 className="text-lg text-center font-semibold">
+                      PROPOSTA {index + 1}: {consorcio.titulo}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                      <div className="space-y-1">
+                        <p>
+                          Modalidade:{" "}
+                          <span className="font-bold">CONSÓRCIO</span>
+                        </p>
+                        <p>
+                          Empresa:{" "}
+                          <span className="font-bold">{consorcio.empresa}</span>
+                        </p>
+                        <p>
+                          Valor do Bem:{" "}
+                          <span className="font-bold">{consorcio.credito}</span>
+                        </p>
+                        <p>
+                          Adesão:{" "}
+                          <span className="font-bold">{consorcio.entrada}</span>
+                        </p>
+                        <p>
+                          Parcela:{" "}
+                          <span className="font-bold">
+                            {consorcio.parcelaCheia}
+                          </span>
+                        </p>
+                        <p>
+                          *Parcela Reduzida:{" "}
+                          <span className="font-bold">
+                            {consorcio.parcelaReduzida}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p>
+                          Prazo:{" "}
+                          <span className="font-bold">
+                            {consorcio.prazo} Meses (
+                            {Math.round(consorcio.prazo / 12)} Anos)
+                          </span>
+                        </p>
+                        {consorcio.lance && Number(consorcio.lance) > 0 && (
+                          <>
+                            <p>
+                              *Lance:{" "}
+                              <span className="font-bold">
+                                {consorcio.lance}
+                              </span>
+                            </p>
+                            {consorcio.creditoPosContemplacao && (
+                              <p>
+                                Crédito Após Contemplação:{" "}
+                                <span className="font-bold">
+                                  {consorcio.creditoPosContemplacao}
+                                </span>
+                              </p>
+                            )}
+                          </>
+                        )}
+                        {simulation.tipo.toUpperCase() === "IMOVEL" && (
+                          <p>
+                            Despesas Cartoriais:{" "}
+                            <span className="font-bold">
+                              até 10% do Crédito
+                            </span>
+                          </p>
+                        )}
+                        <p>
+                          Renda Mínima Exigida:{" "}
+                          <span className="font-bold">
+                            {consorcio.rendaExigida}
+                          </span>
+                        </p>
+                        <p>
+                          Total de Taxas:{" "}
+                          <span className="font-bold">
+                            {consorcio.jurosPagos}
+                          </span>
+                        </p>
+                        <p>
+                          Valor Final do Bem:{" "}
+                          <span className="font-bold">
+                            {consorcio.valorPago}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+              <p className="text-xs text-gray-600 mt-1">
+                * Sujeito à aprovação de crédito.
+                <br />
+                ** Esta proposta é uma simulação, não gerando qualquer espécie
+                de obrigação entre as partes.
+              </p>
             </div>
           </div>
         </div>
