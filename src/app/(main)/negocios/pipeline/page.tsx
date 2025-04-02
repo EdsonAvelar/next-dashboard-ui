@@ -1,5 +1,4 @@
 // app/negocios/pipeline/[proprietario_id]/page.tsx
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 // import PipelineBoard from "@/components/PipelineBoard";
@@ -8,10 +7,11 @@ import { redirect } from "next/navigation";
 // import PipelineBoard from "@/components/PipelineBoard";
 import dynamic from "next/dynamic";
 import PipelineBoardContainer from "@/components/containers/PipelineBoardContainer";
-import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
+import ProprietarioFilterSelect from "@/components/ui/ProprietarioFilterSelect";
 import FormContainer from "@/components/forms/FormContainer";
 import { getTimeComercialVendedores } from "@/lib/actions";
 import FormModal from "@/components/FormModal";
+import { prisma } from "@/lib/prisma";
 
 const PipelineBoard = dynamic(() => import("@/components/PipelineBoard"), {
   ssr: false,
@@ -100,7 +100,7 @@ export default async function PipelinePage({
           button={true}
           title="++Add"
         />
-        <ProprietarioFilterSelect users={allUsers} />
+        <ProprietarioFilterSelect />
       </div>
 
       <div className="">

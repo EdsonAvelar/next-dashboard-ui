@@ -1,6 +1,10 @@
 "use server";
 
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NegocioTipo } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
+import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
 import {
   EquipeSchema,
   FechamentoSchema,
@@ -8,14 +12,7 @@ import {
   NegocioSchema,
   ProductionSchema,
 } from "./formValidationSchema";
-import { prisma } from "./prisma";
-import bcrypt from "bcryptjs";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getServerSession } from "next-auth";
-import { revalidatePath } from "next/cache";
-import { Decimal } from "@prisma/client/runtime/library";
-import { redirect } from "next/navigation";
-import { formatNumberShort, parseDateBr, parseDateUsa } from "./utils";
+import { formatNumberShort, parseDateUsa } from "./utils";
 
 type CurrentState = { success: boolean; msg: string };
 
@@ -24,12 +21,15 @@ export const createNegocio = async (
   data: NegocioSchema
 ) => {
   try {
+    const tenantId = await getTenantID();
+
     const lead = await prisma.lead.create({
       data: {
         nome: data.nome_contato,
         telefone: data.telefone,
         whatsapp: data.whatsapp || "",
         email: data.email || "",
+        tenantId: tenantId,
       },
     });
 
@@ -38,11 +38,12 @@ export const createNegocio = async (
       ? { user: { connect: { id: parseInt(data.proprietario_id, 10) } } }
       : {};
 
-    const negocio = await prisma.negocio.create({
+    await prisma.negocio.create({
       data: {
         titulo:
           data.titulo ||
           `Negócio ${data.nome_contato.split(" ")[0]} - ${data.tipo_credito}${data.valor_credito ? " - " + data.valor_credito : ""}`,
+        tenant: { connect: { id: tenantId } },
         // Os campos "tipo" e "status" devem ser definidos conforme seu enum
         tipo: data.tipo_credito as NegocioTipo,
         status: "ATIVO", // ou outro valor padrão, conforme seu enum NegocioStatus
@@ -54,7 +55,6 @@ export const createNegocio = async (
         ...userConnection,
       },
     });
-    // revalidatePath("/negocios/lista");
 
     return { success: true, msg: "" };
   } catch (error) {
@@ -68,13 +68,6 @@ export const updateNegocio = async (
   data: NegocioSchema
 ) => {
   try {
-    const lead = await prisma.lead.create({
-      data: {
-        nome: data.nome_contato,
-        telefone: data.telefone,
-      },
-    });
-
     const negocio = await prisma.negocio.update({
       where: {
         id: data.id,
@@ -87,7 +80,7 @@ export const updateNegocio = async (
         tipo: data.tipo_credito as NegocioTipo,
         status: "ATIVO", // ou outro valor padrão, conforme seu enum NegocioStatus
         // Conectando o Lead criado:
-        consorciado: { connect: { id: lead.id } },
+
         // Conectando outros relacionamentos, utilizando os IDs recebidos ou definidos no form:
         funil: { connect: { id: 1 } },
         etapa_funil: { connect: { id: 1 } },
@@ -118,6 +111,8 @@ export const createMassNegocio = async (
   data: MassNegocioData
 ) => {
   try {
+    const tenantId = await getTenantID();
+
     // Para cada registro, cria o Lead e o Negócio correspondente
     for (const registro of data.registros) {
       // Criação do lead
@@ -125,9 +120,9 @@ export const createMassNegocio = async (
         data: {
           nome: registro.name,
           telefone: registro.telefone,
+          tenantId: tenantId,
         },
       });
-
 
       // Se existir o parâmetro proprietario_id, prepara a conexão com o usuário
       const userConnection = data.proprietario_id
@@ -145,6 +140,7 @@ export const createMassNegocio = async (
           titulo,
           // Define o tipo conforme o enum; ajuste se necessário
           tipo: data.tipo_credito as NegocioTipo,
+          tenant: { connect: { id: tenantId } },
           status: "ATIVO", // ou outro valor padrão conforme seu enum de status
           // Conectando o Lead criado
           consorciado: { connect: { id: lead.id } },
@@ -279,6 +275,7 @@ export type UserProfile = {
   equipe: { name: string };
   email: string;
   roles: any[]; // ajuste o tipo conforme sua aplicação
+  tenantId: number;
 };
 
 const defaultUser: UserProfile = {
@@ -295,6 +292,7 @@ const defaultUser: UserProfile = {
   equipe: { name: "" },
   email: "",
   roles: [],
+  tenantId: 0,
 };
 
 export async function getUserProfile({
@@ -323,6 +321,7 @@ export async function getUserProfile({
         },
         email: true,
         roles: true,
+        tenantId: true,
       },
     });
 
@@ -340,6 +339,7 @@ export async function getUserProfile({
       equipe: { name: user?.equipe?.name || defaultUser.equipe.name },
       email: user?.email || defaultUser.email,
       roles: user?.roles || defaultUser.roles,
+      tenantId: user?.tenantId || defaultUser.tenantId,
     };
 
     return defaultUserFilled;
@@ -408,10 +408,17 @@ export async function assignMassNegocios(
   formData: FormData
 ) {
   try {
+    const tenantId = await getTenantID();
+
     // Recebe os campos do formulário
     const negocioIdsStr = formData.get("negocioIds") as string; // JSON com array de números
     const proprietarioIdStr = formData.get("proprietarioId") as string;
     const etapaIdStr = formData.get("etapaId") as string;
+    const modelStr = formData.get("model") as string; // ação a ser realizada
+
+    if (!modelStr) {
+      return { success: false, msg: "Modelo não definido" };
+    }
 
     // Converte os valores
     const negocioIds: number[] = JSON.parse(negocioIdsStr);
@@ -420,24 +427,107 @@ export async function assignMassNegocios(
       : null;
     const etapaId = etapaIdStr ? parseInt(etapaIdStr, 10) : null;
 
-    // Atualiza cada negócio (supondo que o relacionamento seja many-to-one com User e many-to-one com EtapaFunil)
-    await Promise.all(
-      negocioIds.map((id) =>
-        prisma.negocio.update({
+    if (modelStr === "leadImportado") {
+      // Para cada ID recebido, tratamento como ID de leadImportado
+      for (const id of negocioIds) {
+        // Busca o registro importado (leadImportado)
+        const importedLead = await prisma.leadImportado.findUnique({
           where: { id },
-          data: {
-            // Atualiza o proprietário: se não selecionado, desconecta
-            user: proprietarioId
-              ? { connect: { id: proprietarioId } }
-              : { disconnect: true },
-            // Atualiza a etapa do funil, se selecionada (se não, não altera ou pode desconectar)
-            etapa_funil: etapaId ? { connect: { id: etapaId } } : undefined,
-          },
-        })
-      )
-    );
+        });
+        
+        if (!importedLead) continue;
 
-    return { success: true, msg: "Negócios atribuídos com sucesso!" };
+        
+        const existingLead = await prisma.lead.findFirst({
+          where: { telefone: importedLead.telefone, tenantId },
+        });
+
+        const newLead = existingLead
+          ? existingLead
+          : await prisma.lead.create({
+              data: {
+                nome: importedLead.nome,
+                telefone: importedLead.telefone,
+                email: importedLead.email || "",
+                tenantId: tenantId,
+              },
+            });
+        // Cria o lead na tabela principal "lead"
+        // const newLead = await prisma.lead.create({
+        //   data: {
+        //     nome: importedLead.nome,
+        //     telefone: importedLead.telefone,
+        //     email: importedLead.email || "",
+        //     tenantId: tenantId,
+        //   },
+        // });
+
+        // Se existir o parâmetro proprietario_id, prepara a conexão com o usuário
+        const userConnection = proprietarioId
+          ? { user: { connect: { id: proprietarioId } } }
+          : {};
+
+        // Cria um título padrão para o novo negócio
+        const titulo = `${newLead.nome.split(" ")[0]} - ${importedLead.tipo}`;
+
+        // Cria o negócio com base no lead importado
+        await prisma.negocio.create({
+          data: {
+            titulo,
+            tenant: { connect: { id: tenantId } },
+            tipo: importedLead.tipo as NegocioTipo,
+            status: "ATIVO",
+            consorciado: { connect: { id: newLead.id } },
+            funil: { connect: { id: 1 } },
+            etapa_funil: etapaId ? { connect: { id: etapaId } } : undefined,
+            ...userConnection,
+          },
+        });
+
+        // Remove o registro importado da tabela leadImportado
+        await prisma.leadImportado.delete({
+          where: { id },
+        });
+      }
+    } else if (modelStr === "negocio") {
+      // Atualiza cada negócio, conforme a lógica existente
+      await Promise.all(
+        negocioIds.map((id) =>
+          prisma.negocio.update({
+            where: { id },
+            data: {
+              user: proprietarioId
+                ? { connect: { id: proprietarioId } }
+                : { disconnect: true },
+              etapa_funil: etapaId ? { connect: { id: etapaId } } : undefined,
+            },
+          })
+        )
+      );
+    }
+
+    // Atualiza cada negócio (supondo que o relacionamento seja many-to-one com User e many-to-one com EtapaFunil)
+    // await Promise.all(
+    //   negocioIds.map((id) =>
+    //     prisma.negocio.update({
+    //       where: { id },
+    //       data: {
+    //         // Atualiza o proprietário: se não selecionado, desconecta
+    //         user: proprietarioId
+    //           ? { connect: { id: proprietarioId } }
+    //           : { disconnect: true },
+    //         // Atualiza a etapa do funil, se selecionada (se não, não altera ou pode desconectar)
+    //         etapa_funil: etapaId ? { connect: { id: etapaId } } : undefined,
+    //       },
+    //     })
+    //   )
+    // );
+
+    const updatedCount = negocioIds.length;
+    return {
+      success: true,
+      msg: `Negócios atribuídos com sucesso! Total: ${updatedCount}`,
+    };
   } catch (error) {
     console.error("Erro na atribuição em massa:", error);
     return { success: false, msg: "Erro ao atribuir negócios." };
@@ -449,6 +539,8 @@ export async function criarReuniao(
   negocioId: number
 ) {
   try {
+    const tenantId = await getTenantID();
+
     // Busca o agendamento para o negócio
     const agendamento = await prisma.agendamento.findFirst({
       where: { negocioId: negocioId },
@@ -481,6 +573,7 @@ export async function criarReuniao(
             // Aqui você pode formatar a data conforme necessário.
             // Se o campo for DateTime, new Date() já é suficiente.
             dataReuniao: new Date(),
+            tenantId: tenantId,
           },
         });
 
@@ -508,6 +601,8 @@ export async function criarAgendamento({
   negocioId: number;
 }) {
   try {
+    const tenantId = await getTenantID();
+
     const negocio = await prisma.negocio.findUnique({
       where: { id: negocioId },
       select: { user_id: true }, // Pegamos apenas o userId
@@ -522,6 +617,7 @@ export async function criarAgendamento({
 
     await prisma.agendamento.create({
       data: {
+        tenant: { connect: { id: tenantId } },
         dataAgendado: new Date(dataAgendado),
         dataAgendamento: new Date(),
         hora,
@@ -570,6 +666,8 @@ export const updateFechamento = async (
   data: FechamentoSchema
 ): Promise<{ success: boolean; msg: string }> => {
   try {
+    const tenantId = await getTenantID();
+
     // Atualiza os campos do fechamento
     const fechamentoAtualizado = await prisma.fechamento.update({
       where: { negocioId: parseInt(data.negocio_id, 10) },
@@ -723,6 +821,7 @@ export const updateFechamento = async (
                   estado: data.conjuge.estado,
                   complemento: data.conjuge.complemento,
                   cep: data.conjuge.cep,
+                  tenantId: tenantId,
                 },
               },
             }
@@ -1005,12 +1104,15 @@ interface SimulacaoInput {
  */
 export async function salvarSimulacao(dados: SimulacaoInput) {
   try {
+    const tenantId = await getTenantID();
+
     const simulacao = await prisma.simulacao.create({
       data: {
         tipo: dados.tipo,
         dataProposta: new Date(),
         negocioId: dados.negocioId,
         userId: dados.userId,
+        tenantId: tenantId,
         consorcios: {
           create: dados.consorcios.map((c) => ({
             conTitulo: c.titulo,
@@ -1099,12 +1201,15 @@ export async function salvarAprovacao({
   status: string;
 }) {
   try {
+    const tenantId = await getTenantID();
+
     const data_aprovacao = new Date();
     const aprovacao = await prisma.aprovacao.create({
       data: {
         data_aprovacao,
         status,
         negocio: { connect: { id: negocioId } },
+        tenant: { connect: { id: tenantId } },
       },
     });
 
@@ -1116,6 +1221,7 @@ export async function salvarAprovacao({
 }
 
 export async function getTimeComercialVendedores() {
+  const tenantId = await getTenantID();
   return prisma.user.findMany({
     where: {
       status: 1,
@@ -1124,6 +1230,7 @@ export async function getTimeComercialVendedores() {
           name: "time_comercial",
         },
       },
+      tenantId: tenantId,
     },
     select: { id: true, name: true },
   });
@@ -1132,6 +1239,9 @@ export async function getTimeComercialVendedores() {
 import { promises as fs } from "fs";
 import path from "path";
 import sharp from "sharp";
+import { getTenantID, prisma } from "./prisma";
+import dayjs from "./dayjs";
+import { connect } from "http2";
 
 export async function saveImageLocally(
   croppedImage: string,
@@ -1331,12 +1441,123 @@ export async function updateBooleanConfigAction({
   value,
 }: UpdateConfigParams) {
   // Exemplo: se for do model "Config", atualiza pelo campo "key"
+  const tenantId = await getTenantID();
 
   await prisma.config.upsert({
-    where: { key },
+    where: {
+      // Aqui, o nome do campo composto gerado automaticamente é "tenantId_key"
+      // Isso depende da nomenclatura do Prisma, mas geralmente é o nome dos campos concatenados com um underline.
+      tenantId_key: { tenantId, key },
+    },
     update: { value: value ? "true" : "false" },
-    create: { key, value: value ? "true" : "false" },
+    create: { tenantId, key, value: value ? "true" : "false" },
   });
 
   // Caso haja outros models, adicione as condições necessárias.
+}
+
+export async function getOrCreateFechamento(negocioId: number) {
+  const tenantId = await getTenantID();
+
+  // Tenta buscar o fechamento associado ao negócio, com os relacionamentos
+  let fechamento = await prisma.fechamento.findFirst({
+    where: { negocioId },
+    include: {
+      negocio: {
+        include: {
+          consorciado: true,
+          conjuge: true,
+        },
+      },
+      vendedores: {
+        include: { user: true },
+      },
+    },
+  });
+
+  // Se não existir, busca o negócio e cria um fechamento com status "RASCUNHO"
+  if (!fechamento) {
+    const negocio = await prisma.negocio.findUnique({
+      where: { id: negocioId },
+    });
+    if (!negocio) {
+      throw new Error("Negócio não encontrado");
+    }
+
+    fechamento = await prisma.fechamento.create({
+      data: {
+        negocio: { connect: { id: negocio.id } },
+        status: "RASCUNHO",
+        tenant: { connect: { id: tenantId } },
+      },
+      include: {
+        negocio: {
+          include: {
+            consorciado: true,
+            conjuge: true,
+          },
+        },
+        vendedores: {
+          include: { user: true },
+        },
+      },
+    });
+  }
+
+  return fechamento;
+}
+
+export type Lead = {
+  nome: string;
+  telefone: string;
+  email: string;
+  tipo: NegocioTipo;
+  campanha: string;
+  fonte: string;
+  data_conversao: string;
+};
+
+export async function importLeadsAction(leads: Lead[], userId: number) {
+  let imported = 0;
+  let rejected = 0;
+
+  const tenantId = await getTenantID();
+
+  for (const lead of leads) {
+    try {
+      // Verifica se já existe um lead importado com o mesmo telefone
+      const exists = await prisma.leadImportado.findUnique({
+        where: { telefone: lead.telefone },
+      });
+
+      if (exists) {
+        rejected++;
+        continue;
+      }
+
+      // Cria o registro no modelo NegocioImportado
+      await prisma.leadImportado.create({
+        data: {
+          userId: userId,
+          nome: lead.nome,
+          telefone: lead.telefone,
+          email: lead.email || null,
+          campanha: lead.campanha || null,
+          fonte: lead.fonte || null,
+          data_conversao: dayjs().toDate(),
+          origem: "IMPORTACAO_PLANILHA",
+          tenantId: tenantId,
+          tipo: lead.tipo,
+        },
+      });
+
+      imported++;
+    } catch (error) {
+      console.error("Erro ao importar lead:", lead, error);
+      rejected++;
+    }
+  }
+
+  console.log("Leads recebidos:", leads);
+  return { imported, rejected };
 }

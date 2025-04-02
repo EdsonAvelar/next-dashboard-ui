@@ -107,7 +107,8 @@ const NegocioForm = ({
             register={register}
             error={errors?.telefone}
           />
-
+        </div>
+        <div className="flex flex-col gap-2 w-1/1 w-full md:w-1/2 ">
           <SelectInput
             label="Tipo de Crédito"
             name="tipo_credito"
@@ -120,6 +121,7 @@ const NegocioForm = ({
               ...tipoCreditoOptions,
             ]}
           />
+          <div className="py-1"></div>
 
           <InputField
             label="Valor do Crédito (opcional)"
@@ -128,9 +130,7 @@ const NegocioForm = ({
             register={register}
             error={errors?.valor_credito}
           />
-        </div>
-        <div className="flex-col gap-4 md:w-1/2 hidden md:block">
-          <InputField
+          {/* <InputField
             label="Título (opcional)"
             name="titulo"
             defaultValue={data?.titulo}
@@ -151,7 +151,7 @@ const NegocioForm = ({
             type="email"
             defaultValue={data?.email}
             register={register}
-          />
+          /> */}
         </div>
       </div>
 

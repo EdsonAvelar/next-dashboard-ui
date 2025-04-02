@@ -4,23 +4,32 @@ import React, { useState } from "react";
 import FormContainer from "./forms/FormContainer";
 import NegocioAtribuirMassForm from "./forms/NegocioAtribuirMassForm";
 
-// Exemplo de componente para ações em massa
+type MassActionsProps = {
+  selectedIds: number[];
+  onClearSelection: () => void;
+  massRelatedData: { users: any[]; etapas: any[] };
+  allowedActions?: string[]; // novo prop para limitar ações
+  model: string;
+};
+
 function MassActions({
   selectedIds,
   onClearSelection,
   massRelatedData,
-}: {
-  selectedIds: number[];
-  onClearSelection: () => void;
-  massRelatedData: { users: any[]; etapas: any[] };
-}) {
+  allowedActions,
+  model = "negocio",
+}: MassActionsProps) {
   const [openAssign, setOpenAssign] = useState(false);
+
+  const handleTransferir = () => {
+    console.log("Transferir → IDs selecionados:", selectedIds);
+    console.log("relatedData: ", massRelatedData);
+    setOpenAssign(true);
+  };
 
   const handleAtribuir = () => {
     console.log("Atribuir → IDs selecionados:", selectedIds);
-
     console.log("relatedData: ", massRelatedData);
-    // Aqui você pode chamar um fetch para API ou abrir um modal
     setOpenAssign(true);
   };
 
@@ -39,49 +48,63 @@ function MassActions({
   const handleRedistribuir = () => {
     console.log("Redistribuir → IDs selecionados:", selectedIds);
   };
+
   return (
     <>
-      <div className="flex flex-col md:flex-row items-center justify-between bg-white p-3 mb-2  rounded shadow-sm gap-2">
-        <span className="text-sm text-gray-600">
-          {selectedIds.length} item(s) selecionado(s)
-        </span>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={handleAtribuir}
-            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-sm"
-          >
-            Atribuir
-          </button>
-          <button
-            onClick={handleDistribuir}
-            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-sm"
-          >
-            Distribuir
-          </button>
-          <button
-            onClick={handleDesativar}
-            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors text-sm"
-          >
-            Desativar
-          </button>
-          <button
-            onClick={handleRedistribuir}
-            className="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 transition-colors text-sm"
-          >
-            Redistribuir
-          </button>
-          <button
-            onClick={handleDeletar}
-            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm"
-          >
-            Deletar
-          </button>
-          <button
-            onClick={onClearSelection}
-            className="bg-gray-300 text-gray-800 px-3 py-1 rounded hover:bg-gray-400 transition-colors text-sm"
-          >
-            Limpar Seleção
-          </button>
+      {/* Container absoluto para as ações */}
+      <div className="absolute top-0 left-0 w-full z-10 bg-white shadow-sm p-3">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-2">
+          <span className="text-sm text-gray-600">
+            {selectedIds.length} item(s) selecionado(s)
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {(!allowedActions || allowedActions.includes("atribuir")) && (
+              <button
+                onClick={handleAtribuir}
+                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-sm"
+              >
+                Atribuir
+              </button>
+            )}
+            {(!allowedActions || allowedActions.includes("distribuir")) && (
+              <button
+                onClick={handleDistribuir}
+                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-sm"
+              >
+                Distribuir
+              </button>
+            )}
+            {(!allowedActions || allowedActions.includes("desativar")) && (
+              <button
+                onClick={handleDesativar}
+                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors text-sm"
+              >
+                Desativar
+              </button>
+            )}
+            {(!allowedActions || allowedActions.includes("redistribuir")) && (
+              <button
+                onClick={handleRedistribuir}
+                className="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 transition-colors text-sm"
+              >
+                Redistribuir
+              </button>
+            )}
+            {(!allowedActions || allowedActions.includes("deletar")) && (
+              <button
+                onClick={handleDeletar}
+                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm"
+              >
+                Deletar
+              </button>
+            )}
+            <button
+              onClick={onClearSelection}
+              className="bg-gray-300 text-gray-800 px-3 py-1 rounded hover:bg-gray-400 transition-colors text-sm"
+            >
+              Limpar Seleção
+            </button>
+          </div>
         </div>
       </div>
       {openAssign && (
@@ -90,7 +113,15 @@ function MassActions({
             <NegocioAtribuirMassForm
               selectedIds={selectedIds}
               relatedData={massRelatedData}
-              onClose={() => setOpenAssign(false)}
+              onClose={() => {
+                setOpenAssign(false);
+                // Ao fechar o modal, também limpamos a seleção
+                onClearSelection();
+              }}
+              onCancel={() => {
+                setOpenAssign(false);
+              }}
+              model={model}
             />
           </div>
         </div>
@@ -108,8 +139,10 @@ type TableProps = {
   relatedData?: any;
   rows: React.ReactElement[];
   selectable?: boolean;
-  multipleActions?: boolean; // <-- nova prop
+  multipleActions?: boolean;
   massRelatedData?: { users: any[]; etapas: any[] };
+  allowedActions?: string[]; // novo prop para limitar ações
+  model: "leadImportado" | "negocio";
 };
 
 const Table = ({
@@ -119,6 +152,8 @@ const Table = ({
   multipleActions = true,
   relatedData = { users: [], etapas: [] },
   massRelatedData,
+  allowedActions,
+  model,
 }: TableProps) => {
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
@@ -140,8 +175,6 @@ const Table = ({
     } else {
       newSelected.delete(id);
     }
-
-
     setSelectedRows(newSelected);
   };
 
@@ -150,23 +183,27 @@ const Table = ({
   };
 
   return (
-    <div>
-      {multipleActions && selectedRows.size > 0 && (
-        <>
+    <div className="relative">
+      {/* Espaço reservado para as ações com altura fixa */}
+      <div className="min-h-[60px]">
+        {multipleActions && selectedRows.size > 0 && (
           <MassActions
             massRelatedData={massRelatedData || { users: [], etapas: [] }}
             selectedIds={Array.from(selectedRows)}
             onClearSelection={clearSelection}
+            allowedActions={allowedActions}
+            model={model}
           />
-        </>
-      )}
-      <table className="w-full mt-4">
+        )}
+      </div>
+
+      <table className="w-full mt-0">
         <thead className="bg-gray-50 p-2">
-          <tr className="text-left text-gray-500 text-xs ">
+          <tr className="text-left text-gray-500 text-xs">
             {selectable && (
               <th
                 key="checkbox"
-                className="w-10"
+                className="w-12 p-2"
               >
                 <input
                   type="checkbox"
@@ -190,7 +227,6 @@ const Table = ({
           {rows.map((row) => {
             if (selectable) {
               const id = row.props["data-rowid"];
-
               const checked = selectedRows.has(id);
               return React.cloneElement(
                 row,

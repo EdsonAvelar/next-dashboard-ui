@@ -1,5 +1,5 @@
 // app/dashboard/funcionarios/[id]/page.tsx
-import { prisma } from "@/lib/prisma";
+import { basePrisma, prisma } from "@/lib/prisma";
 import { getUserProfile } from "@/lib/actions";
 import SingleFuncionarioPageClient from "@/components/SingleFuncionarioPageClient";
 
@@ -16,7 +16,7 @@ export default async function SingleFuncionarioPage({
 }) {
   const user = await getUserProfile({ id: params.id });
   // Busca todas as roles do sistema
-  const allRoles = await prisma.role.findMany();
+  const allRoles = await basePrisma.role.findMany();
 
   const relatedData = await getRelatedData();
 

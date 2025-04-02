@@ -1,11 +1,10 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
   },
@@ -23,7 +22,6 @@ export const authOptions: NextAuthOptions = {
           include: { roles: true, cargo: true }, // se você quiser incluir roles, ou inclua a role do cargo
         });
         if (user) {
-          
         } else {
           throw new Error("Usuário não encontrado");
         }
@@ -41,6 +39,7 @@ export const authOptions: NextAuthOptions = {
           cargo: user.cargo ? user.cargo.name : null,
           role: user.roles.map((r) => r.name).join(","),
           avatar: user.avatar,
+          tenantId: user.tenantId,
         };
       },
     }),
@@ -49,6 +48,8 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       // Na primeira vez que o usuário faz login, 'user' estará definido.
       if (user) {
+        console.log("user", user);
+
         token.id = user.id;
 
         if ("role" in user) {
@@ -61,6 +62,11 @@ export const authOptions: NextAuthOptions = {
         if ("cargo" in user) {
           token.cargo = user.cargo as string;
         }
+
+        if ("tenantId" in user) {
+          token.tenantId = user.tenantId as number;
+        }
+
         // ou qualquer campo que contenha a role
       }
       return token;
@@ -71,6 +77,7 @@ export const authOptions: NextAuthOptions = {
       session.user.role = token.role as string;
       session.user.cargo = token.cargo as string;
       session.user.avatar = token.avatar as string;
+      session.user.tenantId = token.tenantId as number;
       return session;
     },
   },

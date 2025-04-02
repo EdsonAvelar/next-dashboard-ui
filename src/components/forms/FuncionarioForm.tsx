@@ -150,7 +150,6 @@ const FuncionarioForm = ({
             Informações Opcionais
           </span>
           <div className="flex justify-between gap-4 flex-wrap">
-            {/* Utilizando o SelectInput para o campo "Sex" */}
 
             <InputField
               label="Contratacao"

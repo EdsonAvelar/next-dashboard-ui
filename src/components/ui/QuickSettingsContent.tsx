@@ -26,17 +26,25 @@ export default function QuickSettingsContent({
         </div>
 
         <div className="flex gap-2">
-            <button
+          <button
             onClick={() => router.refresh()}
             className="text-gray-500 hover:text-gray-800"
-            >
-            <Icon icon="mdi:refresh" width="24" height="24" />
-            </button>
+          >
+            <Icon
+              icon="mdi:refresh"
+              width="24"
+              height="24"
+            />
+          </button>
           <button
             onClick={closePanel}
             className="text-gray-500 hover:text-gray-800"
           >
-            <Icon icon="mdi:close" width="24" height="24" />
+            <Icon
+              icon="mdi:close"
+              width="24"
+              height="24"
+            />
           </button>
         </div>
       </div>

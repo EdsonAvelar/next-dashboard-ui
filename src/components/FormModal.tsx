@@ -213,7 +213,7 @@ export default function FormModal({
 
       {open && (
         <div className="w-screen h-screen absolute left-0 top-0 bg-black bg-opacity-45 z-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
+          <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[80%] lg:w-[70%] xl:w-[50%] 2xl:w-[50%]">
             {renderContent()}
             <div
               className="absolute top-4 right-4 cursor-pointer"

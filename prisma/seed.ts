@@ -1,6 +1,7 @@
-import { Day, PrismaClient, UserSex, NegocioStatus } from "@prisma/client";
-const prisma = new PrismaClient();
+import { PrismaClient, NegocioStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
+
+const prisma = new PrismaClient();
 
 // Função auxiliar para gerar uma string aleatória
 function randomString(length: number) {
@@ -12,8 +13,15 @@ function randomString(length: number) {
   return result;
 }
 
-export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
-  // 1. Cria cargos, se ainda não existirem
+/**
+ * Cria dados do CRM para um tenant específico (no caso, Representação)
+ */
+export async function populateCRM(
+  NUM_USERS: number,
+  NUM_NEGOCIOS: number,
+  tenantId: number
+) {
+  // 1. Cria cargos, se ainda não existirem (modelo global)
   const cargosData = [
     { name: "Gerente" },
     { name: "Vendedor" },
@@ -26,13 +34,13 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
   ];
   for (const cargo of cargosData) {
     try {
-      await prisma.cargo.create({ data: cargo });
+      await prisma.cargo.create({ data: { ...cargo, tenant: { connect: { id: tenantId } } } });
     } catch (e) {
       // Ignora erro se já existir
     }
   }
 
-  // 2. Cria usuários (Funcionários)
+  // 2. Cria usuários (Funcionários) associados ao tenant Representação
   const cargos = await prisma.cargo.findMany();
   const userPromises = [];
   for (let i = 0; i < NUM_USERS; i++) {
@@ -65,20 +73,22 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
           status: 1,
           cargoId: randomCargo.id,
           roles: { connect: rolesToConnect },
+          tenantId: tenantId,
         },
       })
     );
   }
   const users = await Promise.all(userPromises);
-  console.log(`${NUM_USERS} usuários criados.`);
+  console.log(`${NUM_USERS} usuários criados no tenant Representação.`);
 
-  // 3. Cria equipes
+  // 3. Cria equipes associadas ao tenant Representação
   // Seleciona usuários elegíveis: que tenham a role "gerenciar_equipe" e não pertençam a nenhuma equipe nem liderem outra
   const potentialLeaders = await prisma.user.findMany({
     where: {
       roles: { some: { name: "gerenciar_equipe" } },
       equipeId: null,
       liderEquipe: null,
+      tenantId: tenantId,
     },
     select: { id: true, name: true },
   });
@@ -93,18 +103,20 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
           description: `Descrição da equipe ${i + 1}`,
           logo: "https://via.placeholder.com/40",
           liderId: leader.id,
+          tenantId: tenantId,
         },
       })
     );
   }
   const equipes = await Promise.all(equipePromises);
-  console.log(`${NUM_EQUIPES} equipes criadas.`);
+  console.log(`${NUM_EQUIPES} equipes criadas no tenant Representação.`);
 
   // 4. Atribui membros aleatórios às equipes
   const remainingUsers = await prisma.user.findMany({
     where: {
       equipeId: null,
       id: { notIn: equipes.map((eq) => eq.liderId) },
+      tenantId: tenantId,
     },
   });
   for (const user of remainingUsers) {
@@ -118,7 +130,7 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
   }
   console.log("Membros atribuídos às equipes.");
 
-  // 5. Cria negócios e agendamentos
+  // 5. Cria negócios, leads, agendamentos, fechamentos, etc. no tenant Representação
   for (let i = 0; i < NUM_NEGOCIOS; i++) {
     // Cria um lead fake
     const lead = await prisma.lead.create({
@@ -127,6 +139,7 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
         telefone: `555-010${i}`,
         whatsapp: `555-010${i}`,
         email: `lead${i}@example.com`,
+        tenantId: tenantId,
       },
     });
 
@@ -134,15 +147,18 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
     const randomUser = users[Math.floor(Math.random() * users.length)];
 
     // Certifique-se de que exista o funil "VENDAS"
-    let funil = await prisma.funil.findFirst({ where: { nome: "VENDAS" } });
+    let funil = await prisma.funil.findFirst({
+      where: { nome: "VENDAS", tenantId: tenantId },
+    });
     if (!funil) {
-      funil = await prisma.funil.create({ data: { nome: "VENDAS" } });
+      funil = await prisma.funil.create({
+        data: { nome: "VENDAS", tenantId: tenantId },
+      });
     }
 
-    // Cria o negócio com dono, funil e etapa
     // Obter uma etapa aleatória do funil
     const etapas = await prisma.etapaFunil.findMany({
-      where: { funil_id: funil.id },
+      where: { funil_id: funil.id, tenantId: tenantId },
     });
     const randomEtapa = etapas[Math.floor(Math.random() * etapas.length)];
 
@@ -152,8 +168,6 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
       NegocioStatus.VENDIDO,
       NegocioStatus.PERDIDO,
     ];
-
-    // Gera um status aleatório
     const randomStatus =
       statusOptions[Math.floor(Math.random() * statusOptions.length)];
 
@@ -164,13 +178,14 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
     const negocio = await prisma.negocio.create({
       data: {
         titulo: `Negocio ${randomString(4)}`,
-        tipo: "IMOVEL", // ou randomize entre as opções
-        status: randomStatus, // ou escolha aleatória dentre "ATIVO", "VENDIDO", "PERDIDO"
+        tipo: "IMOVEL",
+        status: randomStatus,
         valor: randomValor,
         consorciado: { connect: { id: lead.id } },
         funil: { connect: { id: funil.id } },
         etapa_funil: { connect: { id: randomEtapa.id } },
         user: { connect: { id: randomUser.id } },
+        tenant: { connect: { id: tenantId } },
       },
     });
 
@@ -182,17 +197,17 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
         status: "pendente",
         negocio: { connect: { id: negocio.id } },
         user: { connect: { id: randomUser.id } },
+        tenant: { connect: { id: tenantId } },
       },
     });
 
-    // Array com os status possíveis
+    // Opcional: Cria um fechamento para 50% dos negócios
     const fechamentoStatusOptions = ["FECHADA", "RASCUNHO", "CANCELADA"];
     const randomFechamentoStatus =
       fechamentoStatusOptions[
         Math.floor(Math.random() * fechamentoStatusOptions.length)
       ];
 
-    // Opcional: Cria um fechamento (venda fechada) para 50% dos negócios
     if (Math.random() < 0.5) {
       await prisma.fechamento.create({
         data: {
@@ -224,11 +239,12 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
           total_pago: 1000.0,
           forma_pagamento: "Dinheiro",
           negocio: { connect: { id: negocio.id } },
+          tenant: { connect: { id: tenantId } },
         },
       });
     }
   }
-  console.log(`${NUM_NEGOCIOS} negócios criados.`);
+  console.log(`${NUM_NEGOCIOS} negócios criados no tenant Representação.`);
 
   const today = new Date();
 
@@ -248,7 +264,8 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
       name: "Produção Anterior",
       startDate: production1Start,
       endDate: production1End,
-      isActive: false, // Ajuste conforme a lógica de negócio
+      isActive: false,
+      tenantId: tenantId,
     },
   });
 
@@ -258,6 +275,7 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
       startDate: production2Start,
       endDate: production2End,
       isActive: true,
+      tenantId: tenantId,
     },
   });
 
@@ -265,7 +283,7 @@ export async function populateCRM(NUM_USERS: number, NUM_NEGOCIOS: number) {
 }
 
 async function main() {
-  // 1. Cria roles/permissões
+  // 1. Cria roles/permissões (modelo global)
   const permissionsData = [
     {
       name: "gerente_geral",
@@ -306,40 +324,84 @@ async function main() {
     },
   ];
 
-  // Cria ou atualiza cada permissão
   for (const permission of permissionsData) {
-    await prisma.role.create({ data: permission });
+    try {
+      await prisma.role.create({ data: permission });
+    } catch (e) {
+      // Ignora se a role já existir
+    }
   }
-
   console.log("Permissões criadas com sucesso!");
 
-  // Cria hash da senha (o número 10 é o salt rounds)'
-  const passwordHash = await bcrypt.hash("12345", 10);
-
-  //get roles with name === 'gerente_geral'
-  const gerente_geral = await prisma.role.findFirst({
-    where: {
-      name: "gerente_geral",
+  // 2. Cria três tenants: Master, Submaster e Representação
+  const tenantMaster = await prisma.tenant.create({
+    data: {
+      name: "Master Tenant",
+      type: "MASTER",
+      billingFrequency: "MENSAL",
     },
   });
+  const tenantSubmaster = await prisma.tenant.create({
+    data: {
+      name: "Submaster Tenant",
+      type: "SUBMASTER",
+      billingFrequency: "MENSAL",
+    },
+  });
+  const tenantRepresentacao = await prisma.tenant.create({
+    data: {
+      name: "Representação Tenant",
+      type: "REPRESENTATION",
+      billingFrequency: "MENSAL",
+    },
+  });
+  console.log("Tenants criados com sucesso!");
 
-  // Cria o usuário admin e conecta com a permissão de gerente_geral
+  // 3. Cria um usuário Admin para cada tenant usando a role "gerente_geral"
+  const passwordHash = await bcrypt.hash("12345", 10);
+  const gerenteGeral = await prisma.role.findFirst({
+    where: { name: "gerente_geral" },
+  });
+  if (!gerenteGeral) {
+    throw new Error("Role 'gerente_geral' não encontrada!");
+  }
+
   await prisma.user.create({
     data: {
-      name: "Gerente",
-      avatar: "", // você pode definir um avatar padrão
-      email: "gerente@com.br",
+      name: "Admin Master",
+      avatar: "",
+      email: "adminmaster@example.com",
       password: passwordHash,
-      roles: {
-        connect: { id: gerente_geral!.id },
-      },
-      status: 1, // supondo que 1 seja ativo
-      // Outros campos podem ser deixados como null ou definidos conforme necessário
+      roles: { connect: { id: gerenteGeral.id } },
+      status: 1,
+      tenantId: tenantMaster.id,
     },
   });
+  await prisma.user.create({
+    data: {
+      name: "Admin Submaster",
+      avatar: "",
+      email: "adminsubmaster@example.com",
+      password: passwordHash,
+      roles: { connect: { id: gerenteGeral.id } },
+      status: 1,
+      tenantId: tenantSubmaster.id,
+    },
+  });
+  await prisma.user.create({
+    data: {
+      name: "Admin Representação",
+      avatar: "",
+      email: "adminrepresentacao@example.com",
+      password: passwordHash,
+      roles: { connect: { id: gerenteGeral.id } },
+      status: 1,
+      tenantId: tenantRepresentacao.id,
+    },
+  });
+  console.log("Usuários Admin criados para cada tenant!");
 
-  console.log("Usuário admin criado com sucesso!");
-
+  // 4. Cria cargos (mesmo processo que no populateCRM)
   const cargoData = [
     { name: "Gerente" },
     { name: "Vendedor" },
@@ -350,280 +412,77 @@ async function main() {
     { name: "Auxiliar Adminstrativo" },
     { name: "Pós-Venda" },
   ];
-
-  for (const name of cargoData) {
-    await prisma.cargo.create({ data: name });
+  for (const cargo of cargoData) {
+    try {
+      await prisma.cargo.create({ data: { ...cargo, tenant: { connect: { id: tenantRepresentacao.id } } } });
+    } catch (e) {
+      // Ignora se já existir
+    }
   }
-
   console.log("Cargos criados com sucesso!");
 
-  // Cria o funil
+  // 5. Cria o funil e as etapas (associados ao tenant Representação)
   const funil = await prisma.funil.create({
-    data: {
-      nome: "VENDAS",
-    },
+    data: { nome: "VENDAS", tenantId: tenantRepresentacao.id },
   });
 
-  // Cria as etapas do funil em uma única operação com createMany
   await prisma.etapaFunil.createMany({
     data: [
       {
         nome: "OPORTUNIDADE",
         ordem: 1,
         funil_id: funil.id,
-        tipo: "COMUM", // etapa de agendamento
+        tipo: "COMUM",
+        tenantId: tenantRepresentacao.id,
       },
       {
         nome: "PRIMEIRO_CONTATO",
         ordem: 2,
         funil_id: funil.id,
-        tipo: "COMUM", // etapa de agendamento
+        tipo: "COMUM",
+        tenantId: tenantRepresentacao.id,
       },
       {
         nome: "REUNIAO_AGENDADA",
         ordem: 3,
         funil_id: funil.id,
-        tipo: "AGENDAMENTO", // etapa de agendamento
+        tipo: "AGENDAMENTO",
+        tenantId: tenantRepresentacao.id,
       },
       {
         nome: "REUNIAO",
         ordem: 4,
         funil_id: funil.id,
-        tipo: "REUNIAO", // etapa de reunião
+        tipo: "REUNIAO",
+        tenantId: tenantRepresentacao.id,
       },
       {
         nome: "APROVACAO",
         ordem: 5,
         funil_id: funil.id,
-        tipo: "COMUM", // etapa de aprovação
+        tipo: "COMUM",
+        tenantId: tenantRepresentacao.id,
       },
       {
         nome: "ACOMPANHAMENTO",
         ordem: 6,
         funil_id: funil.id,
-        tipo: "COMUM", // exemplo: etapa de reunião para acompanhamento
+        tipo: "COMUM",
+        tenantId: tenantRepresentacao.id,
       },
       {
         nome: "FECHAMENTO",
         ordem: 7,
         funil_id: funil.id,
-        tipo: "FECHAMENTO", // etapa de aprovação para fechamento
+        tipo: "FECHAMENTO",
+        tenantId: tenantRepresentacao.id,
       },
     ],
   });
-
   console.log('Pipeline "VENDAS" criado com sucesso!');
 
-  populateCRM(20, 50);
-
-  // ####################################################################
-  // Exemplos que devem ser apagados
-  // ####################################################################
-
-  // ADMIN
-  await prisma.admin.create({
-    data: {
-      id: "admin1",
-      username: "admin1",
-    },
-  });
-  await prisma.admin.create({
-    data: {
-      id: "admin2",
-      username: "admin2",
-    },
-  });
-
-  // GRADE
-  for (let i = 1; i <= 6; i++) {
-    await prisma.grade.create({
-      data: {
-        level: i,
-      },
-    });
-  }
-
-  // CLASS
-  for (let i = 1; i <= 6; i++) {
-    await prisma.class.create({
-      data: {
-        name: `${i}A`,
-        gradeId: i,
-        capacity: Math.floor(Math.random() * (20 - 15 + 1)) + 15,
-      },
-    });
-  }
-
-  // SUBJECT
-  const subjectData = [
-    { name: "Mathematics" },
-    { name: "Science" },
-    { name: "English" },
-    { name: "History" },
-    { name: "Geography" },
-    { name: "Physics" },
-    { name: "Chemistry" },
-    { name: "Biology" },
-    { name: "Computer Science" },
-    { name: "Art" },
-  ];
-
-  for (const subject of subjectData) {
-    await prisma.subject.create({ data: subject });
-  }
-
-  // TEACHER
-  for (let i = 1; i <= 15; i++) {
-    await prisma.teacher.create({
-      data: {
-        id: `teacher${i}`, // Unique ID for the teacher
-        username: `teacher${i}`,
-        name: `TName${i}`,
-        surname: `TSurname${i}`,
-        email: `teacher${i}@example.com`,
-        phone: `123-456-789${i}`,
-        address: `Address${i}`,
-        bloodType: "A+",
-        sex: i % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
-        subjects: { connect: [{ id: (i % 10) + 1 }] },
-        classes: { connect: [{ id: (i % 6) + 1 }] },
-        birthday: new Date(
-          new Date().setFullYear(new Date().getFullYear() - 30)
-        ),
-      },
-    });
-  }
-
-  // LESSON
-  for (let i = 1; i <= 30; i++) {
-    await prisma.lesson.create({
-      data: {
-        name: `Lesson${i}`,
-        day: Day[
-          Object.keys(Day)[
-            Math.floor(Math.random() * Object.keys(Day).length)
-          ] as keyof typeof Day
-        ],
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 3)),
-        subjectId: (i % 10) + 1,
-        classId: (i % 6) + 1,
-        teacherId: `teacher${(i % 15) + 1}`,
-      },
-    });
-  }
-
-  // PARENT
-  for (let i = 1; i <= 25; i++) {
-    await prisma.parent.create({
-      data: {
-        id: `parentId${i}`,
-        username: `parentId${i}`,
-        name: `PName ${i}`,
-        surname: `PSurname ${i}`,
-        email: `parent${i}@example.com`,
-        phone: `123-456-789${i}`,
-        address: `Address${i}`,
-      },
-    });
-  }
-
-  // STUDENT
-  for (let i = 1; i <= 50; i++) {
-    await prisma.student.create({
-      data: {
-        id: `student${i}`,
-        username: `student${i}`,
-        name: `SName${i}`,
-        surname: `SSurname ${i}`,
-        email: `student${i}@example.com`,
-        phone: `987-654-321${i}`,
-        address: `Address${i}`,
-        bloodType: "O-",
-        sex: i % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
-        parentId: `parentId${Math.ceil(i / 2) % 25 || 25}`,
-        gradeId: (i % 6) + 1,
-        classId: (i % 6) + 1,
-        birthday: new Date(
-          new Date().setFullYear(new Date().getFullYear() - 10)
-        ),
-      },
-    });
-  }
-
-  // EXAM
-  for (let i = 1; i <= 10; i++) {
-    await prisma.exam.create({
-      data: {
-        title: `Exam ${i}`,
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 2)),
-        lessonId: (i % 30) + 1,
-      },
-    });
-  }
-
-  // ASSIGNMENT
-  for (let i = 1; i <= 10; i++) {
-    await prisma.assignment.create({
-      data: {
-        title: `Assignment ${i}`,
-        startDate: new Date(new Date().setHours(new Date().getHours() + 1)),
-        dueDate: new Date(new Date().setDate(new Date().getDate() + 1)),
-        lessonId: (i % 30) + 1,
-      },
-    });
-  }
-
-  // RESULT
-  for (let i = 1; i <= 10; i++) {
-    await prisma.result.create({
-      data: {
-        score: 90,
-        studentId: `student${i}`,
-        ...(i <= 5 ? { examId: i } : { assignmentId: i - 5 }),
-      },
-    });
-  }
-
-  // ATTENDANCE
-  for (let i = 1; i <= 10; i++) {
-    await prisma.attendance.create({
-      data: {
-        date: new Date(),
-        present: true,
-        studentId: `student${i}`,
-        lessonId: (i % 30) + 1,
-      },
-    });
-  }
-
-  // EVENT
-  for (let i = 1; i <= 5; i++) {
-    await prisma.event.create({
-      data: {
-        title: `Event ${i}`,
-        description: `Description for Event ${i}`,
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 2)),
-        classId: (i % 5) + 1,
-      },
-    });
-  }
-
-  // ANNOUNCEMENT
-  for (let i = 1; i <= 5; i++) {
-    await prisma.announcement.create({
-      data: {
-        title: `Announcement ${i}`,
-        description: `Description for Announcement ${i}`,
-        date: new Date(),
-        classId: (i % 5) + 1,
-      },
-    });
-  }
-
-  console.log("Seeding completed successfully.");
+  // 6. Popula o CRM (restante dos dados) para o tenant Representação
+  await populateCRM(20, 50, tenantRepresentacao.id);
 }
 
 main()

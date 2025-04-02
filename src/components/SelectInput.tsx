@@ -34,7 +34,6 @@ const SelectInput = ({
           {isRequired && <span className="text-red-500 text-lg">*</span>}
         </label>
       )}
-
       <select
         {...register(name)}
         defaultValue={defaultValue}

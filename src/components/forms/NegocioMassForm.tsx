@@ -102,7 +102,7 @@ const NegocioMassForm = ({
   } = useForm<NegocioMassFormSchema>({
     resolver: zodResolver(negocioMassSchema),
     defaultValues: {
-      tipo_credito: "CARRO",
+      tipo_credito: "IMOVEL",
       negocios: "",
     },
   });
@@ -177,7 +177,7 @@ const NegocioMassForm = ({
       {/* Seleção do Tipo de Crédito via radiobox */}
       <div>
         <h2>Tipo de Crédito</h2>
-        <div className="flex gap-4">
+        <div className="flex gap-4 bg">
           {NegocioTipoOptions.map((option) => (
             <label
               key={option.value}
@@ -200,53 +200,70 @@ const NegocioMassForm = ({
       </div>
 
       {/* Área para inserir os dados dos negócios */}
-      <div>
-        <h2>Dados dos Negócios</h2>
-        <textarea
-          rows={10}
-          className="w-full p-2 border border-gray-300 rounded"
-          placeholder={`Exemplos:
+
+      <div className="flex justify-between gap-2 w-full">
+        <div className="w-full ">
+          <div>
+            <h2 className="py-2 font-semibold text-purple-700">
+              Dados dos Negócios
+            </h2>
+            <textarea
+              rows={10}
+              className="w-full p-2 border border-gray-300 rounded h-[300px] "
+              placeholder={`Exemplos:
 Fulano 1,123456
 Fulano 2,234567, 500000`}
-          {...register("negocios")}
-        ></textarea>
-        {formErrors.negocios && (
-          <span className="text-red-500 text-xs">
-            {formErrors.negocios.message}
-          </span>
-        )}
+              {...register("negocios")}
+            ></textarea>
+            {formErrors.negocios && (
+              <span className="text-red-500 text-xs">
+                {formErrors.negocios.message}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="w-full h-full ">
+          <h2 className="py-2 font-semibold text-purple-700">
+            Pré-visualização
+          </h2>
+          <div className="w-full h-full p-4 ">
+            <div className="h-[300px] overflow-y-scroll">
+              {parsedRecords.length > 0 && (
+                <div>
+                  <h4 className="font-medium">Negócios Válidos:</h4>
+                  <ul className="list-disc ml-4">
+                    {parsedRecords.map((record, idx) => (
+                      <li key={idx}>
+                        <strong>{record.name}</strong> - Telefone:{" "}
+                        {record.telefone}
+                        {record.credito !== null &&
+                          ` - Crédito: R$ ${record.credito !== undefined ? formatCurrency(record.credito) : "N/A"} `}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {parsedErrors.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-red-600">
+                    Erros de Formatação:
+                  </h4>
+                  <ul className="list-disc ml-4">
+                    {parsedErrors.map((error, idx) => (
+                      <li key={idx}>
+                        Linha {error.line}: {error.message} (Conteúdo: "
+                        {error.raw}")
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Pré-visualização dos registros e erros */}
-      <div className="flex flex-col gap-2">
-        <h3 className="font-semibold">Pré-visualização</h3>
-        {parsedRecords.length > 0 && (
-          <div>
-            <h4 className="font-medium">Negócios Válidos:</h4>
-            <ul className="list-disc ml-4">
-              {parsedRecords.map((record, idx) => (
-                <li key={idx}>
-                  <strong>{record.name}</strong> - Telefone: {record.telefone}
-                  {record.credito !== null &&
-                    ` - Crédito: R$ ${record.credito !== undefined ? formatCurrency(record.credito) : "N/A"} `}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {parsedErrors.length > 0 && (
-          <div>
-            <h4 className="font-medium text-red-600">Erros de Formatação:</h4>
-            <ul className="list-disc ml-4">
-              {parsedErrors.map((error, idx) => (
-                <li key={idx}>
-                  Linha {error.line}: {error.message} (Conteúdo: "{error.raw}")
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
 
       {/* Botões de Cancelar e Salvar */}
       <div className="flex gap-4">

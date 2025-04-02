@@ -7,23 +7,36 @@ import { useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { assignMassNegocios } from "@/lib/actions";
+import {
+  NegocioAtribuirMassFormSchema,
+  negocioAtribuirMassSchema,
+} from "@/lib/formValidationSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-type FormValues = {
-  proprietarioId: string;
-  etapaId: string;
-  // Não é necessário registrar "negocioIds" pois será adicionado via payload
-};
+type FormValues = NegocioAtribuirMassFormSchema;
 
 export default function NegocioAtribuirMassForm({
   selectedIds,
   onClose,
+  onCancel,
   relatedData,
+  model,
 }: {
   selectedIds: number[];
   onClose: () => void;
+  onCancel: () => void;
   relatedData: { users: any[]; etapas: any[] };
+  model: string;
 }) {
-  const { register, handleSubmit } = useForm<FormValues>();
+  // const { register, handleSubmit } = useForm<FormValues>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(negocioAtribuirMassSchema),
+  });
+
   const [state, formAction] = useFormState(assignMassNegocios, {
     success: false,
     msg: "",
@@ -37,6 +50,7 @@ export default function NegocioAtribuirMassForm({
     const payload = new FormData();
     payload.append("proprietarioId", data.proprietarioId);
     payload.append("etapaId", data.etapaId);
+    payload.append("model", data.model);
     payload.append("negocioIds", JSON.stringify(selectedIds));
 
     startTransition(async () => {
@@ -49,6 +63,8 @@ export default function NegocioAtribuirMassForm({
       toast.success(state.msg);
       onClose();
       router.refresh();
+    } else if (state.msg && !state.success) {
+      toast.error(state.msg);
     }
   }, [state, router, onClose]);
 
@@ -57,6 +73,12 @@ export default function NegocioAtribuirMassForm({
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-4"
     >
+      <input
+        type="hidden"
+        {...register("model")}
+        value={model}
+      />
+
       <h1 className="text-xl font-semibold">Atribuir Negócios em Massa</h1>
       <label className="text-sm text-gray-700">
         Proprietário
@@ -74,6 +96,11 @@ export default function NegocioAtribuirMassForm({
             </option>
           ))}
         </select>
+        {errors.proprietarioId && (
+          <span className="text-red-500 text-sm">
+            {errors.proprietarioId.message}
+          </span>
+        )}
       </label>
       <label className="text-sm text-gray-700">
         Etapa do Funil
@@ -91,6 +118,9 @@ export default function NegocioAtribuirMassForm({
             </option>
           ))}
         </select>
+        {errors.etapaId && (
+          <span className="text-red-500 text-sm">{errors.etapaId.message}</span>
+        )}
       </label>
       <div className="flex justify-end gap-2 mt-4">
         <button
@@ -102,7 +132,7 @@ export default function NegocioAtribuirMassForm({
         </button>
         <button
           type="button"
-          onClick={onClose}
+          onClick={onCancel}
           className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
         >
           Cancelar

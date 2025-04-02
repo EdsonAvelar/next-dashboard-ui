@@ -200,13 +200,13 @@ export default function ProposalViewer({
                   </p>
                 </div>
               </div>
-
+              <div className="py-2"></div>
               {/* Financiamentos */}
               {simulation.financiamentos &&
                 simulation.financiamentos.map((financiamento, index) => (
                   <div
                     key={`fin-${index}`}
-                    className="py-4 border-t border-yellow-600"
+                    className="py-4 border-t border-yellow-600 "
                   >
                     <h3 className="text-lg text-center font-semibold ">
                       PROPOSTA {index + 1}: {financiamento.titulo}

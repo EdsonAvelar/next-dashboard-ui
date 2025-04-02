@@ -26,36 +26,36 @@ const columns = [
     accessor: "info",
     className: "",
   },
-  {
-    header: (
-      <div className="flex items-center gap-2">
-        <span>Nome</span>
-        {/* Botão de filtro */}
-        <ColumnFilter
-          paramKey="name"
-          filterType="text"
-          label="Filtrar por Teacher ID"
-        />
-      </div>
-    ),
-    accessor: "name",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: (
-      <div className="flex items-center gap-2">
-        <span>E-mail</span>
-        {/* Botão de filtro */}
-        <ColumnFilter
-          paramKey="cargo"
-          filterType="text"
-          label="Filtrar por Subjects ID"
-        />
-      </div>
-    ),
-    accessor: "email",
-    className: "hidden md:table-cell",
-  },
+  // {
+  //   header: (
+  //     <div className="flex items-center gap-2">
+  //       <span>Nome</span>
+  //       {/* Botão de filtro */}
+  //       <ColumnFilter
+  //         paramKey="name"
+  //         filterType="text"
+  //         label="Filtrar por Teacher ID"
+  //       />
+  //     </div>
+  //   ),
+  //   accessor: "name",
+  //   className: "hidden md:table-cell",
+  // },
+  // {
+  //   header: (
+  //     <div className="flex items-center gap-2">
+  //       <span>E-mail</span>
+  //       {/* Botão de filtro */}
+  //       <ColumnFilter
+  //         paramKey="cargo"
+  //         filterType="text"
+  //         label="Filtrar por Subjects ID"
+  //       />
+  //     </div>
+  //   ),
+  //   accessor: "email",
+  //   className: "hidden md:table-cell",
+  // },
   { header: "Cargo", accessor: "cargo", className: "hidden md:table-cell" },
   {
     header: "permissoes",
@@ -80,9 +80,9 @@ const Funcionarios = async ({
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined) {
         switch (key) {
-          case "name":
+          case "info":
             where.name = {
-              contains: params.teacherId,
+              contains: params.info,
             };
             break;
         }
@@ -124,8 +124,8 @@ const Funcionarios = async ({
           <p className="text-xs text-gray-500">{item?.email}</p>
         </div>
       </td>
-      <td className="hidden md:table-cell">{item.name}</td>
-      <td className="hidden md:table-cell">{item.email}</td>
+      {/* <td className="hidden md:table-cell">{item.name}</td>
+      <td className="hidden md:table-cell">{item.email}</td> */}
       <td className="hidden md:table-cell">{item.cargo?.name}</td>
       <td className="hidden md:table-cell">
         {item.roles.map((role, idx) => (

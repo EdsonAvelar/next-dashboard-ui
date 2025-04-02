@@ -1,8 +1,9 @@
+"use server";
+
 import Badge from "@/components/Badge";
 import ColumnFilter from "@/components/ColumnFilter";
-import FormContainer from "@/components/forms/FormContainer";
 import Pagination from "@/components/Pagination";
-import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
+import ProprietarioFilterSelect from "@/components/ui/ProprietarioFilterSelect";
 import Table from "@/components/Table";
 import InputSearch from "@/components/InputSearch";
 import { getCurrentUser, UserProfile } from "@/lib/actions";
@@ -12,22 +13,17 @@ import { hasRole } from "@/lib/user";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
-
 import dayjs from "@/lib/dayjs";
-
 import AgendamentoActions from "@/components/AgendamentoActions";
 
+// Função para definir o status do agendamento
 function getStatus(agendamento: any) {
-  // Se houver registro em agendamento.reuniao, a reunião foi realizada
   if (agendamento.reuniao) {
     return <Badge type="green">REUNIÃO REALIZADA</Badge>;
   }
-
-  // Caso contrário, comparar data_agendado com a data atual
   const date = dayjs(agendamento.dataAgendado);
   const now = dayjs();
-  const diff = date.diff(now, "day"); // se negativo, já passou
-
+  const diff = date.diff(now, "day");
   if (date.isSame(now, "day")) {
     return <Badge type="yellow">REUNIÃO HOJE</Badge>;
   } else if (date.isSame(dayjs().add(1, "day"), "day")) {
@@ -35,15 +31,13 @@ function getStatus(agendamento: any) {
   } else if (diff < 0) {
     return <Badge type="red">FALTOU</Badge>;
   } else {
-    return <Badge type="blue">AGENDADO ({Math.abs(diff)} dia(s))</Badge>;
+    // return <Badge type="blue">AGENDADO ({Math.abs(diff)} dia(s))</Badge>;
+    return <Badge type="blue">AGENDADO</Badge>;
   }
 }
 
-// Definição das colunas, seguindo a mesma estrutura de negocios/lista
+// Definição das colunas da tabela
 const columns = [
-  // Checkbox
-
-  // Proprietário
   {
     header: (
       <div className="flex items-center gap-2">
@@ -57,7 +51,6 @@ const columns = [
     ),
     accessor: "proprietario",
   },
-  // Cliente
   {
     header: (
       <div className="flex items-center gap-2">
@@ -71,7 +64,6 @@ const columns = [
     ),
     accessor: "cliente",
   },
-  // Telefone
   {
     header: (
       <div className="flex items-center gap-2">
@@ -86,31 +78,26 @@ const columns = [
     accessor: "telefone",
     className: "hidden md:table-cell",
   },
-  // Tipo
   {
     header: "Tipo",
     accessor: "tipo",
     className: "hidden md:table-cell",
   },
-  // Agendado Para
   {
     header: "Agendado Para",
     accessor: "agendadoPara",
     className: "hidden md:table-cell",
   },
-  // Hora Agendamento
   {
     header: "Hora",
     accessor: "hora",
     className: "hidden md:table-cell",
   },
-  // Agendado Em
   {
     header: "Agendado Em",
     accessor: "agendadoEm",
     className: "hidden md:table-cell",
   },
-  // Status
   {
     header: (
       <div className="flex items-center gap-2">
@@ -124,7 +111,6 @@ const columns = [
     ),
     accessor: "status",
   },
-  // Ações
   { header: "Ações", accessor: "actions", className: "" },
 ];
 
@@ -136,29 +122,63 @@ export default async function AgendamentoPage({
   const { page, ...params } = searchParams || {};
   const p = page ? parseInt(page) : 1;
 
-  // Usuário atual
+  // Obtém o usuário atual
   const user: UserProfile = await getCurrentUser();
   const isAdmin = hasRole(user, "gerente_geral");
 
-  // Filtros
-  // Se quiser filtrar por data_agendado, proprietario, etc., crie um "where" custom
+  // Monta os filtros (where) para os agendamentos
   const where: Prisma.AgendamentoWhereInput = {};
 
-  // Exemplo: se "proprietario" está em params, filtrar pelo userName do negócio
-  if (params && params.proprietario) {
-    where.negocio = {
-      user: {
-        name: { contains: params.proprietario },
-      },
-    };
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "cliente":
+            where.negocio = {
+              ...where.negocio,
+              consorciado: {
+                nome: {
+                  contains: params.cliente,
+                },
+              },
+            };
+
+            break;
+          case "telefone":
+            where.negocio = {
+              ...where.negocio,
+              consorciado: {
+                telefone: {
+                  contains: params.telefone,
+                },
+              },
+            };
+
+          case "proprietario":
+            where.user = {
+              name: {
+                contains: params.proprietario,
+              },
+            };
+            break;
+          case "proprietario_id":
+            where.user = { id: parseInt(value, 10) };
+            break;
+
+          case "status":
+            where.status = { contains: params.status };
+            break;
+        }
+      }
+    }
   }
 
-  // Se não for admin, filtrar apenas agendamentos do user atual
+  // Se não for admin, forçar filtro pelo usuário logado
   if (!isAdmin && user) {
     where.negocio = { user_id: user.id };
   }
 
-  // Paginação
+  // Consulta os agendamentos com paginação e as relações necessárias
   const [data, pageCount] = await prisma.$transaction([
     prisma.agendamento.findMany({
       where,
@@ -169,11 +189,11 @@ export default async function AgendamentoPage({
             consorciado: true, // Cliente
           },
         },
-        reuniao: true, // Se existir, reunião realizada
+        reuniao: true, // Para exibir status de reunião
       },
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
-      orderBy: { dataAgendado: "desc" },
+      orderBy: { dataAgendamento: "desc" },
     }),
     prisma.agendamento.count({ where }),
   ]);
@@ -189,7 +209,6 @@ export default async function AgendamentoPage({
       >
         {/* Proprietário */}
         <td>{negocio.user?.name || <Badge type="gray">SEM DONO</Badge>}</td>
-
         {/* Cliente */}
         <td>
           {negocio.consorciado ? (
@@ -200,7 +219,6 @@ export default async function AgendamentoPage({
             "N/A"
           )}
         </td>
-
         {/* Telefone */}
         <td className="hidden md:table-cell">
           {negocio.consorciado?.telefone ? (
@@ -211,49 +229,40 @@ export default async function AgendamentoPage({
             "N/A"
           )}
         </td>
-
         {/* Tipo */}
         <td className="hidden md:table-cell">{negocio.tipo || "N/A"}</td>
-
-        {/* Agendado Para */}
+        {/* Agendado Para (data do agendamento) */}
         <td className="hidden md:table-cell">
           {dayjs(agendamento.dataAgendado).format("DD/MM/YYYY")}
         </td>
-
         {/* Hora */}
         <td className="hidden md:table-cell">{agendamento.hora || "N/A"}</td>
-
         {/* Agendado Em */}
         <td className="hidden md:table-cell">
           {dayjs(agendamento.dataAgendamento).format("DD/MM/YYYY")}
         </td>
-
         {/* Status */}
         <td>{getStatus(agendamento)}</td>
-
         {/* Ações */}
-        <td className="flex items-center gap-2 bg-blue-400 rounded-md p-2">
-          {negocio.id}
-
+        <td className="flex items-center gap-2">
           <AgendamentoActions negocioId={negocio.id} />
         </td>
       </tr>
     );
   });
 
-  // Se quiser exibir um Select de Proprietários, Etapas, etc., para filtros
+  // Busca lista completa de usuários (caso precise para filtros em massa)
   const allUsers = await prisma.user.findMany({
     select: { id: true, name: true },
   });
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
-      {/* TOP */}
+      {/* Cabeçalho */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">Agendamentos</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <InputSearch />
-          {/* Exemplo de botões de filtro, etc. */}
           <div className="flex items-center gap-4">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image
@@ -271,27 +280,18 @@ export default async function AgendamentoPage({
                 height={14}
               />
             </button>
-            {/* Exemplo de FormContainer, se quiser criar novo Agendamento */}
-            {/* <FormContainer
-              table="agendamento"
-              type="create"
-            /> */}
           </div>
-
-          {/* Se for admin, permite filtrar por proprietario */}
-          {isAdmin && <ProprietarioFilterSelect users={allUsers} />}
+          {isAdmin && <ProprietarioFilterSelect />}
         </div>
       </div>
-
-      {/* LIST */}
+      {/* Tabela */}
       <Table
         columns={columns}
         rows={rows}
         selectable={true}
-        // massRelatedData se desejar
+        massRelatedData={{ users: allUsers }}
       />
-
-      {/* PAGINATION */}
+      {/* Paginação */}
       <Pagination
         page={p}
         count={pageCount}

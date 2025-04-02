@@ -9,6 +9,7 @@ interface LoginFormProps {
 }
 
 import { useRouter } from "next/navigation";
+import { HOMEPAGE } from "@/lib/settings";
 
 export default function LoginForm({ csrfToken }: LoginFormProps) {
   const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ export default function LoginForm({ csrfToken }: LoginFormProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-   const router = useRouter();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +31,7 @@ export default function LoginForm({ csrfToken }: LoginFormProps) {
       setError(res.error);
       setLoading(false);
     } else {
-      
-      router.push("/dashboard/crm");
+      router.push(HOMEPAGE);
     }
   };
 

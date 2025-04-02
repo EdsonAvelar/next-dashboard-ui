@@ -152,3 +152,15 @@ export const equipeSchema = z.object({
 });
 
 export type EquipeSchema = z.infer<typeof equipeSchema>;
+
+export const negocioAtribuirMassSchema = z.object({
+  proprietarioId: z
+    .string()
+    .nonempty({ message: "Proprietário é obrigatório" }),
+  etapaId: z.string().nonempty({ message: "Etapa do funil é obrigatória" }),
+  model: z.string(),
+});
+
+export type NegocioAtribuirMassFormSchema = z.infer<
+  typeof negocioAtribuirMassSchema
+>;

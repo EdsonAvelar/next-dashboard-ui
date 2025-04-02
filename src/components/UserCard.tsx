@@ -41,11 +41,7 @@ function getIconByType(type: string) {
   }
 }
 
-const UserCard = async ({
-  type,
-  fromDate,
-  toDate,
-}: UserCardProps) => {
+const UserCard = async ({ type, fromDate, toDate }: UserCardProps) => {
   const etapaAprovacao = 5;
   let data;
 
@@ -92,7 +88,7 @@ const UserCard = async ({
     data = formatCurrency(Number(sumValue));
   } else {
     // Exemplo para outros tipos
-    data = await prisma.admin.count();
+    // data = await prisma.admin.count();
   }
 
   // Escolhe o ícone com base no 'type'

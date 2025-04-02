@@ -3,7 +3,7 @@ import Badge from "@/components/Badge";
 import ColumnFilter from "@/components/ColumnFilter";
 import Table from "@/components/Table";
 import Pagination from "@/components/Pagination";
-import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
+import ProprietarioFilterSelect from "@/components/ui/ProprietarioFilterSelect";
 import { getCurrentUser, UserProfile } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
@@ -212,7 +212,7 @@ export default async function ReunioesPage({
               />
             </button>
           </div>
-          {isAdmin && <ProprietarioFilterSelect users={allUsers} />}
+          {isAdmin && <ProprietarioFilterSelect  />}
         </div>
       </div>
 

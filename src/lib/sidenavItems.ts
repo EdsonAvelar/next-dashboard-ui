@@ -54,6 +54,11 @@ export function getSidenavItems(userId?: number | string) {
           href: "/vendas",
           params: userId ? `proprietario_id=${userId}` : "",
         },
+        {
+          label: "Importar",
+          href: "/importar",
+          params: userId ? `proprietario_id=${userId}` : "",
+        },
       ],
     },
     {

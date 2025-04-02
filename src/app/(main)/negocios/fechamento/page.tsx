@@ -3,7 +3,10 @@ import FechamentoForm from "@/components/forms/FechamentoForm";
 import { prisma } from "@/lib/prisma";
 import dayjs from "@/lib/dayjs";
 import { redirect } from "next/navigation";
-import { getTimeComercialVendedores } from "@/lib/actions";
+import {
+  getOrCreateFechamento,
+  getTimeComercialVendedores,
+} from "@/lib/actions";
 
 export default async function FechamentoPage({
   searchParams,
@@ -39,23 +42,7 @@ export default async function FechamentoPage({
 
   // Se não existir, cria um novo fechamento com status "RASCUNHO"
   if (!fechamento && negocio) {
-    fechamento = await prisma.fechamento.create({
-      data: {
-        negocio: { connect: { id: negocio.id } },
-        status: "RASCUNHO",
-      },
-      include: {
-        negocio: {
-          include: {
-            consorciado: true,
-            conjuge: true,
-          },
-        },
-        vendedores: {
-          include: { user: true },
-        },
-      },
-    });
+    fechamento = await getOrCreateFechamento(parsedNegocioId);
   }
 
   // Dados relacionados para os selects do formulário (ex: cargos e vendedores)

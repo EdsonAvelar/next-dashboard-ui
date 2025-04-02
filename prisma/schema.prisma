@@ -7,10 +7,82 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TenantType {
+  MASTER
+  SUBMASTER
+  REPRESENTATION
+}
+
+enum BillingFrequency {
+  MENSAL
+  TRIMESTRAL
+  ANUAL
+}
+
+model Tenant {
+  id               Int             @id @default(autoincrement())
+  name             String
+  type             TenantType
+  billingFrequency BillingFrequency
+  // Se for uma representação com submaster vinculado
+  submasterId      Int?
+  submaster        Tenant?         @relation("SubmasterRepresentations", fields: [submasterId], references: [id])
+  representations  Tenant[]        @relation("SubmasterRepresentations")
+  
+  // Relação de indicação para descontos
+  indicatedById    Int?
+  indicatedBy      Tenant?         @relation("TenantReferrals", fields: [indicatedById], references: [id])
+  referrals        Tenant[]        @relation("TenantReferrals")
+  
+  // Relação com billing e usuários
+  billing          Billing[]
+  users            User[]
+
+  // Relação inversa
+  equipes                Equipe[]
+  negocios               Negocio[]
+  leads                  Lead[]
+  funis                  Funil[]
+  etapaFunils            EtapaFunil[]
+  agendamentos           Agendamento[]
+  reunioes               Reuniao[]
+  aprovacoes             Aprovacao[]
+  fechamentos            Fechamento[]
+  producao               Producao[]
+  simulacoes             Simulacao[]
+  config                 Config[]  
+  cargos                 Cargo[]
+  leadImportados         LeadImportado[]
+
+  role                   Role[]
+  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Billing {
+  id         Int      @id @default(autoincrement())
+
+  plan       String   // Nome ou código do plano contratado
+  valor      Decimal  // Valor cobrado na cobrança
+  discount   Decimal  // Desconto aplicado, se houver
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+    // Associação com o tenant (multi‑tenant)
+  tenantId          Int 
+  tenant            Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+
 model Cargo {
   id Int@id @default(autoincrement())
   name  String
   User User[]
+    // Associação com o tenant (multi‑tenant)
+  tenantId         Int
+  tenant            Tenant    @relation(fields: [tenantId], references: [id])
 }
 
 model Role {
@@ -18,7 +90,12 @@ model Role {
   name  String
   descricao String
   // Relação muitos-para-muitos: cada role pode ter vários usuários
+
   users      User[]
+
+    // Associação com o tenant (multi‑tenant)
+  tenantId          Int
+  tenant            Tenant    @relation(fields: [tenantId], references: [id])
 }
 
 // Model User baseado na migration do Laravel
@@ -35,7 +112,6 @@ model User {
 
   status            Int
 
-
   
   email             String    @unique
   email_verified_at DateTime?
@@ -47,20 +123,26 @@ model User {
   updatedAt         DateTime  @updatedAt
  
   negocios          Negocio[]  // se desejar relacionar o usuário com os negócios
-  agendamento Agendamento[]
-  reunioes  Reuniao[]
-  simulacoes Simulacao[]
+  agendamento       Agendamento[]
+  reunioes          Reuniao[]
+  simulacoes        Simulacao[]
 
   // Relação de membro de equipe (um usuário pode pertencer a, no máximo, uma equipe)
   equipeId          Int?      
   equipe            Equipe?   @relation("TeamMembers", fields: [equipeId], references: [id])
 
   // Relação de liderança: cada usuário pode liderar, no máximo, uma equipe
-  liderEquipe      Equipe?   @relation("LeaderTeam")
+  liderEquipe       Equipe?   @relation("LeaderTeam")
   
   // Added opposite relation for FechamentoUser model
-  fechamentoUsers  FechamentoUser[]
+  fechamentoUsers   FechamentoUser[]
+  
+  // Added opposite relation for LeadImportado
+  leadImportados LeadImportado[] @relation("UserLeadImportados")
 
+  // Associação com o tenant (multi‑tenant)
+  tenantId          Int
+  tenant            Tenant    @relation(fields: [tenantId], references: [id])
 }
 
 model Equipe {
@@ -77,6 +159,10 @@ model Equipe {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Equipe pertence a um tenant
+  tenantId   Int
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 
@@ -136,6 +222,9 @@ model Negocio {
   agendamento Agendamento[]
   simulacoes Simulacao[]
   aprovacoes Aprovacao[] @relation("NegocioAprovacao")
+
+  tenantId       Int
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
 }
 
 model Label {
@@ -192,6 +281,9 @@ model Lead {
 
   // Relação reversa para quando o lead é usado como cônjuge em um Fechamento
   fechamentoConjuge Negocio? @relation("FechamentoConjuge")
+
+  tenantId         Int
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 
@@ -204,6 +296,9 @@ model Funil {
   // Um funil pode ter várias etapas e negócios
   etapa_funils EtapaFunil[]
   negocios     Negocio[]
+
+  tenantId  Int
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 enum EtapaFunilTipo {
@@ -226,6 +321,9 @@ model EtapaFunil {
 
   funil     Funil           @relation(fields: [funil_id], references: [id])
   negocios  Negocio[]
+
+  tenantId Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
 }
 
 model Agendamento {
@@ -245,6 +343,9 @@ model Agendamento {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  tenantId Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
 }
 
 model Reuniao {
@@ -260,6 +361,9 @@ model Reuniao {
   agendamentoId Int @unique
   agendamento   Agendamento @relation(fields: [agendamentoId], references: [id])
   user          User        @relation(fields: [userId], references: [id])
+
+  tenantId Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
 }
 
 model Aprovacao {
@@ -272,6 +376,9 @@ model Aprovacao {
   negocio        Negocio   @relation("NegocioAprovacao", fields: [negocioId], references: [id])
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  tenantId Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
 }
 
 model Fechamento {
@@ -319,6 +426,9 @@ model Fechamento {
 
   createdAt                  DateTime    @default(now())
   updatedAt                  DateTime    @updatedAt
+
+  tenantId  Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
 }
 
 model FechamentoUser {
@@ -343,6 +453,9 @@ model Producao {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  tenantId Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
 }
 
 
@@ -358,6 +471,9 @@ model Simulacao {
   // Relações (supondo que existam os modelos Negocio e User)
   negocio        Negocio?                 @relation(fields: [negocioId], references: [id])
   user           User                     @relation(fields: [userId], references: [id])
+
+  tenantId Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
 }
 
 model SimulacaoConsorcio {
@@ -379,6 +495,8 @@ model SimulacaoConsorcio {
   conParcelasEmbutidas    Int  
   simulacaoId             Int
   simulacao               Simulacao  @relation(fields: [simulacaoId], references: [id])
+
+
 }
 
 model SimulacaoFinanciamento {
@@ -403,201 +521,39 @@ model SimulacaoFinanciamento {
 
 model Config {
   id          Int      @id @default(autoincrement())
-  key         String   @unique
+  key         String   
   value       String   // ou use Json para dados mais complexos
   description String?  // opcional, para documentar a configuração
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relação com o tenant
+  tenantId Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  
+  @@unique([tenantId, key])
+
 }
 
-// ###############################################################################
-// ###############################################################################
-//  ABAIXO MODELS DO SISTEMA DE EXEMPLO, DELETAR DEPOIS
-// ###############################################################################
-// ###############################################################################
+model LeadImportado {
+  id            Int      @id @default(autoincrement())
+  nome          String   
+  telefone      String   @unique   
+  email         String?  
+  campanha      String? 
+  fonte         String? 
+  origem        String?
+  tipo            NegocioTipo
+  
+  data_conversao DateTime 
 
+  userId   Int?
 
-model Admin {
-  id       String @id
-  username String @unique
-}
+  user   User?    @relation("UserLeadImportados", fields: [userId], references: [id])
 
-model Student {
-  id          String       @id
-  username    String       @unique
-  name        String
-  surname     String
-  email       String?      @unique
-  phone       String?      @unique
-  address     String
-  img         String?
-  bloodType   String
-  sex         UserSex
-  createdAt   DateTime     @default(now())
-  parentId    String
-  parent      Parent       @relation(fields: [parentId], references: [id])
-  classId     Int
-  class       Class        @relation(fields: [classId], references: [id])
-  gradeId     Int
-  grade       Grade        @relation(fields: [gradeId], references: [id])
-  attendances Attendance[]
-  results     Result[]
-  birthday    DateTime
-}
+  tenantId Int
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
 
-model Teacher {
-  id        String    @id
-  username  String    @unique
-  name      String
-  surname   String
-  email     String?   @unique
-  phone     String?   @unique
-  address   String
-  img       String?
-  bloodType String
-  sex       UserSex
-  createdAt DateTime  @default(now())
-  subjects  Subject[]
-  lessons   Lesson[]
-  classes   Class[]
-  birthday  DateTime
-}
-
-model Parent {
-  id        String    @id
-  username  String    @unique
-  name      String
-  surname   String
-  email     String?   @unique
-  phone     String    @unique
-  address   String
-  createdAt DateTime  @default(now())
-  students  Student[]
-}
-
-model Grade {
-  id    Int @id @default(autoincrement())
-  level Int @unique
-
-  students Student[]
-  classess Class[]
-}
-
-model Class {
-  id       Int    @id @default(autoincrement())
-  name     String @unique
-  capacity Int
-
-  supervisorId  String?
-  supervisor    Teacher?       @relation(fields: [supervisorId], references: [id])
-  lessons       Lesson[]
-  students      Student[]
-  gradeId       Int
-  grade         Grade          @relation(fields: [gradeId], references: [id])
-  events        Event[]
-  announcements Announcement[]
-}
-
-model Subject {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  teachers Teacher[]
-  lessons  Lesson[]
-}
-
-model Lesson {
-  id        Int      @id @default(autoincrement())
-  name      String
-  day       Day
-  startTime DateTime
-  endTime   DateTime
-
-  subjectId   Int
-  subject     Subject      @relation(fields: [subjectId], references: [id])
-  classId     Int
-  class       Class        @relation(fields: [classId], references: [id])
-  teacherId   String
-  teacher     Teacher      @relation(fields: [teacherId], references: [id])
-  exams       Exam[]
-  assignments Assignment[]
-  attendances Attendance[]
-}
-
-model Exam {
-  id        Int      @id @default(autoincrement())
-  title     String
-  startTime DateTime
-  endTime   DateTime
-
-  lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
-  results  Result[]
-}
-
-model Assignment {
-  id        Int      @id @default(autoincrement())
-  title     String
-  startDate DateTime
-  dueDate   DateTime
-
-  lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
-  results  Result[]
-}
-
-model Result {
-  id    Int @id @default(autoincrement())
-  score Int
-
-  examId       Int?
-  exam         Exam?       @relation(fields: [examId], references: [id])
-  assignmentId Int?
-  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
-  studentId    String
-  student      Student     @relation(fields: [studentId], references: [id])
-}
-
-model Attendance {
-  id      Int      @id @default(autoincrement())
-  date    DateTime
-  present Boolean
-
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id])
-  lessonId  Int
-  lesson    Lesson  @relation(fields: [lessonId], references: [id])
-}
-
-model Event {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  startTime   DateTime
-  endTime     DateTime
-
-  classId Int?
-  class   Class? @relation(fields: [classId], references: [id])
-}
-
-model Announcement {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  date        DateTime
-
-  classId Int?
-  class   Class? @relation(fields: [classId], references: [id])
-}
-
-enum UserSex {
-  MALE
-  FEMALE
-}
-
-enum Day {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

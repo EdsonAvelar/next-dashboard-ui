@@ -2,9 +2,13 @@ import Badge from "@/components/Badge";
 import ColumnFilter from "@/components/ColumnFilter";
 import FormContainer from "@/components/forms/FormContainer";
 import Pagination from "@/components/Pagination";
-import ProprietarioFilterSelect from "@/components/ProprietarioFilterSelect";
+import ProprietarioFilterSelect from "@/components/ui/ProprietarioFilterSelect";
 import Table from "@/components/Table";
-import { getCurrentUser, UserProfile } from "@/lib/actions";
+import {
+  getCurrentUser,
+  getTimeComercialVendedores,
+  UserProfile,
+} from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { hasRole } from "@/lib/user";
@@ -299,10 +303,8 @@ const Negocios = async ({
     </tr>
   ));
 
-  // Buscando os dados para ações em massa:
-  const allUsers = await prisma.user.findMany({
-    select: { id: true, name: true },
-  });
+  const allUsers = await getTimeComercialVendedores();
+
   const allEtapas = await prisma.etapaFunil.findMany({
     select: { id: true, nome: true },
   });
@@ -338,7 +340,7 @@ const Negocios = async ({
           </div>
           {/* Adicionando o select para filtrar por Proprietário */}
 
-          {isAdmin && <ProprietarioFilterSelect users={allUsers} />}
+          {isAdmin && <ProprietarioFilterSelect />}
         </div>
       </div>
       {/* LIST */}
@@ -347,6 +349,7 @@ const Negocios = async ({
         rows={rows}
         selectable={true}
         massRelatedData={{ users: allUsers, etapas: allEtapas }}
+        model="negocio"
       />
       {/* PAGINATION */}
       <Pagination

@@ -7,7 +7,11 @@ type User = {
   name: string;
 };
 
-export default function ProprietarioFilterSelect({ users }: { users: User[] }) {
+export default function ProprietarioFilterSelectClient({
+  users,
+}: {
+  users: User[];
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentValue = searchParams.get("proprietario_id") || "";
@@ -16,7 +20,7 @@ export default function ProprietarioFilterSelect({ users }: { users: User[] }) {
   const [query, setQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // Atualiza o usuário selecionado caso já exista no searchParams
+  // Atualiza o usuário selecionado caso já exista nos searchParams
   useEffect(() => {
     if (currentValue) {
       const found = users.find((u) => String(u.id) === currentValue);
@@ -61,7 +65,7 @@ export default function ProprietarioFilterSelect({ users }: { users: User[] }) {
 
   return (
     <div
-      className="relative w-64"
+      className="relative w-64 z-50"
       ref={dropdownRef}
     >
       <button
