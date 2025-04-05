@@ -5,7 +5,7 @@ import SingleFuncionarioPageClient from "@/components/SingleFuncionarioPageClien
 
 // Função para obter os cargos (dados relacionados)
 async function getRelatedData() {
-  const cargos = await prisma.cargo.findMany();
+  const cargos = await basePrisma.cargo.findMany();
   return { cargos };
 }
 
