@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import FormContainer from "./forms/FormContainer";
 import NegocioAtribuirMassForm from "./forms/NegocioAtribuirMassForm";
+import DeleteConfirmation from "./DeleteConfirmation";
 
 type MassActionsProps = {
   selectedIds: number[];
   onClearSelection: () => void;
   massRelatedData: { users: any[]; etapas: any[] };
   allowedActions?: string[]; // novo prop para limitar ações
-  model: string;
+  model: "leadImportado" | "negocio";
 };
 
 function MassActions({
@@ -20,6 +21,7 @@ function MassActions({
   model = "negocio",
 }: MassActionsProps) {
   const [openAssign, setOpenAssign] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
 
   const handleTransferir = () => {
     console.log("Transferir → IDs selecionados:", selectedIds);
@@ -42,7 +44,7 @@ function MassActions({
   };
 
   const handleDeletar = () => {
-    console.log("Deletar → IDs selecionados:", selectedIds);
+    setOpenDelete(true);
   };
 
   const handleRedistribuir = () => {
@@ -125,6 +127,18 @@ function MassActions({
             />
           </div>
         </div>
+      )}
+
+      {openDelete && (
+        <DeleteConfirmation
+          message="Tem certeza que deseja deletar os leads importados?"
+          selectedIds={selectedIds}
+          model={model}
+          onClose={() => {
+            setOpenDelete(false);
+            onClearSelection();
+          }}
+        />
       )}
     </>
   );

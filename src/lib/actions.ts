@@ -434,10 +434,9 @@ export async function assignMassNegocios(
         const importedLead = await prisma.leadImportado.findUnique({
           where: { id },
         });
-        
+
         if (!importedLead) continue;
 
-        
         const existingLead = await prisma.lead.findFirst({
           where: { telefone: importedLead.telefone, tenantId },
         });
@@ -1297,6 +1296,8 @@ export async function saveCroppedImageAction(options?: {
   try {
     let storedValue: string = options?.value ?? "";
 
+    const tenantId = await getTenantID();
+
     // Determina se deve processar como imagem com base no configType
     const isImage =
       options?.configType === "avatar" ||
@@ -1328,13 +1329,13 @@ export async function saveCroppedImageAction(options?: {
 
       // Verifica se já existe uma configuração com esta chave
       const existingConfig = await prisma.config.findUnique({
-        where: { key },
+        where: { tenantId_key: { tenantId, key } },
       });
 
       if (existingConfig) {
         // Atualiza a configuração existente
         await prisma.config.update({
-          where: { key },
+          where: { tenantId_key: { tenantId, key } },
           data: {
             value: storedValue,
             updatedAt: new Date(),
@@ -1347,56 +1348,37 @@ export async function saveCroppedImageAction(options?: {
             key,
             value: storedValue,
             description: isImage ? `Imagem: ${key}` : `Configuração: ${key}`,
+            tenant: { connect: { id: tenantId } },
           },
         });
       }
     }
     // CASO 2: Atualizar avatar de usuário
     else if (options?.configType === "avatar" && options?.id) {
-      await prisma.user.update({
-        where: { id: Number(options.id) },
-        data: { avatar: storedValue },
-      });
-    }
-    // CASO 3: Compatibilidade com código antigo ou outros usos específicos
-    else if (options?.id && options?.database && options?.field) {
-      const model = prisma[options.database as keyof typeof prisma];
-
-      if (model === undefined) {
-        return {
-          success: false,
-          msg: `Modelo ${options.database} não existe`,
-        };
-      }
-
-      if (typeof (model as any).update !== "function") {
+      if (options?.database === "user") {
+        await prisma.user.update({
+          where: { id: Number(options.id) },
+          data: { avatar: storedValue },
+        });
+      } else if (options?.database === "leads") {
+        await prisma.lead.update({
+          where: { id: Number(options.id) },
+          data: { avatar: storedValue },
+        });
+      } else {
         throw new Error(
-          `O modelo "${options.database}" não suporta a função "update".`
+          `Database ${options?.database} não reconhecido para salvar o avatar`
         );
       }
-
-      await (model as any).update({
-        where: { id: Number(options.id) },
-        data: { [options.field]: storedValue },
-      });
     } else {
       throw new Error("Parâmetros inválidos ou configType não reconhecido");
     }
 
-    // Resposta consistente
-    const response: CurrentState & { fileUrl?: string } = {
+    return {
       success: true,
-      msg: isImage
-        ? "Imagem salva com sucesso"
-        : "Configuração salva com sucesso",
+      msg: "Operação realizada com sucesso",
+      fileUrl: storedValue,
     };
-
-    // Adiciona fileUrl quando é uma imagem
-    if (isImage) {
-      response.fileUrl = storedValue;
-    }
-
-    return response;
   } catch (error: any) {
     console.error("Erro em saveCroppedImageAction:", error);
     return {
@@ -1560,4 +1542,62 @@ export async function importLeadsAction(leads: Lead[], userId: number) {
 
   console.log("Leads recebidos:", leads);
   return { imported, rejected };
+}
+
+// Server action que deleta os registros conforme o modelo
+export async function deleteItemsAction(
+  formData: FormData,
+  model: "negocio" | "leadImportado"
+) {
+  try {
+    const ids = JSON.parse(formData.get("ids") as string) as number[];
+
+    if (model === "negocio") {
+      await prisma.negocio.deleteMany({
+        where: { id: { in: ids } },
+      });
+    } else {
+      await prisma.leadImportado.deleteMany({
+        where: { id: { in: ids } },
+      });
+    }
+    return { success: true, msg: "Registros deletados com sucesso" };
+  } catch (error) {
+    console.log("Erro ao deletar negocio:", error);
+    return { success: false, msg: "Erro ao deletar negocio: " + error };
+  }
+}
+
+interface CreateComentarioParams {
+  negocioId: number;
+  userId: number; // se quiser vincular a um usuário logado
+  comentario: string;
+}
+
+/**
+ * Cria um novo comentário para o negócio informado.
+ */
+export async function createNegocioComentarioAction({
+  negocioId,
+  userId,
+  comentario,
+}: CreateComentarioParams) {
+  if (!negocioId || !comentario) {
+    throw new Error("Dados insuficientes para criar comentário.");
+  }
+
+  try {
+    const novoComentario = await prisma.negocioComentario.create({
+      data: {
+        negocioId,
+        userId, // se existir
+        comentario,
+      },
+    });
+
+    return { success: true, msg: "Comentário adicionado com sucesso" };
+  } catch (error) {
+    console.log("Erro ao deletar negocio:", error);
+    return { success: false, msg: "Erro ao deletar negocio: " + error };
+  }
 }

@@ -1,18 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import ImageUploadCrop from "./ImageUploadCrop";
 import { formatCurrency } from "@/lib/utils";
+import { createNegocioComentarioAction } from "@/lib/actions";
+
+// Importa ReactQuill de forma dinâmica (somente client)
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+import "react-quill/dist/quill.snow.css";
+import { toast } from "react-toastify";
 
 interface Negocio {
+  id: number;
   titulo: string;
   tipo: string;
   valor: number;
-  user?: {
-    name: string;
-  };
+  user?: { name: string };
   levantamento?: { status: string };
   consorciado?: {
+    id: number;
+    avatar?: string;
     nome?: string;
     telefone?: string;
     email?: string;
@@ -28,34 +38,59 @@ interface Negocio {
   cota?: string;
   assembleia?: string;
   contrato?: string;
-  fechamento?: {
-    id: string;
-    valor: number;
-  };
-  comentarios?: Array<{
-    id: string;
+  fechamento?: { id: string; valor: number };
+  negocioComentario?: Array<{
+    id: number;
     user?: { avatar?: string; name?: string };
-    created_at: string;
+    createdAt: string;
     comentario: string;
   }>;
   atividades?: Array<{
     id: string;
     user?: { avatar?: string; name?: string };
-    created_at: string;
+    createdAt: string;
     descricao: string;
   }>;
 }
 
-export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
-  const [activeTab, setActiveTab] = useState("perfil");
+export default function ClientNegocioEdit({
+  negocio,
+  user,
+}: {
+  negocio: Negocio;
+  user: any;
+}) {
+  const [activeTab, setActiveTab] = useState("observações");
+  const [newComment, setNewComment] = useState("");
+  const router = useRouter();
 
-  // Exemplo de submit para os formulários (a implementação real deverá integrar com sua API)
-  interface HandleSubmitEvent extends React.FormEvent<HTMLFormElement> {}
-
-  const handleSubmit = (e: HandleSubmitEvent): void => {
+  // Handler para submit dos formulários das abas (exemplo)
+  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    // Aqui você pode capturar os dados dos formulários e enviar via fetch/axios para sua API
+    // Implementação do submit do formulário principal
   };
+
+  // Handler para adicionar novo comentário usando ReactQuill
+  async function handleAddComment() {
+    if (!newComment.trim()) return;
+    try {
+      const response = await createNegocioComentarioAction({
+        negocioId: negocio.id,
+        comentario: newComment,
+        userId: user.id,
+      });
+      setNewComment("");
+
+      if (response.success) {
+        router.refresh(); // Atualiza os dados do servidor
+        toast.success(response.msg || "Comentário salvo com sucesso");
+      } else {
+        toast.error(response.msg || "Erro: " + response.msg);
+      }
+    } catch (error) {
+      console.error("Erro ao criar comentário:", error);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 shadow-2xl">
@@ -64,12 +99,25 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
         <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between">
           <div className="flex items-center">
             <div className="relative w-20 h-20 mr-4">
-              <Image
-                src="/images/sistema/user-padrao.png"
-                alt="Avatar"
-                fill
-                className="rounded-full object-cover"
-              />
+              {negocio.consorciado ? (
+                <ImageUploadCrop
+                  aspect={1}
+                  id={negocio.consorciado.id}
+                  database="leads"
+                  field="avatar"
+                  configType="avatar"
+                  defaultImage={negocio.consorciado.avatar || "/noAvatar.png"}
+                  filename={`avatar_leads_${negocio.consorciado.id}`}
+                  folder="leads"
+                />
+              ) : (
+                <Image
+                  src="/images/sistema/user-padrao.png"
+                  alt="Avatar"
+                  fill
+                  className="rounded-full object-cover"
+                />
+              )}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
@@ -99,7 +147,6 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
                 <h2 className="font-semibold text-sm pt-1 text-gray-400">
                   Proprietário:{" "}
                 </h2>
-
                 <h2 className="text-lg semibold">
                   {negocio.user ? negocio.user.name : "Sem Proprietário"}
                 </h2>
@@ -114,13 +161,13 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
       </header>
 
       {/* Conteúdo principal com abas */}
-      <main className="mx-auto px-4 py-6 flex gap-4 ">
-        {/* Painel de Informações do cliente (sidebar) */}
+      <main className="mx-auto px-4 py-6 flex gap-4">
+        {/* Sidebar: Painel de Informações do Cliente */}
         <div className="bg-white rounded-xl shadow-lg w-full md:w-1/4 p-6 space-y-6">
           {/* PESSOA */}
           <div className="space-y-2">
             <h3 className="text-xl font-semibold text-gray-800">Pessoa</h3>
-            <hr className="py-2"></hr>
+            <hr className="py-2" />
             <p className="text-sm text-gray-700">
               <span className="font-semibold text-sm">Nome:</span>{" "}
               {negocio.consorciado?.nome || "--"}
@@ -154,7 +201,7 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
           {/* NEGÓCIO */}
           <div className="space-y-2">
             <h3 className="text-xl font-semibold text-gray-800">Negócio</h3>
-            <hr className="py-2"></hr>
+            <hr className="py-2" />
             <p className="text-sm text-gray-700">
               <span className="font-semibold text-sm">Idade do Negócio:</span>{" "}
               Inativo por X dias
@@ -175,12 +222,12 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
             </p>
           </div>
 
-          {/* CLIENTE */}
+          {/* ADMINISTRATIVO */}
           <div className="space-y-2">
             <h3 className="text-xl font-semibold text-gray-800">
-              Adminstrativo
+              Administrativo
             </h3>
-            <hr className="py-2"></hr>
+            <hr className="py-2" />
             <p className="text-sm text-gray-700">
               <span className="font-semibold text-sm">Grupo:</span>{" "}
               {negocio.grupo || "--"}
@@ -197,8 +244,6 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
               <span className="font-semibold text-sm">Contrato:</span>{" "}
               {negocio.contrato || "--"}
             </p>
-
-            {/* Dados de fechamento */}
             {negocio.fechamento && (
               <div className="mt-4 border-t pt-4">
                 <p className="text-sm text-gray-700">
@@ -224,16 +269,15 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
           </div>
         </div>
 
-        {/* Área principal (conteúdo das abas) */}
+        {/* Área principal com abas */}
         <div className="bg-white rounded-lg shadow-2xl w-full md:w-3/4">
-          {/* Navegação por abas */}
           <nav className="border-b">
             <ul className="flex flex-wrap -mb-px">
               {[
+                "observações",
                 "perfil",
                 "contato",
                 "negocio",
-                "observacoes",
                 "atividades",
               ].map((tab) => (
                 <li
@@ -255,7 +299,6 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
             </ul>
           </nav>
 
-          {/* Conteúdo das abas */}
           <div className="p-6">
             {/* Aba PERFIL */}
             {activeTab === "perfil" && (
@@ -305,7 +348,7 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
                   type="submit"
                   className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
                 >
-                  Salvar Alterações
+                  Salvar
                 </button>
               </form>
             )}
@@ -470,20 +513,42 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
                   type="submit"
                   className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
                 >
-                  Salvar Alterações
+                  Salvar
                 </button>
               </form>
             )}
 
             {/* Aba OBSERVACOES */}
-            {activeTab === "observacoes" && (
+            {activeTab === "observações" && (
               <div>
                 <h2 className="text-xl font-bold text-gray-700 mb-4">
                   Observações
                 </h2>
+
+                {/* Formulário para adicionar nova observação usando ReactQuill */}
+                <div className="mb-6 p-4 bg-gray-50 border rounded">
+                  <h3 className="font-semibold mb-2 text-sm">
+                    Adicionar nova observação
+                  </h3>
+                  <ReactQuill
+                    theme="snow"
+                    value={newComment}
+                    onChange={setNewComment}
+                    className="mb-2"
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    className="mt-2 bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700 transition"
+                  >
+                    Salvar
+                  </button>
+                </div>
+
+                {/* Lista de observações */}
                 <div className="space-y-4">
-                  {negocio.comentarios && negocio.comentarios.length > 0 ? (
-                    negocio.comentarios.map((comentario) => (
+                  {negocio.negocioComentario &&
+                  negocio.negocioComentario.length > 0 ? (
+                    negocio.negocioComentario.map((comentario) => (
                       <div
                         key={comentario.id}
                         className="flex items-start space-x-4 p-4 border rounded-md bg-gray-50"
@@ -504,11 +569,14 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
                             {comentario.user?.name || "Usuário Desconhecido"}
                           </h3>
                           <p className="text-xs text-gray-500">
-                            {comentario.created_at}
+                            {new Date(comentario.createdAt).toLocaleString()}
                           </p>
-                          <p className="mt-2 text-gray-700">
-                            {comentario.comentario}
-                          </p>
+                          <div
+                            className="mt-2 text-gray-700"
+                            dangerouslySetInnerHTML={{
+                              __html: comentario.comentario,
+                            }}
+                          />
                         </div>
                       </div>
                     ))
@@ -547,10 +615,10 @@ export default function ClientNegocioEdit({ negocio }: { negocio: Negocio }) {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-sm font-bold text-gray-800">
-                            author {atividade.user?.name || "Desconhecido"}
+                            {atividade.user?.name || "Desconhecido"}
                           </h3>
                           <p className="text-xs text-gray-500">
-                            {atividade.created_at}
+                            {atividade.createdAt}
                           </p>
                           <p className="mt-2 text-gray-700">
                             {atividade.descricao}

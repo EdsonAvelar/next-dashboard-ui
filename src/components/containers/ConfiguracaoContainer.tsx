@@ -1,9 +1,8 @@
 import React from "react";
 import ConfiguracaoCliente from "../ConfiguracaoCliente";
-import { prisma } from "@/lib/prisma"; // exemplo de importação do Prisma
+import { basePrisma, prisma } from "@/lib/prisma"; // exemplo de importação do Prisma
 import dayjs from "dayjs";
 import { getConfigurations } from "@/lib/actions";
-
 
 // Exemplo de função para buscar as configurações do CRM no banco
 async function createImageList() {
@@ -179,8 +178,6 @@ async function getActiveProduction() {
 export default async function ConfiguracaoContainer() {
   const { crmImages, simulationImages } = await createImageList();
 
-
-
   // Buscando dados no servidor
   const productions = await getProductions();
   const activeProduction = await getActiveProduction();
@@ -190,7 +187,7 @@ export default async function ConfiguracaoContainer() {
 
   // Aqui você pode buscar outras informações, como configs do sistema   etc.
 
-  const roles = await prisma.role.findMany({
+  const roles = await basePrisma.role.findMany({
     include: {
       users: true,
     },

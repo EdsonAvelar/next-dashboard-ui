@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { basePrisma, prisma } from "@/lib/prisma";
 import FormModal from "../FormModal";
 
 export type FormContainerProps = {
@@ -33,7 +33,7 @@ const FormContainer = async ({
   } else if (type !== "delete") {
     switch (table) {
       case "user":
-        const cargos = await prisma.cargo.findMany();
+        const cargos = await basePrisma.cargo.findMany();
         relatedData = { cargos: cargos };
         break;
       case "equipe":

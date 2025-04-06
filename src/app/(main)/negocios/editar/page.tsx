@@ -1,5 +1,6 @@
 // app/negocio/editar/page.jsx
 import ClientNegocioEdit from "@/components/ClientNegocioEdit";
+import { getCurrentUser } from "@/lib/actions";
 import { prisma } from "@/lib/prisma"; // ajuste o caminho conforme sua estrutura
 
 export default async function NegocioEditPage({
@@ -7,6 +8,8 @@ export default async function NegocioEditPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
+  const user = await getCurrentUser();
+
   const negocioId = searchParams.negocio_id;
 
   if (!negocioId) {
@@ -22,6 +25,7 @@ export default async function NegocioEditPage({
       agendamento: true,
       fechamento: true,
       user: true,
+      negocioComentario: { include: { user: true } },
     },
   });
 
@@ -56,5 +60,10 @@ export default async function NegocioEditPage({
   }
 
   // Passamos os dados do negócio para o componente cliente
-  return <ClientNegocioEdit negocio={negocio} />;
+  return (
+    <ClientNegocioEdit
+      negocio={negocio}
+      user={user}
+    />
+  );
 }
