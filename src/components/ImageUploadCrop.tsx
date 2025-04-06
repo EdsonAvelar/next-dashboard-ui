@@ -47,6 +47,14 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      // Define o tamanho máximo permitido (4MB)
+      const maxSize = 4 * 1024 * 1024; // 4MB em bytes
+
+      if (file.size > maxSize) {
+        toast.error("O arquivo selecionado é muito grande. O limite é de 4MB.");
+        return;
+      }
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {

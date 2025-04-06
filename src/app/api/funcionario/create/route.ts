@@ -12,7 +12,6 @@ const funcionarioSchema = z.object({
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters long" }),
-
   cargo: z.string().min(1, { message: "Cargo is required" }),
 });
 
@@ -36,6 +35,7 @@ export async function POST(req: Request) {
         password: passwordHash, // Em produção, lembre-se de hashear a senha!
         avatar: "/noAvatar.png",
         cargo: { connect: { id: parseInt(data.cargo) } },
+        tenant: { connect: { id: 1 } },
         status: 1,
       },
     });

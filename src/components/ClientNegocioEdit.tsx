@@ -12,6 +12,7 @@ import { createNegocioComentarioAction } from "@/lib/actions";
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
 import { toast } from "react-toastify";
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 interface Negocio {
   id: number;
@@ -60,15 +61,55 @@ export default function ClientNegocioEdit({
   negocio: Negocio;
   user: any;
 }) {
-  const [activeTab, setActiveTab] = useState("observações");
+  const [activeTab, setActiveTab] = useState("anotações");
   const [newComment, setNewComment] = useState("");
   const router = useRouter();
 
   // Handler para submit dos formulários das abas (exemplo)
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  // const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  //   e.preventDefault();
+  //   // Implementação do submit do formulário principal
+  // };
+  
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    // Implementação do submit do formulário principal
+
+    // Cria um objeto FormData para capturar os dados do formulário
+    const formData = new FormData(e.currentTarget);
+
+    // Extrai os valores necessários (ajuste os nomes conforme os seus inputs)
+    const data = {
+      id: negocio.id,
+      titulo: formData.get("titulo") as string,
+      tipo: formData.get("tipo") as string,
+      valor: Number(formData.get("valor")),
+    };
+
+    try {
+      // Envia os dados para a rota de API responsável pela atualização
+      const res = await fetch("/api/updateNegocio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        toast.success("Negócio atualizado com sucesso!");
+        router.refresh(); // Atualiza os dados da tela
+      } else {
+        toast.error(result.msg || "Erro ao atualizar o negócio");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar o negócio: ", error);
+      toast.error("Erro ao atualizar o negócio");
+    }
   };
+
 
   // Handler para adicionar novo comentário usando ReactQuill
   async function handleAddComment() {
@@ -273,41 +314,47 @@ export default function ClientNegocioEdit({
         <div className="bg-white rounded-lg shadow-2xl w-full md:w-3/4">
           <nav className="border-b">
             <ul className="flex flex-wrap -mb-px">
-              {[
-                "observações",
-                "perfil",
-                "contato",
-                "negocio",
-                "atividades",
-              ].map((tab) => (
-                <li
-                  key={tab}
-                  className="mr-2"
-                >
-                  <button
-                    onClick={() => setActiveTab(tab)}
-                    className={`inline-block py-2 px-4 border-b-2 font-medium transition-colors ${
-                      activeTab === tab
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300"
-                    }`}
+              {["anotações", "negocio", "contato", "atividades"].map((tab) => {
+                const icons: { [key: string]: string } = {
+                  anotações: "mdi:note-outline",
+                  negocio: "mdi:briefcase",
+                  contato: "mdi:phone",
+                  atividades: "mdi:check-circle",
+                };
+                return (
+                  <li
+                    key={tab}
+                    className="mr-2"
                   >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </button>
-                </li>
-              ))}
+                    <button
+                      onClick={() => setActiveTab(tab)}
+                      className={`inline-block py-2 px-4 border-b-2 font-medium transition-colors ${
+                        activeTab === tab
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      <Icon
+                        icon={icons[tab]}
+                        className="inline mr-1"
+                      />
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
 
           <div className="p-6">
             {/* Aba PERFIL */}
-            {activeTab === "perfil" && (
+            {activeTab === "negocio" && (
               <form
                 onSubmit={handleSubmit}
                 className="space-y-6"
               >
                 <h2 className="text-xl font-bold text-gray-700 mb-4">
-                  Dados do Perfil
+                  Negócio
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -452,83 +499,17 @@ export default function ClientNegocioEdit({
               </form>
             )}
 
-            {/* Aba NEGOCIO */}
-            {activeTab === "negocio" && (
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-6"
-              >
-                <h2 className="text-xl font-bold text-gray-700 mb-4">
-                  Informações do Negócio
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Grupo
-                    </label>
-                    <input
-                      type="text"
-                      name="grupo"
-                      defaultValue={negocio.grupo || ""}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Cota(s)
-                    </label>
-                    <input
-                      type="text"
-                      name="cota"
-                      defaultValue={negocio.cota || ""}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Data Assembleia
-                    </label>
-                    <input
-                      type="text"
-                      name="assembleia"
-                      defaultValue={negocio.assembleia || ""}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Contrato
-                    </label>
-                    <input
-                      type="text"
-                      name="contrato"
-                      defaultValue={negocio.contrato || ""}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
-                >
-                  Salvar
-                </button>
-              </form>
-            )}
-
             {/* Aba OBSERVACOES */}
-            {activeTab === "observações" && (
+            {activeTab === "anotações" && (
               <div>
-                <h2 className="text-xl font-bold text-gray-700 mb-4">
-                  Observações
+                <h2 className="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                  Anotações
                 </h2>
 
                 {/* Formulário para adicionar nova observação usando ReactQuill */}
                 <div className="mb-6 p-4 bg-gray-50 border rounded">
                   <h3 className="font-semibold mb-2 text-sm">
-                    Adicionar nova observação
+                    Adicionar nova anotação
                   </h3>
                   <ReactQuill
                     theme="snow"
@@ -582,7 +563,7 @@ export default function ClientNegocioEdit({
                     ))
                   ) : (
                     <p className="text-gray-500">
-                      Nenhuma observação cadastrada.
+                      Nenhuma anotação cadastrada.
                     </p>
                   )}
                 </div>

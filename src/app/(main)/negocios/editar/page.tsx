@@ -20,12 +20,14 @@ export default async function NegocioEditPage({
     where: { id: Number(negocioId) },
     include: {
       consorciado: true,
-      // atividades: true,
       simulacoes: true,
       agendamento: true,
       fechamento: true,
       user: true,
-      negocioComentario: { include: { user: true } },
+      negocioComentario: {
+        include: { user: true },
+        orderBy: { createdAt: 'desc' }
+      },
     },
   });
 

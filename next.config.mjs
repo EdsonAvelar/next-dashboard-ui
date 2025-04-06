@@ -5,7 +5,11 @@ const nextConfig = {
             { hostname: "images.pexels.com" },
             { hostname: "res.cloudinary.com" },
         ]
-    }
+    }, api: {
+        bodyParser: {
+            sizeLimit: "5mb",
+        },
+    },
 };
 
 export default nextConfig;
