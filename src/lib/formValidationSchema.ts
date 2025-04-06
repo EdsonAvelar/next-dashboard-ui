@@ -32,7 +32,7 @@ export const negocioSchema = z.object({
   telefone: z.string().min(1, { message: "Telefone é obrigatório" }),
   tipo_credito: z.string().min(1, { message: "Tipo de crédito é obrigatório" }),
   // Campos opcionais:
-  valor_credito: z.string().optional(),
+  valor: z.number().optional(),
   titulo: z.string().optional(),
   whatsapp: z.string().optional(),
   email: z.string().optional(),
@@ -164,3 +164,15 @@ export const negocioAtribuirMassSchema = z.object({
 export type NegocioAtribuirMassFormSchema = z.infer<
   typeof negocioAtribuirMassSchema
 >;
+
+export const updateNegocioSchema = z.object({
+  id: z.number(),
+  titulo: z.string().min(1, { message: "Título é obrigatório" }),
+  nome_contato: z.string().min(1, { message: "Nome de contato é obrigatório" }),
+  telefone: z.string().min(1, { message: "Telefone é obrigatório" }),
+  tipo_credito: z.string().min(1, { message: "Tipo de crédito é obrigatório" }),
+
+  valor: z.number({ invalid_type_error: "Valor deve ser um número" }),
+});
+
+export type UpdateNegocioSchema = z.infer<typeof updateNegocioSchema>;

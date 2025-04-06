@@ -88,10 +88,10 @@ export const updateNegocio = async (
     });
     // revalidatePath("/negocios/lista");
 
-    return { success: true, msg: "" };
+    return { success: true, msg: "Negocio Atualizado com Sucesso" };
   } catch (error) {
     console.log(error);
-    return { success: false, msg: "Erro ao Atualizar Negocio" };
+    return { success: false, msg: "Erro ao Atualizar Negocio" + error };
   }
 };
 

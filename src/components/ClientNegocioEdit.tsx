@@ -7,12 +7,14 @@ import dynamic from "next/dynamic";
 import ImageUploadCrop from "./ImageUploadCrop";
 import { formatCurrency } from "@/lib/utils";
 import { createNegocioComentarioAction } from "@/lib/actions";
+import { z } from "zod";
+import { toast } from "react-toastify";
 
 // Importa ReactQuill de forma dinâmica (somente client)
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
-import { toast } from "react-toastify";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { updateNegocioSchema } from "@/lib/formValidationSchema";
 
 interface Negocio {
   id: number;
@@ -65,51 +67,53 @@ export default function ClientNegocioEdit({
   const [newComment, setNewComment] = useState("");
   const router = useRouter();
 
-  // Handler para submit dos formulários das abas (exemplo)
-  // const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
-  //   e.preventDefault();
-  //   // Implementação do submit do formulário principal
-  // };
-  
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
-    // Cria um objeto FormData para capturar os dados do formulário
+    // Cria objeto com os dados do formulário
     const formData = new FormData(e.currentTarget);
+    const rawData = Object.fromEntries(formData.entries());
 
-    // Extrai os valores necessários (ajuste os nomes conforme os seus inputs)
-    const data = {
-      id: negocio.id,
-      titulo: formData.get("titulo") as string,
-      tipo: formData.get("tipo") as string,
-      valor: Number(formData.get("valor")),
+    // Ajusta os tipos (por exemplo, convertendo valores numéricos)
+    const dataToValidate = {
+      id: negocio.id, // se já tiver o id do negócio
+      titulo: rawData.titulo as string,
+      nome_contato: rawData.nome_contato as string,
+      telefone: rawData.telefone as string,
+      tipo_credito: rawData.tipo_credito as string,
+      valor: Number(rawData.valor),
     };
 
     try {
-      // Envia os dados para a rota de API responsável pela atualização
+      // Valida os dados com o schema
+      const validatedData = updateNegocioSchema.parse(dataToValidate);
+
+      // Se a validação passar, envia os dados à API
       const res = await fetch("/api/updateNegocio", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(validatedData),
       });
-
       const result = await res.json();
-
       if (result.success) {
         toast.success("Negócio atualizado com sucesso!");
-        router.refresh(); // Atualiza os dados da tela
+        router.refresh();
       } else {
         toast.error(result.msg || "Erro ao atualizar o negócio");
       }
-    } catch (error) {
-      console.error("Erro ao atualizar o negócio: ", error);
-      toast.error("Erro ao atualizar o negócio");
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        // Percorre os erros e exibe uma mensagem para cada, incluindo o campo relacionado para melhor detalhe
+        err.errors.forEach((error) => {
+          const field = error.path.join('.') || 'Campo';
+          toast.error(`Erro de Validação [${field}]: ${error.message}`);
+        });
+      } else {
+        console.error("Erro desconhecido", err);
+        toast.error("Erro ao atualizar o negócio");
+      }
     }
   };
-
 
   // Handler para adicionar novo comentário usando ReactQuill
   async function handleAddComment() {

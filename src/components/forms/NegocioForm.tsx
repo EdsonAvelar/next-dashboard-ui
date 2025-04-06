@@ -126,9 +126,9 @@ const NegocioForm = ({
           <InputField
             label="Valor do Crédito (opcional)"
             name="valor_credito"
-            defaultValue={data?.valor_credito}
+            defaultValue={data?.valor}
             register={register}
-            error={errors?.valor_credito}
+            error={errors?.valor}
           />
           {/* <InputField
             label="Título (opcional)"
