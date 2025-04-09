@@ -6,7 +6,7 @@ import { useState, useEffect, SetStateAction, Dispatch } from "react";
 import InputField from "../InputField";
 import SelectInput from "../SelectInput";
 // import { NegocioTipoOptions } from "@/lib/utils";
-import { createNegocio } from "@/lib/actions";
+import { createNegocio, updateNegocio } from "@/lib/actions";
 import { NegocioSchema, negocioSchema } from "@/lib/formValidationSchema";
 import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
@@ -15,22 +15,25 @@ import { NegocioTipoOptions } from "@/lib/utils";
 
 const NegocioForm = ({
   type,
-  data,
   setOpen,
   relatedData,
 }: {
   type: "create" | "update";
-  setOpen: Dispatch<SetStateAction<boolean>>;
-  data?: any;
+  setOpen?: Dispatch<SetStateAction<boolean>>;
   relatedData?: any;
 }) => {
   const {
+    control,
     register,
     handleSubmit,
     setValue,
     formState: { errors },
   } = useForm<NegocioSchema>({
     resolver: zodResolver(negocioSchema),
+    defaultValues: {
+      tipo: relatedData?.tipo || "",
+      // ...outros campos
+    },
   });
 
   const searchParams = useSearchParams();
@@ -49,10 +52,13 @@ const NegocioForm = ({
     fetchTipoCredito();
   }, []);
 
-  const [state, formAction] = useFormState(createNegocio, {
-    success: false,
-    msg: "",
-  });
+  const [state, formAction] = useFormState(
+    type === "create" ? createNegocio : updateNegocio,
+    {
+      success: false,
+      msg: "",
+    }
+  );
 
   const onSubmit = handleSubmit(async (formData) => {
     formAction(formData);
@@ -63,8 +69,11 @@ const NegocioForm = ({
   useEffect(() => {
     if (state.success) {
       toast.success("Negocio criado com sucesso");
-      setOpen(false);
+
+      if (setOpen) setOpen(false);
       router.refresh();
+    } else if (state.msg) {
+      toast.error(state.msg);
     }
   }, [state]);
 
@@ -78,82 +87,100 @@ const NegocioForm = ({
         Informações do Contato e do Negócio
       </span>
 
-      <div className="flex gap-4">
-        <div className="flex flex-col gap-2 w-1/1 w-full md:w-1/2">
-          {proprietarioId && (
-            <InputField
-              label="Proprietario ID"
-              name="proprietario_id"
-              isRequired={true}
-              hidden={true}
-              defaultValue={proprietarioId}
-              register={register}
-            />
-          )}
+      {/* Linha 1: 3 inputs em uma mesma linha */}
+      <div
+        className={`grid grid-cols-1 gap-4 ${type === "create" ? "md:grid-cols-2" : "md:grid-cols-3"}`}
+      >
+        {type === "update" && (
+          <InputField
+            label="id"
+            name="id"
+            isRequired={true}
+            hidden={true}
+            defaultValue={relatedData.id}
+            register={register}
+          />
+        )}
 
+        {/* Mesmo que o InputField de Proprietário seja hidden, ele pode ser incluído sem impactar o layout */}
+        {proprietarioId && (
           <InputField
-            label="Nome do Contato"
-            name="nome_contato"
+            label="Proprietario ID"
+            name="proprietario_id"
             isRequired={true}
-            defaultValue={data?.nome_contato}
+            hidden={true}
+            defaultValue={proprietarioId}
             register={register}
-            error={errors?.nome_contato}
           />
-          <InputField
-            label="Telefone"
-            name="telefone"
-            isRequired={true}
-            defaultValue={data?.telefone}
-            register={register}
-            error={errors?.telefone}
-          />
-        </div>
-        <div className="flex flex-col gap-2 w-1/1 w-full md:w-1/2 ">
-          <SelectInput
-            label="Tipo de Crédito"
-            name="tipo_credito"
-            register={register}
-            isRequired={true}
-            defaultValue={data?.telefone}
-            error={errors?.tipo_credito}
-            options={[
-              { value: "", label: "Selecione o Crédito" },
-              ...tipoCreditoOptions,
-            ]}
-          />
-          <div className="py-1"></div>
+        )}
 
+        <InputField
+          label="Nome do Contato"
+          name="nome_contato"
+          isRequired={true}
+          defaultValue={relatedData?.nome_contato}
+          register={register}
+          error={errors?.nome_contato}
+        />
+        <InputField
+          label="Telefone"
+          name="telefone"
+          isRequired={true}
+          defaultValue={relatedData?.telefone}
+          register={register}
+          error={errors?.telefone}
+        />
+        <SelectInput
+          label="Tipo de Crédito"
+          name="tipo"
+          control={control}
+          defaultValue={relatedData?.tipo || ""}
+          isRequired={true}
+          error={errors?.tipo}
+          options={[
+            { value: "", label: "Selecione o Crédito" },
+            ...tipoCreditoOptions,
+          ]}
+        />
+        <InputField
+          label="Valor do Crédito (opcional)"
+          name="valor"
+          type="number"
+          defaultValue={relatedData?.valor}
+          register={register}
+          error={errors?.valor}
+        />
+      </div>
+
+      {/* Linha 2: Campos adicionais para atualização */}
+      {type === "update" && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <InputField
-            label="Valor do Crédito (opcional)"
-            name="valor_credito"
-            defaultValue={data?.valor}
-            register={register}
-            error={errors?.valor}
-          />
-          {/* <InputField
             label="Título (opcional)"
             name="titulo"
-            defaultValue={data?.titulo}
+            defaultValue={relatedData?.titulo}
             register={register}
             error={errors?.titulo}
           />
-
           <InputField
             label="Whatsapp (opcional)"
             name="whatsapp"
-            defaultValue={data?.whatsapp}
+            defaultValue={relatedData?.whatsapp}
             register={register}
             error={errors?.whatsapp}
           />
-          <InputField
-            label="Email (opcional)"
-            name="email"
-            type="email"
-            defaultValue={data?.email}
-            register={register}
-          /> */}
+          {/* O campo Email ocupará toda a linha em telas maiores */}
+          <div className="md:col-span-1">
+            <InputField
+              label="Email (opcional)"
+              name="email"
+              type="email"
+              defaultValue={relatedData?.email}
+              register={register}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <button
         type="submit"

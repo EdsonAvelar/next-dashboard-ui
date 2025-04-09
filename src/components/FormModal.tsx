@@ -75,9 +75,8 @@ function getFormComponent(
       return (
         <NegocioForm
           type={type as "create" | "update"}
-          data={data}
+          relatedData={data}
           setOpen={setOpen}
-          relatedData={relatedData}
         />
       );
     }

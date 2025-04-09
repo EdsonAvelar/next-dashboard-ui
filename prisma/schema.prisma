@@ -24,37 +24,29 @@ model Tenant {
   name             String
   type             TenantType
   billingFrequency BillingFrequency
-  // Se for uma representação com submaster vinculado
   submasterId      Int?
   submaster        Tenant?         @relation("SubmasterRepresentations", fields: [submasterId], references: [id])
   representations  Tenant[]        @relation("SubmasterRepresentations")
   
-  // Relação de indicação para descontos
   indicatedById    Int?
   indicatedBy      Tenant?         @relation("TenantReferrals", fields: [indicatedById], references: [id])
   referrals        Tenant[]        @relation("TenantReferrals")
   
-  // Relação com billing e usuários
   billing          Billing[]
   users            User[]
-
-  // Relação inversa
-  equipes                Equipe[]
-  negocios               Negocio[]
-  leads                  Lead[]
-  funis                  Funil[]
-  etapaFunils            EtapaFunil[]
-  agendamentos           Agendamento[]
-  reunioes               Reuniao[]
-  aprovacoes             Aprovacao[]
-  fechamentos            Fechamento[]
-  producao               Producao[]
-  simulacoes             Simulacao[]
-  config                 Config[]  
-  cargos                 Cargo[]
-  leadImportados         LeadImportado[]
-
-  role                   Role[]
+  equipes          Equipe[]
+  negocios         Negocio[]
+  leads            Lead[]
+  funis            Funil[]
+  etapaFunils      EtapaFunil[]
+  agendamentos     Agendamento[]
+  reunioes         Reuniao[]
+  aprovacoes       Aprovacao[]
+  fechamentos      Fechamento[]
+  producao         Producao[]
+  simulacoes       Simulacao[]
+  config           Config[]
+  leadImportados   LeadImportado[]
   
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -77,25 +69,35 @@ model Billing {
 
 
 model Cargo {
-  id Int@id @default(autoincrement())
-  name  String
-  User User[]
-    // Associação com o tenant (multi‑tenant)
-  tenantId         Int
-  tenant            Tenant    @relation(fields: [tenantId], references: [id])
+  id        Int      @id @default(autoincrement())
+  name      String
+  
+  // Campo opcional para definir o "scope" deste cargo (por exemplo, MASTER, REPRESENTATION)
+  scope     TenantType?
+  
+  
+  // Se desejar manter a associação direta com User, pode manter:
+  users     User[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Role {
-  id                Int       @id @default(autoincrement())
-  name  String
-  descricao String
-  // Relação muitos-para-muitos: cada role pode ter vários usuários
-
-  users      User[]
-
-    // Associação com o tenant (multi‑tenant)
-  tenantId          Int
-  tenant            Tenant    @relation(fields: [tenantId], references: [id])
+  id          Int       @id @default(autoincrement())
+  name        String
+  descricao   String
+  
+  // Campo opcional para definir o "scope" deste role (por exemplo, MASTER, REPRESENTATION)
+  scope       TenantType?
+  
+  // Relação many-to-many com Tenant
+  
+  // Relação com usuários que possuem este Role
+  users       User[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 // Model User baseado na migration do Laravel
@@ -103,7 +105,7 @@ model User {
   id                Int       @id @default(autoincrement())
   name              String
   avatar            String?
-  telefone          String?   // campo opcional
+  telefone          String?  
   cpf               String?
   rg                String?
   endereco          String?
@@ -126,6 +128,7 @@ model User {
   agendamento       Agendamento[]
   reunioes          Reuniao[]
   simulacoes        Simulacao[]
+  negocioComentario NegocioComentario[]
 
   // Relação de membro de equipe (um usuário pode pertencer a, no máximo, uma equipe)
   equipeId          Int?      
@@ -223,6 +226,10 @@ model Negocio {
   simulacoes Simulacao[]
   aprovacoes Aprovacao[] @relation("NegocioAprovacao")
 
+  negocioComentario NegocioComentario[]
+
+  upload    Upload[]
+
   tenantId       Int
   tenant          Tenant        @relation(fields: [tenantId], references: [id])
 }
@@ -236,42 +243,43 @@ model Label {
 
 model Lead {
   id             Int      @id @default(autoincrement())
-  nome           String   @db.VarChar(254)
-  telefone       String   @db.VarChar(32)
-  whatsapp       String?  @db.VarChar(32)
-  email          String?  @db.VarChar(254)
+  nome           String   
+  telefone       String   
+  whatsapp       String?  
+  email          String?  
+  avatar          String?  
 
   // Dados pessoais adicionais
-  nome_mae       String?  @db.VarChar(255)
-  nome_pai       String?  @db.VarChar(255)
+  nome_mae       String?  
+  nome_pai       String?  
   data_nasc      DateTime @default(now())
-  orgao_exp      String?  @db.VarChar(255)
-  cpf            String?  @db.VarChar(255)
-  rg             String?  @db.VarChar(255)
+  orgao_exp      String?  
+  cpf            String?  
+  rg             String?  
   data_exp       DateTime? @default(now())
-  nacionalidade  String?  @db.VarChar(255)
-  naturalidade   String?  @db.VarChar(255)
-  genero         String?  @db.VarChar(255)
-  estado_civil   String?  @db.VarChar(255)
+  nacionalidade  String?  
+  naturalidade   String?  
+  genero         String?  
+  estado_civil   String?  
   
-  formacao       String?  @db.VarChar(255)
-  profissao      String?  @db.VarChar(255)
-  renda_liquida  String?  @db.VarChar(255)
+  formacao       String?  
+  profissao      String?  
+  renda_liquida  String?  
 
   // Informações de campanha
   data_conversao DateTime? @default(now())
-  fonte          String?  @db.VarChar(254)
-  campanha       String?  @db.VarChar(254)
+  fonte          String?  
+  campanha       String?  
 
   // Endereço
-  endereco       String?  @db.VarChar(254)
-  numero       String?  @db.VarChar(254)
-  bairro       String?  @db.VarChar(254)
-  cidade       String?  @db.VarChar(254)
-  estado       String?  @db.VarChar(254)
+  endereco       String?  
+  numero       String?  
+  bairro       String?  
+  cidade       String?  
+  estado       String?  
   
-  complemento    String?  @db.VarChar(254)
-  cep            String?  @db.VarChar(254)
+  complemento    String?  
+  cep            String?  
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -334,18 +342,18 @@ model Agendamento {
   status          String?
   
   negocioId       Int
-  negocio         Negocio @relation(fields: [negocioId], references: [id])
+  negocio         Negocio @relation(fields: [negocioId], references: [id], onDelete: Cascade)
 
   userId          Int
   user            User @relation(fields: [userId], references: [id])
 
-  reuniao     Reuniao?  // Se for 1:1, é um campo opcional
+  reuniao         Reuniao?  // Se for 1:1, é opcional
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  tenantId Int
-  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  tenantId        Int
+  tenant          Tenant @relation(fields: [tenantId], references: [id])
 }
 
 model Reuniao {
@@ -359,7 +367,7 @@ model Reuniao {
 
   // Relacionamentos
   agendamentoId Int @unique
-  agendamento   Agendamento @relation(fields: [agendamentoId], references: [id])
+  agendamento   Agendamento @relation(fields: [agendamentoId], references: [id],  onDelete: Cascade)
   user          User        @relation(fields: [userId], references: [id])
 
   tenantId Int
@@ -368,34 +376,32 @@ model Reuniao {
 
 model Aprovacao {
   id             Int       @id @default(autoincrement())
-  data_aprovacao DateTime  // Use DateTime para armazenar a data/hora da aprovação
-  status         String    // Valores esperados: "ANALISE", "APROVADO", "REPROVADO"
-
+  data_aprovacao DateTime
+  status         String
   negocioId      Int
-
-  negocio        Negocio   @relation("NegocioAprovacao", fields: [negocioId], references: [id])
+  negocio        Negocio   @relation("NegocioAprovacao", fields: [negocioId], references: [id], onDelete: Cascade)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  tenantId Int
-  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  tenantId       Int
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
 }
 
 model Fechamento {
   id                         Int         @id @default(autoincrement())
-  data_fechamento            DateTime?   // Alteramos para DateTime para facilitar manipulação
-  status                     String?     @db.VarChar(255)
+  data_fechamento            DateTime?
+  status                     String?
 
   // Dados do Plano Contratado
-  grupo                      String?     @db.VarChar(255)   
-  cota                       String?     @db.VarChar(255)    
-  especie                    String?     @db.VarChar(255)
-  marca                      String?     @db.VarChar(255)
-  modelo                     String?     @db.VarChar(255)
-  tipo_plano                 String?     @db.VarChar(255)
-  plano_leve                 String?     @db.VarChar(255)
-  seguro_prestamista         String?     @db.VarChar(255)
-  codigo_bem                 String?     @db.VarChar(255)
+  grupo                      String?        
+  cota                       String?         
+  especie                    String?     
+  marca                      String?     
+  modelo                     String?     
+  tipo_plano                 String?     
+  plano_leve                 String?     
+  seguro_prestamista         String?     
+  codigo_bem                 String?     
   preco_bem                  Decimal?    @db.Decimal(10,2) // Dinheiro com 2 casas decimais
   duracao_grupo              Int?        // Número de meses
   duracao_plano              Int?        // Número de meses
@@ -403,7 +409,7 @@ model Fechamento {
   grupo_em_andamento         Boolean?    // 0 ou 1
   numero_assembleia_adesao   Int?        
   data_assembleia            DateTime?   // Data
-  tabela                     String?     @db.VarChar(255) // cima e baixo
+  tabela                     String?      // cima e baixo
   pagamento_incorporado      Decimal?    @db.Decimal(10,2)
   pagamento_ate_contemplacao Decimal?    @db.Decimal(10,2)
   numero_contrato            Int?
@@ -415,11 +421,11 @@ model Fechamento {
   adesao                     Decimal?    @db.Decimal(10,2)
   primeira_parcela           Decimal?    @db.Decimal(10,2)
   total_pago                 Decimal?    @db.Decimal(10,2)
-  forma_pagamento            String?     @db.VarChar(255)
+  forma_pagamento            String?     
 
   // Associação com Negócio: um fechamento pertence a um negócio
   negocioId                  Int      @unique
-  negocio                    Negocio  @relation(fields: [negocioId], references: [id])
+  negocio                    Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
 
   // Relação many-to-many: Um fechamento pode ter 1 ou mais usuários
   vendedores                 FechamentoUser[]
@@ -438,8 +444,8 @@ model FechamentoUser {
   userId       Int
 
   // Comissão precisa ser string porque não pode passar Decimal do servidor pro cliente
-  comissao    String?     @db.VarChar(10)
-  modo        String?     @db.VarChar(255)
+  comissao    String?     
+  modo        String?     
 
   @@id([fechamentoId, userId])
 }
@@ -468,12 +474,11 @@ model Simulacao {
   consorcios     SimulacaoConsorcio[]
   financiamentos SimulacaoFinanciamento[]
 
-  // Relações (supondo que existam os modelos Negocio e User)
-  negocio        Negocio?                 @relation(fields: [negocioId], references: [id])
-  user           User                     @relation(fields: [userId], references: [id])
+  negocio        Negocio?  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id])
 
-  tenantId Int
-  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  tenantId       Int
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
 }
 
 model SimulacaoConsorcio {
@@ -556,4 +561,33 @@ model LeadImportado {
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+
+model NegocioComentario {
+  id          Int      @id @default(autoincrement())
+  comentario  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      Int
+  negocioId   Int
+
+  user        User    @relation(fields: [userId], references: [id])
+  negocio     Negocio  @relation(fields: [negocioId], references: [id])
+}
+
+
+
+model Upload {
+  id         Int      @id @default(autoincrement())
+  fileName   String
+  filePath   String
+  extension  String?
+  fileSize   Int?
+  description String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  negocioId  Int
+  negocio    Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
 }

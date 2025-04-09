@@ -26,7 +26,7 @@ export default async function NegocioEditPage({
       user: true,
       negocioComentario: {
         include: { user: true },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       },
     },
   });
@@ -61,11 +61,18 @@ export default async function NegocioEditPage({
     return <div>Negócio não encontrado.</div>;
   }
 
+  const simulacoes = await prisma.simulacao.findMany({
+    where: { negocioId: Number(negocioId) },
+    orderBy: { dataProposta: "desc" },
+    include: { consorcios: true, financiamentos: true },
+  });
+
   // Passamos os dados do negócio para o componente cliente
   return (
     <ClientNegocioEdit
       negocio={negocio}
       user={user}
+      simulacoes={simulacoes}
     />
   );
 }

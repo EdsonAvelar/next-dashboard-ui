@@ -38,18 +38,21 @@ export const createNegocio = async (
       ? { user: { connect: { id: parseInt(data.proprietario_id, 10) } } }
       : {};
 
+    const valor = formatNumberShort(data.valor || 0);
+
     await prisma.negocio.create({
       data: {
         titulo:
           data.titulo ||
-          `Negócio ${data.nome_contato.split(" ")[0]} - ${data.tipo_credito}${data.valor_credito ? " - " + data.valor_credito : ""}`,
+          `Negócio ${data.nome_contato.split(" ")[0]} - ${data.tipo}${valor ? " - " + valor : ""}`,
         tenant: { connect: { id: tenantId } },
         // Os campos "tipo" e "status" devem ser definidos conforme seu enum
-        tipo: data.tipo_credito as NegocioTipo,
+        tipo: data.tipo as NegocioTipo,
         status: "ATIVO", // ou outro valor padrão, conforme seu enum NegocioStatus
         // Conectando o Lead criado:
         consorciado: { connect: { id: lead.id } },
         // Conectando outros relacionamentos, utilizando os IDs recebidos ou definidos no form:
+        valor: data.valor,
         funil: { connect: { id: 1 } },
         etapa_funil: { connect: { id: 1 } },
         ...userConnection,
@@ -75,9 +78,9 @@ export const updateNegocio = async (
       data: {
         titulo:
           data.titulo ||
-          `Negócio ${data.nome_contato.split(" ")[0]} - ${data.tipo_credito}${data.valor_credito ? " - " + data.valor_credito : ""}`,
+          `Negócio ${data.nome_contato.split(" ")[0]} - ${data.tipo}${data.valor ? " - " + data.valor : ""}`,
         // Os campos "tipo" e "status" devem ser definidos conforme seu enum
-        tipo: data.tipo_credito as NegocioTipo,
+        tipo: data.tipo as NegocioTipo,
         status: "ATIVO", // ou outro valor padrão, conforme seu enum NegocioStatus
         // Conectando o Lead criado:
 
@@ -97,7 +100,7 @@ export const updateNegocio = async (
 
 // Tipo para os registros importados em massa
 type MassNegocioData = {
-  tipo_credito: string;
+  tipo: string;
   proprietario_id?: string;
   registros: {
     name: string;
@@ -131,7 +134,7 @@ export const createMassNegocio = async (
 
       // Cria um título padrão, combinando o primeiro nome com o tipo de crédito
       const titulo =
-        `${registro.name.split(" ")[0]} - ${data.tipo_credito}` +
+        `${registro.name.split(" ")[0]} - ${data.tipo}` +
         (registro.credito ? ` - ${formatNumberShort(registro.credito)}` : "");
 
       // Criação do negócio
@@ -139,7 +142,7 @@ export const createMassNegocio = async (
         data: {
           titulo,
           // Define o tipo conforme o enum; ajuste se necessário
-          tipo: data.tipo_credito as NegocioTipo,
+          tipo: data.tipo as NegocioTipo,
           tenant: { connect: { id: tenantId } },
           status: "ATIVO", // ou outro valor padrão conforme seu enum de status
           // Conectando o Lead criado
@@ -1238,7 +1241,7 @@ export async function getTimeComercialVendedores() {
 import { promises as fs } from "fs";
 import path from "path";
 import sharp from "sharp";
-import { getTenantID, prisma } from "./prisma";
+import { basePrisma, getTenantID, prisma } from "./prisma";
 import dayjs from "./dayjs";
 import { connect } from "http2";
 
@@ -1547,19 +1550,43 @@ export async function importLeadsAction(leads: Lead[], userId: number) {
 // Server action que deleta os registros conforme o modelo
 export async function deleteItemsAction(
   formData: FormData,
-  model: "negocio" | "leadImportado"
+  model: "negocio" | "leadImportado" | "upload"
 ) {
   try {
     const ids = JSON.parse(formData.get("ids") as string) as number[];
 
-    if (model === "negocio") {
-      await prisma.negocio.deleteMany({
-        where: { id: { in: ids } },
-      });
+    if ((prisma as any)[model]) {
+      if (model === "upload") {
+        await Promise.all(
+          ids.map(async (id) => {
+            const upload = await basePrisma.upload.findUnique({
+              where: { id },
+            });
+            if (!upload) {
+              throw new Error("Arquivo não encontrado");
+            }
+            // Remove o arquivo do disco (se existir)
+            const filePath = path.join(
+              process.cwd(),
+              "public",
+              upload.filePath
+            );
+            try {
+              await fs.unlink(filePath);
+
+              await prisma.upload.delete({ where: { id } });
+            } catch (error) {
+              console.error("Erro ao deletar arquivo do disco", error);
+            }
+          })
+        );
+      } else {
+        await (prisma as any)[model].deleteMany({
+          where: { id: { in: ids } },
+        });
+      }
     } else {
-      await prisma.leadImportado.deleteMany({
-        where: { id: { in: ids } },
-      });
+      throw new Error(`Model ${model} não existe no Prisma.`);
     }
     return { success: true, msg: "Registros deletados com sucesso" };
   } catch (error) {
@@ -1601,3 +1628,72 @@ export async function createNegocioComentarioAction({
     return { success: false, msg: "Erro ao deletar negocio: " + error };
   }
 }
+
+export async function uploadNegocioFile(
+  formData: FormData
+): Promise<{ success: boolean; msg: string }> {
+  try {
+    const negocioId = Number(formData.get("negocioId"));
+    const description = formData.get("description") as string;
+    const file = formData.get("file") as File;
+
+    if (!file) {
+      return { success: false, msg: "Nenhum arquivo enviado" };
+    }
+    // Obter o buffer do arquivo
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const originalName = file.name;
+    const extension = originalName.split(".").pop() || "";
+    const fileSize = file.size;
+    // Gerar um nome único para o arquivo
+    const filename = `${Date.now()}_${originalName}`;
+    const folder = "uploads";
+    const filePath = path.join(process.cwd(), "public", folder, filename);
+    // Garantir que a pasta exista
+    await fs.mkdir(path.join(process.cwd(), "public", folder), {
+      recursive: true,
+    });
+    // Salvar o arquivo
+    await fs.writeFile(filePath, buffer);
+    // Cria o registro no banco de dados
+    await prisma.upload.create({
+      data: {
+        fileName: originalName,
+        filePath: `/${folder}/${filename}`,
+        extension,
+        fileSize,
+        description,
+        negocioId,
+      },
+    });
+    return { success: true, msg: "Arquivo enviado com sucesso" };
+  } catch (error: any) {
+    console.error(error);
+    return { success: false, msg: "Erro ao enviar arquivo: " + error.message };
+  }
+}
+
+// export async function deleteUploadFile(
+//   formData: FormData
+// ): Promise<{ success: boolean; msg: string }> {
+//   try {
+//     const id = Number(formData.get("id"));
+//     const upload = await basePrisma.upload.findUnique({ where: { id } });
+//     if (!upload) {
+//       return { success: false, msg: "Arquivo não encontrado" };
+//     }
+//     // Remove o arquivo do disco (se existir)
+//     const filePath = path.join(process.cwd(), "public", upload.filePath);
+//     try {
+//       await fs.unlink(filePath);
+//     } catch (error) {
+//       console.error("Erro ao deletar arquivo do disco", error);
+//     }
+//     // Deleta também do banco
+//     await basePrisma.upload.delete({ where: { id } });
+//     return { success: true, msg: "Arquivo deletado com sucesso" };
+//   } catch (error: any) {
+//     console.error(error);
+//     return { success: false, msg: error.message || "Erro ao deletar arquivo" };
+//   }
+// }

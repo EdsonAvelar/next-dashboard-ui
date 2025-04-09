@@ -1,3 +1,4 @@
+import { Controller } from "react-hook-form";
 import { FieldError } from "react-hook-form";
 
 type Option = {
@@ -7,7 +8,7 @@ type Option = {
 
 type SelectInputProps = {
   label?: string;
-  register: any;
+  control: any;
   name: string;
   defaultValue?: string;
   isRequired?: boolean;
@@ -18,7 +19,7 @@ type SelectInputProps = {
 
 const SelectInput = ({
   label,
-  register,
+  control,
   name,
   defaultValue,
   error,
@@ -34,21 +35,27 @@ const SelectInput = ({
           {isRequired && <span className="text-red-500 text-lg">*</span>}
         </label>
       )}
-      <select
-        {...register(name)}
-        defaultValue={defaultValue}
-        className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-        {...selectProps}
-      >
-        {options.map((option) => (
-          <option
-            key={option.value}
-            value={option.value}
+      <Controller
+        control={control}
+        name={name}
+        defaultValue={defaultValue || ""}
+        render={({ field }) => (
+          <select
+            {...field}
+            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            {...selectProps}
           >
-            {option.label}
-          </option>
-        ))}
-      </select>
+            {options.map((option) => (
+              <option
+                key={option.value}
+                value={option.value}
+              >
+                {option.label}
+              </option>
+            ))}
+          </select>
+        )}
+      />
       {error?.message && (
         <p className="text-xs text-red-500 py-0">{error.message.toString()}</p>
       )}

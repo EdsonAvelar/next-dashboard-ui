@@ -12,7 +12,7 @@ import { formatCurrency, NegocioTipoOptions } from "@/lib/utils";
 
 // Schema para o formulário de importação em massa
 const negocioMassSchema = z.object({
-  tipo_credito: z.string(),
+  tipo: z.string(),
   negocios: z.string().min(1, "Insira os dados dos negócios"),
 });
 
@@ -102,7 +102,7 @@ const NegocioMassForm = ({
   } = useForm<NegocioMassFormSchema>({
     resolver: zodResolver(negocioMassSchema),
     defaultValues: {
-      tipo_credito: "IMOVEL",
+      tipo: "IMOVEL",
       negocios: "",
     },
   });
@@ -137,7 +137,7 @@ const NegocioMassForm = ({
 
     // Prepara o payload para a ação de criação em massa
     const payload = {
-      tipo_credito: formData.tipo_credito,
+      tipo: formData.tipo,
       proprietario_id: proprietarioId,
       registros: parsedRecords,
     };
@@ -186,15 +186,15 @@ const NegocioMassForm = ({
               <input
                 type="radio"
                 value={option.value}
-                {...register("tipo_credito")}
+                {...register("tipo")}
               />
               {option.label}
             </label>
           ))}
         </div>
-        {formErrors.tipo_credito && (
+        {formErrors.tipo && (
           <span className="text-red-500 text-xs">
-            {formErrors.tipo_credito.message}
+            {formErrors.tipo.message}
           </span>
         )}
       </div>

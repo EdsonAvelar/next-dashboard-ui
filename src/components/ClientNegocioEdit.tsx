@@ -15,6 +15,9 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { updateNegocioSchema } from "@/lib/formValidationSchema";
+import NegocioForm from "./forms/NegocioForm";
+import Badge from "./Badge";
+import NegocioUploads from "./NegocioUploads";
 
 interface Negocio {
   id: number;
@@ -56,13 +59,25 @@ interface Negocio {
   }>;
 }
 
+interface Simulacao {
+  id: number;
+  tipo?: string;
+  dataProposta?: string;
+  consorcios?: any[];
+  financiamentos?: any[];
+}
+
+interface ClientNegocioEditProps {
+  negocio: Negocio;
+  user: any;
+  simulacoes?: Simulacao[];
+}
+
 export default function ClientNegocioEdit({
   negocio,
   user,
-}: {
-  negocio: Negocio;
-  user: any;
-}) {
+  simulacoes = [],
+}: ClientNegocioEditProps) {
   const [activeTab, setActiveTab] = useState("anotações");
   const [newComment, setNewComment] = useState("");
   const router = useRouter();
@@ -80,7 +95,7 @@ export default function ClientNegocioEdit({
       titulo: rawData.titulo as string,
       nome_contato: rawData.nome_contato as string,
       telefone: rawData.telefone as string,
-      tipo_credito: rawData.tipo_credito as string,
+      tipo: rawData.tipo as string,
       valor: Number(rawData.valor),
     };
 
@@ -105,7 +120,7 @@ export default function ClientNegocioEdit({
       if (err instanceof z.ZodError) {
         // Percorre os erros e exibe uma mensagem para cada, incluindo o campo relacionado para melhor detalhe
         err.errors.forEach((error) => {
-          const field = error.path.join('.') || 'Campo';
+          const field = error.path.join(".") || "Campo";
           toast.error(`Erro de Validação [${field}]: ${error.message}`);
         });
       } else {
@@ -318,11 +333,21 @@ export default function ClientNegocioEdit({
         <div className="bg-white rounded-lg shadow-2xl w-full md:w-3/4">
           <nav className="border-b">
             <ul className="flex flex-wrap -mb-px">
-              {["anotações", "negocio", "contato", "atividades"].map((tab) => {
+              {[
+                "anotações",
+                "negocio",
+                "arquivos",
+                // "contato",
+                "propostas",
+                "atividades",
+              ].map((tab) => {
                 const icons: { [key: string]: string } = {
                   anotações: "mdi:note-outline",
                   negocio: "mdi:briefcase",
+                  // contato: "mdi:phone",
+                  arquivos: "mdi:upload",
                   contato: "mdi:phone",
+                  propostas: "mdi:file-document-multiple-outline",
                   atividades: "mdi:check-circle",
                 };
                 return (
@@ -353,59 +378,23 @@ export default function ClientNegocioEdit({
           <div className="p-6">
             {/* Aba PERFIL */}
             {activeTab === "negocio" && (
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-6"
-              >
-                <h2 className="text-xl font-bold text-gray-700 mb-4">
-                  Negócio
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Título do Negócio
-                    </label>
-                    <input
-                      type="text"
-                      name="titulo"
-                      defaultValue={negocio.titulo}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Tipo de Negócio
-                    </label>
-                    <input
-                      type="text"
-                      name="tipo"
-                      defaultValue={negocio.tipo}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Valor do Crédito
-                  </label>
-                  <input
-                    type="number"
-                    name="valor"
-                    defaultValue={negocio.valor}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
-                >
-                  Salvar
-                </button>
-              </form>
+              <NegocioForm
+                type={"update"}
+                relatedData={{
+                  id: negocio.id,
+                  nome_contato: negocio.consorciado?.nome,
+                  telefone: negocio.consorciado?.telefone, // Exemplo de dados
+                  tipo: negocio.tipo,
+                  valor: negocio.valor,
+                  titulo: negocio.titulo,
+                  whatsapp: negocio.consorciado?.whatsapp,
+                  email: negocio.consorciado?.email,
+                }}
+              />
             )}
 
             {/* Aba CONTATO */}
-            {activeTab === "contato" && (
+            {/* {activeTab === "contato" && (
               <form
                 onSubmit={handleSubmit}
                 className="space-y-6"
@@ -501,6 +490,76 @@ export default function ClientNegocioEdit({
                   Salvar Alterações
                 </button>
               </form>
+            )} */}
+
+            {activeTab === "propostas" && (
+              <div className="mt-8">
+                <h2 className="text-xl font-bold mb-4">Simulações</h2>
+                {simulacoes.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {simulacoes.map((sim) => {
+                      const creditConsorcio =
+                        sim.consorcios && sim.consorcios.length > 0
+                          ? sim.consorcios[0].conCredito
+                          : null;
+                      const creditFinanciamento =
+                        sim.financiamentos && sim.financiamentos.length > 0
+                          ? sim.financiamentos[0].finCredito
+                          : null;
+
+                      const creditValue =
+                        creditConsorcio || creditFinanciamento;
+                      return (
+                        <a
+                          key={sim.id}
+                          href={`/simulacoes?simulacao_id=${sim.id}`}
+                          className="block p-4 border rounded-lg hover:bg-gray-100 transition"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold">
+                              Simulação #{sim.id}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {sim.dataProposta
+                                ? new Date(
+                                    sim.dataProposta
+                                  ).toLocaleDateString() +
+                                  " " +
+                                  new Date(
+                                    sim.dataProposta
+                                  ).toLocaleTimeString()
+                                : ""}
+                            </span>
+                          </div>
+                          <p className="text-sm mt-2">
+                            Bem: {sim.tipo || "Sem tipo definido"}
+                          </p>
+                          <p className="text-sm mt-2">
+                            Crédito:{" "}
+                            {creditConsorcio ? (
+                              <Badge type="blue">Consórcio</Badge>
+                            ) : (
+                              ""
+                            )}
+                            {creditFinanciamento ? (
+                              <Badge type="purple">Financiamento</Badge>
+                            ) : (
+                              ""
+                            )}
+                          </p>
+                          {creditValue && (
+                            <p className="text-sm mt-1">
+                              Valor do Crédito: R$ {creditValue.toString()}
+                            </p>
+                          )}
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p>Sem simulações</p>
+                )}
+              </div>
             )}
 
             {/* Aba OBSERVACOES */}
@@ -572,6 +631,10 @@ export default function ClientNegocioEdit({
                   )}
                 </div>
               </div>
+            )}
+
+            {activeTab === "arquivos" && (
+              <NegocioUploads negocioId={negocio.id} />
             )}
 
             {/* Aba ATIVIDADES */}

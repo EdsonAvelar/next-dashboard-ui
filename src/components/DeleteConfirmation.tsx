@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { deleteItemsAction } from "@/lib/actions";
+import { deleteItemsAction, deleteUploadFile } from "@/lib/actions";
 
 type DeleteFormValues = {
   ids: string;
@@ -14,7 +14,7 @@ type DeleteFormValues = {
 interface DeleteConfirmationProps {
   message?: string;
   selectedIds: number[];
-  model: "negocio" | "leadImportado";
+  model: "negocio" | "leadImportado" | "upload";
   onClose: () => void;
 }
 
@@ -34,7 +34,10 @@ export default function DeleteConfirmation({
 
     startTransition(async () => {
       try {
-        const res = await deleteItemsAction(formData, model);
+        let res;
+
+        res = await deleteItemsAction(formData, model);
+
         if (res.success) {
           toast.success("Itens excluídos com sucesso!");
           router.refresh();

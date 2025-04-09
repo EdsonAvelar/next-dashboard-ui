@@ -1,4 +1,9 @@
-import { PrismaClient, NegocioStatus } from "@prisma/client";
+import {
+  PrismaClient,
+  NegocioStatus,
+  TenantType,
+  BillingFrequency,
+} from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -21,7 +26,7 @@ export async function populateCRM(
   NUM_NEGOCIOS: number,
   tenantId: number
 ) {
-  // 1. Cria cargos, se ainda não existirem (modelo global)
+  // 1. Cria cargos para o tenant Representação
   const cargosData = [
     { name: "Gerente" },
     { name: "Vendedor" },
@@ -34,33 +39,40 @@ export async function populateCRM(
   ];
   for (const cargo of cargosData) {
     try {
-      await prisma.cargo.create({ data: { ...cargo, tenant: { connect: { id: tenantId } } } });
+      await prisma.cargo.create({
+        data: {
+          ...cargo,
+          scope: TenantType.REPRESENTATION,
+        },
+      });
     } catch (e) {
       // Ignora erro se já existir
     }
   }
 
   // 2. Cria usuários (Funcionários) associados ao tenant Representação
-  const cargos = await prisma.cargo.findMany();
+  // Agora, busca cargos filtrando pelo scope, pois Cargo não possui relação com Tenant.
+  const cargos = await prisma.cargo.findMany({
+    where: { scope: TenantType.REPRESENTATION },
+  });
   const userPromises = [];
   for (let i = 0; i < NUM_USERS; i++) {
     const name = `User ${i + 1}`;
     const email = `user${i + 1}@example.com`;
     const passwordHash = await bcrypt.hash("password", 10);
     const randomCargo = cargos[Math.floor(Math.random() * cargos.length)];
-    // 30% de chance de receber a role "gerenciar_equipe"
-    let rolesToConnect: { id: number }[] = [];
 
+    // Conecta as roles disponíveis para REPRESENTATION
+    let rolesToConnect: { id: number }[] = [];
     const timeComercialRole = await prisma.role.findFirst({
-      where: { name: "time_comercial" },
+      where: { name: "time_comercial", scope: TenantType.REPRESENTATION },
     });
     if (timeComercialRole) {
       rolesToConnect.push({ id: timeComercialRole.id });
     }
-
     if (Math.random() < 0.3) {
       const role = await prisma.role.findFirst({
-        where: { name: "gerenciar_equipe" },
+        where: { name: "gerenciar_equipe", scope: TenantType.REPRESENTATION },
       });
       if (role) rolesToConnect.push({ id: role.id });
     }
@@ -82,10 +94,11 @@ export async function populateCRM(
   console.log(`${NUM_USERS} usuários criados no tenant Representação.`);
 
   // 3. Cria equipes associadas ao tenant Representação
-  // Seleciona usuários elegíveis: que tenham a role "gerenciar_equipe" e não pertençam a nenhuma equipe nem liderem outra
   const potentialLeaders = await prisma.user.findMany({
     where: {
-      roles: { some: { name: "gerenciar_equipe" } },
+      roles: {
+        some: { name: "gerenciar_equipe", scope: TenantType.REPRESENTATION },
+      },
       equipeId: null,
       liderEquipe: null,
       tenantId: tenantId,
@@ -131,6 +144,77 @@ export async function populateCRM(
   console.log("Membros atribuídos às equipes.");
 
   // 5. Cria negócios, leads, agendamentos, fechamentos, etc. no tenant Representação
+  // Cria o funil se não existir
+  let funil = await prisma.funil.findFirst({
+    where: { nome: "VENDAS", tenantId: tenantId },
+  });
+  if (!funil) {
+    funil = await prisma.funil.create({
+      data: { nome: "VENDAS", tenantId: tenantId },
+    });
+  }
+
+  // Gera etapas caso ainda não existam
+  const etapas = await prisma.etapaFunil.findMany({
+    where: { funil_id: funil.id, tenantId: tenantId },
+  });
+  if (etapas.length === 0) {
+    await prisma.etapaFunil.createMany({
+      data: [
+        {
+          nome: "OPORTUNIDADE",
+          ordem: 1,
+          funil_id: funil.id,
+          tipo: "COMUM",
+          tenantId: tenantId,
+        },
+        {
+          nome: "PRIMEIRO_CONTATO",
+          ordem: 2,
+          funil_id: funil.id,
+          tipo: "COMUM",
+          tenantId: tenantId,
+        },
+        {
+          nome: "REUNIAO_AGENDADA",
+          ordem: 3,
+          funil_id: funil.id,
+          tipo: "AGENDAMENTO",
+          tenantId: tenantId,
+        },
+        {
+          nome: "REUNIAO",
+          ordem: 4,
+          funil_id: funil.id,
+          tipo: "REUNIAO",
+          tenantId: tenantId,
+        },
+        {
+          nome: "APROVACAO",
+          ordem: 5,
+          funil_id: funil.id,
+          tipo: "COMUM",
+          tenantId: tenantId,
+        },
+        {
+          nome: "ACOMPANHAMENTO",
+          ordem: 6,
+          funil_id: funil.id,
+          tipo: "COMUM",
+          tenantId: tenantId,
+        },
+        {
+          nome: "FECHAMENTO",
+          ordem: 7,
+          funil_id: funil.id,
+          tipo: "FECHAMENTO",
+          tenantId: tenantId,
+        },
+      ],
+    });
+  }
+
+  // Cria negócios e informações associadas
   for (let i = 0; i < NUM_NEGOCIOS; i++) {
     // Cria um lead fake
     const lead = await prisma.lead.create({
@@ -146,21 +230,12 @@ export async function populateCRM(
     // Escolhe um usuário aleatório como dono
     const randomUser = users[Math.floor(Math.random() * users.length)];
 
-    // Certifique-se de que exista o funil "VENDAS"
-    let funil = await prisma.funil.findFirst({
-      where: { nome: "VENDAS", tenantId: tenantId },
-    });
-    if (!funil) {
-      funil = await prisma.funil.create({
-        data: { nome: "VENDAS", tenantId: tenantId },
-      });
-    }
-
     // Obter uma etapa aleatória do funil
-    const etapas = await prisma.etapaFunil.findMany({
+    const etapasFunil = await prisma.etapaFunil.findMany({
       where: { funil_id: funil.id, tenantId: tenantId },
     });
-    const randomEtapa = etapas[Math.floor(Math.random() * etapas.length)];
+    const randomEtapa =
+      etapasFunil[Math.floor(Math.random() * etapasFunil.length)];
 
     // Array com os status possíveis
     const statusOptions = [
@@ -283,95 +358,108 @@ export async function populateCRM(
 }
 
 async function main() {
-  // 1. Cria roles/permissões (modelo global)
-  const permissionsData = [
+  // 1. Cria roles (para REPRESENTATION)
+  const rolesData = [
     {
       name: "gerente_geral",
       descricao: "Permite acesso total ao sistema sem restrições",
+      scope: TenantType.REPRESENTATION,
     },
     {
       name: "time_comercial",
       descricao:
         "Permite acesso ao pipeline, pertencer a equipe e ser visto nos rankings",
+      scope: TenantType.REPRESENTATION,
     },
     {
       name: "gerenciar_funcionarios",
-      descricao: "Permite adicionar ou remover funcionarios",
+      descricao: "Permite adicionar ou remover funcionários",
+      scope: TenantType.REPRESENTATION,
     },
     {
       name: "importar_leads",
-      descricao: "Permite ter acesso a área de importação de leads",
+      descricao: "Permite acesso à área de importação de leads",
+      scope: TenantType.REPRESENTATION,
     },
     {
       name: "gerenciar_equipe",
-      descricao: "Permite um usuário poder ser líder de uma equipe",
+      descricao: "Permite que um usuário seja líder de uma equipe",
+      scope: TenantType.REPRESENTATION,
     },
     {
       name: "gerenciar_vendas",
-      descricao: "Permite enxergar a área de vendas realizadas",
+      descricao: "Permite visualizar a área de vendas realizadas",
+      scope: TenantType.REPRESENTATION,
     },
     {
       name: "gerenciar_bordero",
-      descricao: "Permite enxergar e gerenciar a área de criação de bordero",
+      descricao: "Permite gerenciar a área de criação de bordero",
+      scope: TenantType.REPRESENTATION,
     },
     {
       name: "enviar_notificacao",
       descricao: "Permite enviar notificações de vendas",
+      scope: TenantType.REPRESENTATION,
     },
     {
       name: "gerenciar_filiais",
-      descricao: "Permite enxergar a área de filiais",
+      descricao: "Permite acesso à área de filiais",
+      scope: TenantType.REPRESENTATION,
     },
   ];
 
-  for (const permission of permissionsData) {
+  for (const role of rolesData) {
     try {
-      await prisma.role.create({ data: permission });
+      await prisma.role.create({
+        data: { ...role },
+      });
     } catch (e) {
       // Ignora se a role já existir
     }
   }
-  console.log("Permissões criadas com sucesso!");
+  console.log("Roles para REPRESENTATION criadas com sucesso!");
 
   // 2. Cria três tenants: Master, Submaster e Representação
   const tenantMaster = await prisma.tenant.create({
     data: {
       name: "Master Tenant",
-      type: "MASTER",
-      billingFrequency: "MENSAL",
+      type: TenantType.MASTER,
+      billingFrequency: BillingFrequency.MENSAL,
     },
   });
   const tenantSubmaster = await prisma.tenant.create({
     data: {
       name: "Submaster Tenant",
-      type: "SUBMASTER",
-      billingFrequency: "MENSAL",
+      type: TenantType.SUBMASTER,
+      billingFrequency: BillingFrequency.MENSAL,
     },
   });
   const tenantRepresentacao = await prisma.tenant.create({
     data: {
       name: "Representação Tenant",
-      type: "REPRESENTATION",
-      billingFrequency: "MENSAL",
+      type: TenantType.REPRESENTATION,
+      billingFrequency: BillingFrequency.MENSAL,
     },
   });
   console.log("Tenants criados com sucesso!");
 
-  // 3. Cria um usuário Admin para cada tenant usando a role "gerente_geral"
-  const passwordHash = await bcrypt.hash("12345", 10);
+  // 3. (Removido) Atualizar as roles para conectar com o tenant Representação,
+  // pois o modelo Role não possui relação many-to-many com Tenant.
+
+  // 4. Cria um usuário Admin para cada tenant usando a role "gerente_geral"
+  const senhaHash = await bcrypt.hash("12345", 10);
   const gerenteGeral = await prisma.role.findFirst({
-    where: { name: "gerente_geral" },
+    where: { name: "gerente_geral", scope: TenantType.REPRESENTATION },
   });
   if (!gerenteGeral) {
     throw new Error("Role 'gerente_geral' não encontrada!");
   }
-
   await prisma.user.create({
     data: {
       name: "Admin Master",
       avatar: "",
       email: "adminmaster@example.com",
-      password: passwordHash,
+      password: senhaHash,
       roles: { connect: { id: gerenteGeral.id } },
       status: 1,
       tenantId: tenantMaster.id,
@@ -382,7 +470,7 @@ async function main() {
       name: "Admin Submaster",
       avatar: "",
       email: "adminsubmaster@example.com",
-      password: passwordHash,
+      password: senhaHash,
       roles: { connect: { id: gerenteGeral.id } },
       status: 1,
       tenantId: tenantSubmaster.id,
@@ -393,7 +481,7 @@ async function main() {
       name: "Admin Representação",
       avatar: "",
       email: "adminrepresentacao@example.com",
-      password: passwordHash,
+      password: senhaHash,
       roles: { connect: { id: gerenteGeral.id } },
       status: 1,
       tenantId: tenantRepresentacao.id,
@@ -401,88 +489,11 @@ async function main() {
   });
   console.log("Usuários Admin criados para cada tenant!");
 
-  // 4. Cria cargos (mesmo processo que no populateCRM)
-  const cargoData = [
-    { name: "Gerente" },
-    { name: "Vendedor" },
-    { name: "Coordenador" },
-    { name: "Supervisor" },
-    { name: "Telemarketing" },
-    { name: "Gerente Adminstrativo" },
-    { name: "Auxiliar Adminstrativo" },
-    { name: "Pós-Venda" },
-  ];
-  for (const cargo of cargoData) {
-    try {
-      await prisma.cargo.create({ data: { ...cargo, tenant: { connect: { id: tenantRepresentacao.id } } } });
-    } catch (e) {
-      // Ignora se já existir
-    }
-  }
-  console.log("Cargos criados com sucesso!");
-
-  // 5. Cria o funil e as etapas (associados ao tenant Representação)
-  const funil = await prisma.funil.create({
-    data: { nome: "VENDAS", tenantId: tenantRepresentacao.id },
-  });
-
-  await prisma.etapaFunil.createMany({
-    data: [
-      {
-        nome: "OPORTUNIDADE",
-        ordem: 1,
-        funil_id: funil.id,
-        tipo: "COMUM",
-        tenantId: tenantRepresentacao.id,
-      },
-      {
-        nome: "PRIMEIRO_CONTATO",
-        ordem: 2,
-        funil_id: funil.id,
-        tipo: "COMUM",
-        tenantId: tenantRepresentacao.id,
-      },
-      {
-        nome: "REUNIAO_AGENDADA",
-        ordem: 3,
-        funil_id: funil.id,
-        tipo: "AGENDAMENTO",
-        tenantId: tenantRepresentacao.id,
-      },
-      {
-        nome: "REUNIAO",
-        ordem: 4,
-        funil_id: funil.id,
-        tipo: "REUNIAO",
-        tenantId: tenantRepresentacao.id,
-      },
-      {
-        nome: "APROVACAO",
-        ordem: 5,
-        funil_id: funil.id,
-        tipo: "COMUM",
-        tenantId: tenantRepresentacao.id,
-      },
-      {
-        nome: "ACOMPANHAMENTO",
-        ordem: 6,
-        funil_id: funil.id,
-        tipo: "COMUM",
-        tenantId: tenantRepresentacao.id,
-      },
-      {
-        nome: "FECHAMENTO",
-        ordem: 7,
-        funil_id: funil.id,
-        tipo: "FECHAMENTO",
-        tenantId: tenantRepresentacao.id,
-      },
-    ],
-  });
-  console.log('Pipeline "VENDAS" criado com sucesso!');
-
-  // 6. Popula o CRM (restante dos dados) para o tenant Representação
+  // 5. Inicia a população do CRM para o tenant Representação
+  console.log("Iniciando a população do CRM para o tenant Representação...");
   await populateCRM(20, 50, tenantRepresentacao.id);
+
+  console.log("Seed concluído com sucesso!");
 }
 
 main()
