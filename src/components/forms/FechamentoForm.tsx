@@ -375,7 +375,7 @@ export default function FechamentoForm({
             <SelectInput
               label="Estado Civil"
               name="consorciado.estado_civil"
-              register={register}
+              control={control}
               defaultValue={fechamento.negocio?.consorciado?.estado_civil}
               options={EstadoCivilOptions}
             />
@@ -384,7 +384,7 @@ export default function FechamentoForm({
             <SelectInput
               label="Gênero"
               name="consorciado.genero"
-              register={register}
+              control={control}
               defaultValue={fechamento.negocio?.consorciado?.genero}
               options={GeneroOptions}
             />
@@ -493,7 +493,7 @@ export default function FechamentoForm({
             <SelectInput
               label="Gênero"
               name="conjuge.genero"
-              register={register}
+              control={control}
               defaultValue={fechamento.negocio?.conjuge?.genero}
               options={GeneroOptions}
             />
@@ -717,7 +717,7 @@ export default function FechamentoForm({
             <SelectInput
               label="Grupo em Formação"
               name="grupo_em_formacao"
-              register={register}
+              control={control}
               defaultValue={fechamento.grupo_em_formacao ? "SIM" : "NÃO"}
               options={[
                 { value: "SIM", label: "SIM" },
@@ -729,7 +729,7 @@ export default function FechamentoForm({
             <SelectInput
               label="Grupo em Andamento"
               name="grupo_em_andamento"
-              register={register}
+              control={control}
               defaultValue={fechamento.grupo_em_andamento ? "1" : "0"}
               options={[
                 { value: "1", label: "SIM" },
@@ -791,7 +791,7 @@ export default function FechamentoForm({
             <SelectInput
               label="Tabela"
               name="tabela"
-              register={register}
+              control={control}
               defaultValue={fechamento.tabela ? "1" : "0"}
               options={[
                 { value: "1", label: "CIMA" },
@@ -898,6 +898,8 @@ export default function FechamentoForm({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-6 mb-5 px-1">
           <div className="col-span-1">
+            {/* {fechamento.data_fechamento}-{dayjs().format("DD-MM-YYYY")} */}
+
             <InputField
               label="Data Fechamento"
               name="data_fechamento"
@@ -906,8 +908,8 @@ export default function FechamentoForm({
               isRequired={true}
               defaultValue={
                 fechamento.data_fechamento
-                  ? dayjs(fechamento.data_fechamento).format("YYYY-MM-DD")
-                  : dayjs().format("YYYY-MM-DD")
+                  ? dayjs(fechamento.data_fechamento).format("DD-MM-YYYY")
+                  : dayjs().format("DD-MM-YYYY")
               }
               type="date"
             />
@@ -1062,7 +1064,7 @@ export default function FechamentoForm({
       <div className="flex flex-col md:flex-row justify-end items-center mt-6 space-y-2 md:space-y-0 md:space-x-4">
         <SelectInput
           name="status"
-          register={register}
+          control={control}
           defaultValue={fechamento.status || ""}
           options={VendaStatusOptions}
         />

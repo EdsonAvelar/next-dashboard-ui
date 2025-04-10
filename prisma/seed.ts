@@ -451,9 +451,11 @@ async function main() {
   const gerenteGeral = await prisma.role.findFirst({
     where: { name: "gerente_geral", scope: TenantType.REPRESENTATION },
   });
+  
   if (!gerenteGeral) {
     throw new Error("Role 'gerente_geral' não encontrada!");
   }
+  
   await prisma.user.create({
     data: {
       name: "Admin Master",

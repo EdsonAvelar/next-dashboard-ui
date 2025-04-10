@@ -182,7 +182,7 @@ function ColumnComponent({ column }: { column: Column }) {
             <img
               src={column.logo}
               alt="logo"
-              className="w-8 h-8 object-cover rounded-full"
+              className="w-8 h-8 object-cover rounded-full bg"
             />
           )}
           <span className="text-sm text-gray-500 uppercase font-semibold">

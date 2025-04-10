@@ -838,7 +838,7 @@ export const updateFechamento = async (
     return { success: true, msg: "Fechamento atualizado com sucesso" };
   } catch (error) {
     console.error("Erro ao atualizar fechamento:", error);
-    return { success: false, msg: "Erro ao atualizar fechamento" };
+    return { success: false, msg: "Erro ao atualizar fechamento" + error };
   }
 };
 
@@ -941,6 +941,8 @@ export const createEquipe = async (
   data: EquipeSchema
 ) => {
   try {
+    const tenantId = await getTenantID();
+
     const { name, description, logo, liderId } = data;
     if (!name || !liderId) {
       return { success: false, msg: "Nome e líder são obrigatórios" };
@@ -958,6 +960,7 @@ export const createEquipe = async (
         description,
         logo,
         liderId,
+        tenantId: tenantId,
       },
     });
     return { success: true };
@@ -1628,72 +1631,3 @@ export async function createNegocioComentarioAction({
     return { success: false, msg: "Erro ao deletar negocio: " + error };
   }
 }
-
-export async function uploadNegocioFile(
-  formData: FormData
-): Promise<{ success: boolean; msg: string }> {
-  try {
-    const negocioId = Number(formData.get("negocioId"));
-    const description = formData.get("description") as string;
-    const file = formData.get("file") as File;
-
-    if (!file) {
-      return { success: false, msg: "Nenhum arquivo enviado" };
-    }
-    // Obter o buffer do arquivo
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const originalName = file.name;
-    const extension = originalName.split(".").pop() || "";
-    const fileSize = file.size;
-    // Gerar um nome único para o arquivo
-    const filename = `${Date.now()}_${originalName}`;
-    const folder = "uploads";
-    const filePath = path.join(process.cwd(), "public", folder, filename);
-    // Garantir que a pasta exista
-    await fs.mkdir(path.join(process.cwd(), "public", folder), {
-      recursive: true,
-    });
-    // Salvar o arquivo
-    await fs.writeFile(filePath, buffer);
-    // Cria o registro no banco de dados
-    await prisma.upload.create({
-      data: {
-        fileName: originalName,
-        filePath: `/${folder}/${filename}`,
-        extension,
-        fileSize,
-        description,
-        negocioId,
-      },
-    });
-    return { success: true, msg: "Arquivo enviado com sucesso" };
-  } catch (error: any) {
-    console.error(error);
-    return { success: false, msg: "Erro ao enviar arquivo: " + error.message };
-  }
-}
-
-// export async function deleteUploadFile(
-//   formData: FormData
-// ): Promise<{ success: boolean; msg: string }> {
-//   try {
-//     const id = Number(formData.get("id"));
-//     const upload = await basePrisma.upload.findUnique({ where: { id } });
-//     if (!upload) {
-//       return { success: false, msg: "Arquivo não encontrado" };
-//     }
-//     // Remove o arquivo do disco (se existir)
-//     const filePath = path.join(process.cwd(), "public", upload.filePath);
-//     try {
-//       await fs.unlink(filePath);
-//     } catch (error) {
-//       console.error("Erro ao deletar arquivo do disco", error);
-//     }
-//     // Deleta também do banco
-//     await basePrisma.upload.delete({ where: { id } });
-//     return { success: true, msg: "Arquivo deletado com sucesso" };
-//   } catch (error: any) {
-//     console.error(error);
-//     return { success: false, msg: error.message || "Erro ao deletar arquivo" };
-//   }
-// }

@@ -25,6 +25,7 @@ const ProfileForm = ({ data, relatedData }: ProfileFormProps) => {
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     formState: { errors },
@@ -116,8 +117,8 @@ const ProfileForm = ({ data, relatedData }: ProfileFormProps) => {
           <SelectInput
             label="Cargo"
             name="cargo"
-            register={register}
-            defaultValue={data?.cargo?.name}
+            control={control}
+            defaultValue={data?.cargo?.id}
             error={errors?.cargo}
             options={[
               { value: "", label: "Selecionar Cargo" },

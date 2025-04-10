@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
 import InputField from "../InputField";
+import LogoUpload from "../LogoUpload";
 import { equipeSchema, EquipeSchema } from "@/lib/formValidationSchema";
 import { createEquipe, updateEquipe } from "@/lib/actions";
 import { useFormState } from "react-dom";
@@ -32,26 +33,25 @@ export default function EquipeForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<EquipeSchema>({
     resolver: zodResolver(equipeSchema),
     defaultValues: {
       name: data?.name || "",
       description: data?.description || "",
-      // Transformamos o liderId para string para o input
       liderId: data?.liderId ? data.liderId.toString() : "",
+      // O campo 'logo' será populado via LogoUpload
       logo: data?.logo || "",
     },
   });
 
-  // Escolhe a action conforme o tipo (create ou update)
   const actionFn = type === "create" ? createEquipe : updateEquipe;
   const [state, formAction] = useFormState(actionFn, {
     success: false,
     msg: "",
   });
 
-  // Fecha o modal e atualiza a página ao concluir a ação
   useEffect(() => {
     if (state.success) {
       toast.success(
@@ -66,7 +66,7 @@ export default function EquipeForm({
 
   const onSubmit = handleSubmit((formData) => {
     if (type === "update" && data?.id) {
-      formData.id = data.id; // necessário para atualizar
+      formData.id = data.id;
     }
     formAction(formData);
   });
@@ -80,7 +80,7 @@ export default function EquipeForm({
         {type === "create" ? "Criar Equipe" : "Atualizar Equipe"}
       </h2>
 
-      {/* Nome */}
+      {/* Nome da Equipe */}
       <InputField
         label="Nome"
         name="name"
@@ -105,6 +105,7 @@ export default function EquipeForm({
         )}
       </div>
 
+      {/* Líder da Equipe */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Líder (Gerenciar Equipe)
@@ -128,13 +129,10 @@ export default function EquipeForm({
         )}
       </div>
 
-      {/* Logo */}
-      <InputField
-        label="URL da Logo"
-        name="logo"
-        type="text"
-        register={register}
-        error={errors.logo}
+      {/* Componente de Upload de Logo com Preview Oval */}
+      <LogoUpload
+        value={data?.logo || ""}
+        onChange={(logoValue) => setValue("logo", logoValue)}
       />
 
       <button

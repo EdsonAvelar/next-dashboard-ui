@@ -4,7 +4,6 @@ import { useState, FormEvent, ChangeEvent, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { deleteUploadFile } from "@/lib/actions";
 import DeleteConfirmation from "./DeleteConfirmation"; // importe o componente
 
 type UploadFile = {

@@ -1,6 +1,6 @@
 // app/fechamento/page.tsx
 import FechamentoForm from "@/components/forms/FechamentoForm";
-import { prisma } from "@/lib/prisma";
+import { basePrisma, prisma } from "@/lib/prisma";
 import dayjs from "@/lib/dayjs";
 import { redirect } from "next/navigation";
 import {
@@ -46,7 +46,7 @@ export default async function FechamentoPage({
   }
 
   // Dados relacionados para os selects do formulário (ex: cargos e vendedores)
-  const cargos = await prisma.cargo.findMany();
+  const cargos = await basePrisma.cargo.findMany();
 
   // const vendedores = await prisma.user.findMany({
   //   select: { id: true, name: true },

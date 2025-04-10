@@ -444,7 +444,7 @@ model FechamentoUser {
   userId       Int
 
   // Comissão precisa ser string porque não pode passar Decimal do servidor pro cliente
-  comissao    String?     
+  comissao    Decimal?    @db.Decimal(10,4)   
   modo        String?     
 
   @@id([fechamentoId, userId])
