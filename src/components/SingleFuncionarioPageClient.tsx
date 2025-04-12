@@ -29,6 +29,7 @@ type User = {
 
 export interface RelatedData {
   cargos: { id: number; name: string }[];
+  tenantId: number;
 }
 
 interface SingleFuncionarioPageClientProps {
@@ -42,6 +43,8 @@ export default function SingleFuncionarioPageClient({
   allRoles,
   relatedData,
 }: SingleFuncionarioPageClientProps) {
+  const { tenantId } = relatedData; // Obtemos o tenantId do objeto relatedData
+
   const [showAddRoles, setShowAddRoles] = useState(false);
 
   return (
@@ -65,7 +68,7 @@ export default function SingleFuncionarioPageClient({
                   configType="avatar"
                   defaultImage={user.avatar || "/noAvatar.png"}
                   filename={`avatar_user_${user.id}`}
-                  folder="avatars" // se desejar que o arquivo seja salvo em public/avatars
+                  folder={`tenants/${tenantId}/avatars`} // se desejar que o arquivo seja salvo em public/avatars
                 />
               </div>
               <h2 className="text-lg font-semibold">{user.name}</h2>

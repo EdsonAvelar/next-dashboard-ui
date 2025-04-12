@@ -33,6 +33,7 @@ export function getSidenavItems(userId?: number | string) {
           label: "Pipeline",
           href: "/pipeline",
           params: userId ? `proprietario_id=${userId}` : "",
+          allowed: ["time_comercial"],
         },
         {
           label: "Lista",

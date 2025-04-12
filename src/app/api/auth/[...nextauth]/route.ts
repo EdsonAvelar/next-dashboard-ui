@@ -2,7 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { basePrisma, prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials, req) {
         if (!credentials) throw new Error("Credenciais não informadas");
-        const user = await prisma.user.findUnique({
+        const user = await basePrisma.user.findUnique({
           where: { email: credentials.email },
           include: { roles: true, cargo: true }, // se você quiser incluir roles, ou inclua a role do cargo
         });

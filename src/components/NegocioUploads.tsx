@@ -18,9 +18,13 @@ type UploadFile = {
 
 interface NegocioUploadsProps {
   negocioId: number;
+  folder: string;
 }
 
-export default function NegocioUploads({ negocioId }: NegocioUploadsProps) {
+export default function NegocioUploads({
+  negocioId,
+  folder,
+}: NegocioUploadsProps) {
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [uploads, setUploads] = useState<UploadFile[]>([]);
@@ -66,6 +70,9 @@ export default function NegocioUploads({ negocioId }: NegocioUploadsProps) {
     }
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("destination", "local"); // aws | cloudinary | local
+    formData.append("folder", folder); // aws | cloudinary | local
+
     formData.append("description", description);
     formData.append("negocioId", negocioId.toString());
     const res = await fetch("/api/uploads", {

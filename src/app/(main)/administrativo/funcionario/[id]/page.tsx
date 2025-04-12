@@ -1,12 +1,13 @@
 // app/dashboard/funcionarios/[id]/page.tsx
-import { basePrisma, prisma } from "@/lib/prisma";
+import { basePrisma, getTenantID, prisma } from "@/lib/prisma";
 import { getUserProfile } from "@/lib/actions";
 import SingleFuncionarioPageClient from "@/components/SingleFuncionarioPageClient";
 
 // Função para obter os cargos (dados relacionados)
 async function getRelatedData() {
   const cargos = await basePrisma.cargo.findMany();
-  return { cargos };
+  const tenantId = await getTenantID();
+  return { cargos, tenantId };
 }
 
 export default async function SingleFuncionarioPage({

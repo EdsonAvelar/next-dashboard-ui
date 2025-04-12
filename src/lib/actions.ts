@@ -935,34 +935,106 @@ export async function deleteProduction(
     return { success: false, msg: "Erro ao deletar produção" };
   }
 }
+
 // Cria uma nova equipe
+// export const createEquipe = async (
+//   currentState: CurrentState,
+//   data: EquipeSchema
+// ) => {
+//   try {
+//     const tenantId = await getTenantID();
+
+//     const { name, description, logo, liderId } = data;
+//     if (!name || !liderId) {
+//       return { success: false, msg: "Nome e líder são obrigatórios" };
+//     }
+//     // Verifica se o usuário já lidera uma equipe
+//     const existingEquipe = await prisma.equipe.findUnique({
+//       where: { liderId: liderId },
+//     });
+
+//     if (existingEquipe) {
+//       return { success: false, msg: "O líder já está em uma equipe" };
+//     }
+//     await prisma.equipe.create({
+//       data: {
+//         name,
+//         description,
+//         logo,
+//         liderId,
+//         tenantId: tenantId,
+//       },
+//     });
+//     return { success: true };
+//   } catch (error) {
+//     console.error("Erro ao criar equipe:", error);
+//     return { success: false, msg: "Erro ao criar equipe: " + error };
+//   }
+// };
+
 export const createEquipe = async (
   currentState: CurrentState,
   data: EquipeSchema
 ) => {
   try {
     const tenantId = await getTenantID();
-
     const { name, description, logo, liderId } = data;
+
     if (!name || !liderId) {
       return { success: false, msg: "Nome e líder são obrigatórios" };
     }
+
     // Verifica se o usuário já lidera uma equipe
     const existingEquipe = await prisma.equipe.findUnique({
-      where: { liderId: liderId },
+      where: { liderId },
     });
     if (existingEquipe) {
       return { success: false, msg: "O líder já está em uma equipe" };
     }
-    await prisma.equipe.create({
+
+    // Criação inicial da equipe sem logo
+    const equipeCriada = await prisma.equipe.create({
       data: {
         name,
         description,
-        logo,
+        logo: "", // Será atualizado após salvar o arquivo
         liderId,
-        tenantId: tenantId,
+        tenantId,
       },
     });
+
+    // Se houver upload de logo
+    if (logo) {
+
+      const base64Data = logo.replace(/^data:image\/\w+;base64,/, "");
+
+      // Converte o logo de base64 para Buffer (ajuste se o formato for outro)
+      // const bufferLogo = Buffer.from(logo, "base64");
+      const bufferLogo = Buffer.from(base64Data, "base64");
+
+      // Define a estrutura do folder de destino utilizando a estrutura informada:
+      const folder = `/tenants/${tenantId}/equipes/${equipeCriada.id}`;
+      const filename = "logo.png";
+      const filePath = path.join(process.cwd(), "public", folder, filename);
+
+      // Garantir que a pasta exista
+      await fs.mkdir(path.join(process.cwd(), "public", folder), {
+        recursive: true,
+      });
+
+      // Salvar o arquivo no caminho definido
+      await fs.writeFile(filePath, bufferLogo);
+
+      // Monta o caminho para acesso (URL) - considerando que a pasta "public" é servida estaticamente
+      const caminhoLogoUrl = path.posix.join(folder, filename);
+
+      // Atualiza o registro da equipe com o caminho do logo (formato URL)
+      await prisma.equipe.update({
+        where: { id: equipeCriada.id },
+        data: { logo: caminhoLogoUrl },
+      });
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Erro ao criar equipe:", error);
@@ -1290,7 +1362,9 @@ export async function saveImageLocally(
   return { fileUrl: `/${folder}/${filename}` };
 }
 
-export async function saveCroppedImageAction(options?: {
+type CurrentStateUpload = { success: boolean; msg: string; fileUrl: string };
+
+export async function saveLocalCroppedImageAction(options?: {
   id?: string;
   database?: string;
   field?: string;
@@ -1298,11 +1372,17 @@ export async function saveCroppedImageAction(options?: {
   filename?: string;
   folder?: string;
   configType?: "avatar" | "system_image" | "config_value"; // Tipo de configuração
-}): Promise<CurrentState & { fileUrl?: string }> {
+}): Promise<CurrentStateUpload & { fileUrl?: string }> {
   try {
     let storedValue: string = options?.value ?? "";
 
     const tenantId = await getTenantID();
+
+    if (options?.folder) {
+      await fs.mkdir(path.join(process.cwd(), "public", options.folder), {
+        recursive: true,
+      });
+    }
 
     // Determina se deve processar como imagem com base no configType
     const isImage =
@@ -1371,6 +1451,11 @@ export async function saveCroppedImageAction(options?: {
           where: { id: Number(options.id) },
           data: { avatar: storedValue },
         });
+      } else if (options?.database === "equipe") {
+        await prisma.equipe.update({
+          where: { id: Number(options.id) },
+          data: { logo: storedValue },
+        });
       } else {
         throw new Error(
           `Database ${options?.database} não reconhecido para salvar o avatar`
@@ -1386,7 +1471,7 @@ export async function saveCroppedImageAction(options?: {
       fileUrl: storedValue,
     };
   } catch (error: any) {
-    console.error("Erro em saveCroppedImageAction:", error);
+    console.error("Erro em saveLocalCroppedImageAction:", error);
     return {
       success: false,
       msg: error.message || "Erro ao salvar",

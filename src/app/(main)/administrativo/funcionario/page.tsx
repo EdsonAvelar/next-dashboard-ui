@@ -63,7 +63,6 @@ const columns = [
     className: "hidden lg:table-cell",
   },
   { header: "Criação", accessor: "address", className: "hidden lg:table-cell" },
-  { header: "Actions", accessor: "createdAt", className: "" },
 ];
 
 const Funcionarios = async ({
@@ -108,21 +107,25 @@ const Funcionarios = async ({
       className="border-b border-gray-200 even:bg-slate-50 text-sn hover:bg-lamaPurpleLight"
     >
       <td className="flex items-center gap-4 p-4">
-        <Image
-          src={
-            item.avatar && item.avatar !== "null"
-              ? item.avatar
-              : "/noAvatar.png"
-          }
-          alt={item.name}
-          width={40}
-          height={40}
-          className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
-        />
-        <div className="flex flex-col">
-          <h3 className="font-semibold">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item?.email}</p>
-        </div>
+        <Link href={`/administrativo/funcionario/${item.id}`}>
+          <div className="flex items-center gap-2 ">
+            <Image
+              src={
+                item.avatar && item.avatar !== "null"
+                  ? item.avatar
+                  : "/noAvatar.png"
+              }
+              alt={item.name}
+              width={40}
+              height={40}
+              className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
+            />
+            <div className="flex flex-col">
+              <h3 className="font-semibold">{item.name}</h3>
+              <p className="text-xs text-gray-500">{item?.email}</p>
+            </div>
+          </div>
+        </Link>
       </td>
       {/* <td className="hidden md:table-cell">{item.name}</td>
       <td className="hidden md:table-cell">{item.email}</td> */}
@@ -139,7 +142,7 @@ const Funcionarios = async ({
       </td>
       <td className="hidden md:table-cell">{item.createdAt.toDateString()}</td>
 
-      <td className="flex items-center gap-2">
+      {/* <td className="flex items-center gap-2">
         <FormContainer
           table="user"
           type="update"
@@ -162,7 +165,7 @@ const Funcionarios = async ({
           type="delete"
           id={parseInt(item.id.toString())}
         />
-      </td>
+      </td> */}
     </tr>
   ));
 

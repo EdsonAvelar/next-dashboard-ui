@@ -27,23 +27,19 @@ export default function RootLayout({
     <html lang="pt">
       <body className={`${GeistSans.className} overflow-hidden`}>
         <header className="fixed top-0 left-0 right-0 z-10 bg-white shadow">
-          {/* Conteúdo do header */}
           <nav>
-            <Header />
+            {/* <Header /> */}
             <HeaderMobile />
           </nav>
         </header>
 
-        <div className="h-screen flex">
-          {/* Coluna Esquerda */}
+        {/* Container com padding-top para evitar que o Sidebar e conteúdo fiquem por trás do header */}
+        <div
+          className="flex"
+          style={{ paddingTop: "0px", height: "100vh" }}
+        >
           <Sidebar />
-
-          {/* Coluna Direita: flex-1 expande para ocupar todo o espaço restante */}
-          <div className="flex-1 bg-[#F7F8FA] overflow-y-auto mt-[50px]">
-            {/* <Navbar /> */}
-
-            {children}
-          </div>
+          <div className="flex-1 bg-[#F7F8FA] overflow-y-auto">{children}</div>
         </div>
 
         <ToastContainer
@@ -52,25 +48,5 @@ export default function RootLayout({
         />
       </body>
     </html>
-
-    // <html lang="en">
-    //   <body className={inter.className}>
-    //     <div className="h-screen flex">
-    //       {/* Coluna Esquerda */}
-    //       <Sidebar />
-
-    //       {/* Coluna Direita: flex-1 expande para ocupar todo o espaço restante */}
-    //       <div className="flex-1 bg-[#F7F8FA] overflow-y-auto">
-    //         <Navbar />
-
-    //         {children}
-    //       </div>
-    //     </div>
-    //     <ToastContainer
-    //       position="bottom-right"
-    //       theme="colored"
-    //     />
-    //   </body>
-    // </html>
   );
 }

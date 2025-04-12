@@ -84,6 +84,7 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          destination: "local", // Ex: "aws", "cloudinary", "local"
           croppedImage: croppedImg,
           id, // Ex: "3"
           database, // Ex: "user" ou "config"
@@ -147,7 +148,7 @@ const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
       <input
         id={`upload-input-${id}`}
         type="file"
-        accept="image/*"
+        accept=".png"
         className="hidden"
         onChange={onFileChange}
       />

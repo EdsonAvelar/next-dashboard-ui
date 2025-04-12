@@ -20,26 +20,56 @@ interface S3UploadParams {
 }
 
 export async function uploadFileToS3(
-  file: Buffer,
-  filename: string
-): Promise<void> {
-  const fileBuffer = Buffer.from(await (file as Blob).arrayBuffer());
-  //const fileBuffer: Buffer = file;
+  file: Blob,
+  filename: string,
+  negocioId?: number
+): Promise<any> {
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-  const params: S3UploadParams = {
-    Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET!,
-    // Key: `myfolder/${filename}-${Date.now()}`,
-    Key: `myfolder/${filename}`,
-    Body: fileBuffer,
-    ContentType: "image/png",
-  };
+    // const fileBuffer = Buffer.from(await buffer.arrayBuffer());
+    //const fileBuffer: Buffer = file;
 
-  const command = new PutObjectCommand(params);
-  await s3Client.send(command);
-  console.log("File uploaded successfully", command);
+    const tenantId = await getTenantID();
+
+    const imagepath = `tenant/${tenantId}/${filename}`;
+
+    const fileUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}.s3.${process.env.NEXT_PUBLIC_AWS_S3_REGION}.amazonaws.com/${imagepath}`;
+
+    const params: S3UploadParams = {
+      Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET!,
+      // Key: `myfolder/${filename}-${Date.now()}`,
+      Key: imagepath,
+      Body: buffer,
+      ContentType: "image/png",
+    };
+
+    const command = new PutObjectCommand(params);
+    await s3Client.send(command);
+
+    const res = await prisma.upload.create({
+      data: {
+        fileName: filename,
+        filePath: fileUrl,
+        extension: filename.split(".").pop() || "",
+        fileSize: buffer.length,
+        negocio: { connect: { id: negocioId } },
+      },
+    });
+
+    return {
+      success: true,
+      msg: "Arquivo Salvo com sucesso: ",
+      fileUrl: fileUrl,
+    };
+  } catch (e) {
+    console.error(e);
+    return { success: false, msg: "erro ao salvar arquivo: " + e };
+  }
 }
 
 import { v2 as cloudinary } from "cloudinary";
+import { getTenantID, prisma } from "./prisma";
 
 // Configuração do Cloudinary (certifique-se de que as variáveis de ambiente estão definidas)
 cloudinary.config({
@@ -56,6 +86,7 @@ cloudinary.config({
  * @param folder - Pasta onde o arquivo será armazenado (padrão: "myfolder")
  * @returns A URL segura do arquivo enviado
  */
+
 export async function uploadFileToCloudinary(
   file: Blob,
   folder: string = "myfolder"
@@ -80,17 +111,23 @@ export async function uploadFileToCloudinary(
   return secureUrl;
 }
 
-export async function uploadNegocioFile(
+import path from "path";
+import fs from "fs/promises";
+export async function uploadNegocioToLocal(
   formData: FormData
 ): Promise<{ success: boolean; msg: string }> {
   try {
     const negocioId = Number(formData.get("negocioId"));
     const description = formData.get("description") as string;
     const file = formData.get("file") as File;
+    const destFolder = formData.get("folder") as string;
 
     if (!file) {
       return { success: false, msg: "Nenhum arquivo enviado" };
     }
+
+    const tenantId = await getTenantID();
+
     // Obter o buffer do arquivo
     const buffer = Buffer.from(await file.arrayBuffer());
     const originalName = file.name;
@@ -98,7 +135,7 @@ export async function uploadNegocioFile(
     const fileSize = file.size;
     // Gerar um nome único para o arquivo
     const filename = `${Date.now()}_${originalName}`;
-    const folder = "uploads";
+    const folder = destFolder || `uploads/tenants/${tenantId}`;
     const filePath = path.join(process.cwd(), "public", folder, filename);
     // Garantir que a pasta exista
     await fs.mkdir(path.join(process.cwd(), "public", folder), {
@@ -114,7 +151,7 @@ export async function uploadNegocioFile(
         extension,
         fileSize,
         description,
-        negocioId,
+        negocio: { connect: { id: negocioId } },
       },
     });
     return { success: true, msg: "Arquivo enviado com sucesso" };

@@ -1,7 +1,7 @@
 // app/negocio/editar/page.jsx
 import ClientNegocioEdit from "@/components/ClientNegocioEdit";
 import { getCurrentUser } from "@/lib/actions";
-import { prisma } from "@/lib/prisma"; // ajuste o caminho conforme sua estrutura
+import { getTenantID, prisma } from "@/lib/prisma"; // ajuste o caminho conforme sua estrutura
 
 export default async function NegocioEditPage({
   searchParams,
@@ -67,12 +67,17 @@ export default async function NegocioEditPage({
     include: { consorcios: true, financiamentos: true },
   });
 
+  const tenantId = await getTenantID();
+
+  // const folder = `/tenants/${tenantId}/leads/${negocio.consorciado?.id}`;
+
   // Passamos os dados do negócio para o componente cliente
   return (
     <ClientNegocioEdit
       negocio={negocio}
       user={user}
       simulacoes={simulacoes}
+      tenantId={tenantId}
     />
   );
 }

@@ -71,12 +71,14 @@ interface ClientNegocioEditProps {
   negocio: Negocio;
   user: any;
   simulacoes?: Simulacao[];
+  tenantId?: string;
 }
 
 export default function ClientNegocioEdit({
   negocio,
   user,
   simulacoes = [],
+  tenantId,
 }: ClientNegocioEditProps) {
   const [activeTab, setActiveTab] = useState("anotações");
   const [newComment, setNewComment] = useState("");
@@ -168,7 +170,7 @@ export default function ClientNegocioEdit({
                   configType="avatar"
                   defaultImage={negocio.consorciado.avatar || "/noAvatar.png"}
                   filename={`avatar_leads_${negocio.consorciado.id}`}
-                  folder="leads"
+                  folder={`tenants/${tenantId}/avatar/${negocio.consorciado.id}`}
                 />
               ) : (
                 <Image
@@ -634,7 +636,10 @@ export default function ClientNegocioEdit({
             )}
 
             {activeTab === "arquivos" && (
-              <NegocioUploads negocioId={negocio.id} />
+              <NegocioUploads
+                negocioId={negocio.id}
+                folder={`tenants/${tenantId}/uploads/${negocio.consorciado.id}/`}
+              />
             )}
 
             {/* Aba ATIVIDADES */}

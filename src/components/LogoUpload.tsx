@@ -43,7 +43,7 @@ export default function LogoUpload({ value = "", onChange }: LogoUploadProps) {
       </div>
       <input
         type="file"
-        accept="image/*"
+        accept=".png"
         onChange={handleFileChange}
       />
     </div>
