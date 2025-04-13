@@ -18,21 +18,21 @@ export default async function FechamentosCotasChart({
   const vendedores = await getTimeComercialVendedores();
 
   // 2. Busca os fechamentos com status "FECHADA" dentro do intervalo,
-  // incluindo o negócio para obter o user_id.
+  // incluindo o negócio para obter o userId.
   const fechamentos = await prisma.fechamento.findMany({
     where: {
       status: FechamentoStatus.FECHADA,
       data_fechamento: { gte: fromDate, lte: toDate },
     },
     include: {
-      negocio: { select: { user_id: true } },
+      negocio: { select: { userId: true } },
     },
   });
 
-  // 3. Agrupa os fechamentos por vendedor (via negócio.user_id) e conta a quantidade de fechamentos.
+  // 3. Agrupa os fechamentos por vendedor (via negócio.userId) e conta a quantidade de fechamentos.
   const groupedMap: Record<number, number> = {};
   fechamentos.forEach((fechamento) => {
-    const userId = fechamento.negocio?.user_id;
+    const userId = fechamento.negocio?.userId;
     if (userId !== null && userId !== undefined) {
       groupedMap[userId] = (groupedMap[userId] || 0) + 1;
     }

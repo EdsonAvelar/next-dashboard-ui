@@ -14,7 +14,7 @@ const SingleStudentPage = () => {
                 {/* TOP */}
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* USER INFO CARD */}
-                    <div className="bg-lamaSky py-6 px-4 rounded-md flex-1 flex gap-4">
+                    <div className="bg-xconSky py-6 px-4 rounded-md flex-1 flex gap-4">
 
                         <div className="w-1/3">
                             <Image src="https://images.pexels.com/photos/1181690/pexels-photo-1181690.jpeg"
@@ -126,11 +126,11 @@ const SingleStudentPage = () => {
                 <div className="bg-white p-4 rounded-md ">
                     <h1 className="text-xl font-semibold">Shortcuts</h1>
                     <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
-                        <Link className="p-3 rounded-md bg-lamaSkyLight" href="/" > Student's Classes</Link>
-                        <Link className="p-3 rounded-md bg-lamaSkyLight" href="/" > Student's Classes</Link>
-                        <Link className="p-3 rounded-md bg-lamaYellowLight" href="/" > Student's Classes</Link>
-                        <Link className="p-3 rounded-md bg-lamaSkyLight" href="/" > Student's Classes</Link>
-                        <Link className="p-3 rounded-md bg-lamaPurpleLight" href="/" > Student's Classes</Link>
+                        <Link className="p-3 rounded-md bg-xconSkyLight" href="/" > Student's Classes</Link>
+                        <Link className="p-3 rounded-md bg-xconSkyLight" href="/" > Student's Classes</Link>
+                        <Link className="p-3 rounded-md bg-xconYellowLight" href="/" > Student's Classes</Link>
+                        <Link className="p-3 rounded-md bg-xconSkyLight" href="/" > Student's Classes</Link>
+                        <Link className="p-3 rounded-md bg-xconPurpleLight" href="/" > Student's Classes</Link>
                     </div>
                 </div>
                 <Performance />

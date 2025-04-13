@@ -12,6 +12,7 @@ interface SearchParams {
 
 interface UserCardProps {
   type: string;
+  userId?: number;
   fromDate?: Date;
   toDate?: Date;
 }
@@ -41,24 +42,28 @@ function getIconByType(type: string) {
   }
 }
 
-const UserCard = async ({ type, fromDate, toDate }: UserCardProps) => {
+const UserCard = async ({ type, userId, fromDate, toDate }: UserCardProps) => {
   const etapaAprovacao = 5;
   let data;
 
   if (type === "Negócios Ativos") {
     data = await prisma.negocio.count({
-      where: { status: "ATIVO" },
+      where: {
+        status: "ATIVO",
+        ...(userId && { userId }), // Filtro direto no negócio
+      },
     });
   } else if (type === "Em Aprovação") {
     const result = await prisma.negocio.aggregate({
       _sum: { valor: true },
-      where: { etapa_funil_id: etapaAprovacao },
+      where: {
+        etapa_funil_id: etapaAprovacao,
+        ...(userId && { userId }),
+      },
     });
     const sumValor = result._sum.valor || 0;
     data = formatCurrency(Number(sumValor));
   } else if (type === "Vendas em Conclusão") {
-    // Se não receber fromDate/toDate via props, tenta computar a partir de searchParams
-
     const result = await prisma.fechamento.aggregate({
       _sum: { preco_bem: true },
       where: {
@@ -67,13 +72,15 @@ const UserCard = async ({ type, fromDate, toDate }: UserCardProps) => {
           gte: fromDate,
           lte: toDate,
         },
+        ...(userId && {
+          // Filtra fechamentos pelos vendedores (relacionamento many‑to‑many)
+          vendedores: { some: { userId } },
+        }),
       },
     });
     const sumValue = result._sum.preco_bem || 0;
     data = formatCurrency(Number(sumValue));
   } else if (type === "Total Vendido") {
-    // Se não receber fromDate/toDate via props, tenta computar a partir de searchParams
-
     const result = await prisma.fechamento.aggregate({
       _sum: { preco_bem: true },
       where: {
@@ -82,6 +89,9 @@ const UserCard = async ({ type, fromDate, toDate }: UserCardProps) => {
           gte: fromDate,
           lte: toDate,
         },
+        ...(userId && {
+          vendedores: { some: { userId } },
+        }),
       },
     });
     const sumValue = result._sum.preco_bem || 0;
@@ -95,9 +105,9 @@ const UserCard = async ({ type, fromDate, toDate }: UserCardProps) => {
   const Icon = getIconByType(type);
 
   return (
-    <div className="relative rounded-2xl odd:bg-blue-300 even:bg-lamaYellow p-4 flex-1 min-w-[130px] shadow-md border border-gray-300">
+    <div className="relative rounded-2xl odd:bg-xconPurple even:bg-xconYellow p-4 flex-1 min-w-[130px] shadow-md border border-gray-300">
       <div className="flex justify-between items-center">
-        <h4 className="capitalize text-sm font-medium text-gray-500">{type}</h4>
+        <h4 className="capitalize text-sm font-medium text-white">{type}</h4>
         <Image
           src="/more.png"
           alt="More"
@@ -106,7 +116,6 @@ const UserCard = async ({ type, fromDate, toDate }: UserCardProps) => {
         />
       </div>
       <h1 className="text-2xl font-semibold my-4">{data?.toString()}</h1>
-
       <span className="text-[10px] bg-white px-2 py-1 rounded-full text-green-600">
         1%
       </span>

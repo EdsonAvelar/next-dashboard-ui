@@ -5,6 +5,8 @@ import {
   BriefcaseIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  ArrowLeftEndOnRectangleIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 
 export function getSidenavItems(userId?: number | string) {
@@ -14,14 +16,16 @@ export function getSidenavItems(userId?: number | string) {
       icon: HomeIcon,
       prefix: "/dashboard",
       children: [
+        { label: "Comercial", href: "/comercial", allowed: ["time_comercial"] },
         {
           label: "Geral",
           href: "/geral",
           params: userId ? `proprietario_id=${userId}` : "",
+          allowed: ["gerente_geral"],
         },
-        { label: "Equipes", href: "/equipes" },
-        { label: "Semanal", href: "/semanal" },
-        { label: "Produção", href: "/producao" },
+        { label: "Equipes", href: "/equipes", allowed: ["gerente_geral"] },
+        { label: "Semanal", href: "/semanal", allowed: ["gerente_geral"] },
+        { label: "Produção", href: "/producao", allowed: ["gerente_geral"] },
       ],
     },
     {
@@ -33,32 +37,37 @@ export function getSidenavItems(userId?: number | string) {
           label: "Pipeline",
           href: "/pipeline",
           params: userId ? `proprietario_id=${userId}` : "",
-          allowed: ["time_comercial"],
+          allowed: ["time_comercial", "gerente_geral"],
         },
         {
           label: "Lista",
           href: "/lista",
           params: userId ? `proprietario_id=${userId}` : "",
+          allowed: ["gerente_geral"],
         },
         {
           label: "Agendamentos",
           href: "/agendamentos",
           params: userId ? `proprietario_id=${userId}` : "",
+          allowed: ["gerente_geral"],
         },
         {
           label: "Reunioes",
           href: "/reunioes",
           params: userId ? `proprietario_id=${userId}` : "",
+          allowed: ["gerente_geral"],
         },
         {
           label: "Vendas",
           href: "/vendas",
           params: userId ? `proprietario_id=${userId}` : "",
+          allowed: ["gerente_geral"],
         },
         {
           label: "Importar",
           href: "/importar",
           params: userId ? `proprietario_id=${userId}` : "",
+          allowed: ["gerente_geral"],
         },
       ],
     },
@@ -67,9 +76,13 @@ export function getSidenavItems(userId?: number | string) {
       icon: UserGroupIcon,
       prefix: "/administrativo",
       children: [
-        { label: "Funcionarios", href: "/funcionario" },
-        { label: "Produções", href: "/producoes" },
-        { label: "Equipes", href: "/equipes" },
+        {
+          label: "Funcionarios",
+          href: "/funcionario",
+          allowed: ["gerente_geral"],
+        },
+        { label: "Produções", href: "/producoes", allowed: ["gerente_geral"] },
+        { label: "Equipes", href: "/equipes", allowed: ["gerente_geral"] },
       ],
     },
     {
@@ -77,9 +90,25 @@ export function getSidenavItems(userId?: number | string) {
       icon: CogIcon,
       prefix: "/configuracoes",
       children: [
-        { label: "Minha Conta", href: "/profile" },
-        // { label: "Permissões", href: "/permissions" },
-        { label: "Sistema", href: "/sistema" },
+        // { label: "Minha Conta", href: "/profile" },
+        { label: "Sistema", href: "/sistema", allowed: ["gerente_geral"] },
+        {
+          label: "Permissões",
+          href: "/permissions",
+          allowed: ["gerente_geral"],
+        },
+      ],
+    },
+    {
+      title: "Usuário",
+      icon: UserIcon, // novo ícone de usuário
+      prefix: "/user",
+      children: [
+        {
+          label: "Minha Conta",
+          ignorePrefix: true,
+          href: `/administrativo/funcionario/${userId}`,
+        },
         { label: "Logout", href: "/logout" },
       ],
     },

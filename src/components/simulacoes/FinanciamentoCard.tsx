@@ -155,7 +155,7 @@ export default function FinanciamentoCard({
   }, [inputs, computed]);
 
   return (
-    <div className="bg-lamaPurpleLight p-[40px] rounded shadow space-y-4">
+    <div className="bg-xconPurpleLight p-[40px] rounded shadow space-y-4">
       {/* Cabeçalho do Card */}
       <div className="flex justify-between items-center">
         <span className="font-semibold text-gray-700">

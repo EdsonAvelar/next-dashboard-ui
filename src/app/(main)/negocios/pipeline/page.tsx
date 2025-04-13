@@ -42,7 +42,7 @@ export default async function PipelinePage({
   // Busca os negócios deste proprietário
   const negocios = await prisma.negocio.findMany({
     where: {
-      user_id: proprietario,
+      userId: proprietario,
       status: "ATIVO", // ajuste conforme seu schema
       funil_id: funil?.id,
     },

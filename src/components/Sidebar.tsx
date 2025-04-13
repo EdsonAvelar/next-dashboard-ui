@@ -8,6 +8,8 @@ import { getCurrentUser, UserProfile } from "@/lib/actions";
 import { getSidenavItems } from "@/lib/sidenavItems";
 import { usePathname } from "next/navigation";
 import { toPath } from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // Função debounce: aguarda um delay antes de executar a função
 function debounce<T extends (...args: any[]) => void>(func: T, delay: number) {
@@ -20,19 +22,19 @@ function debounce<T extends (...args: any[]) => void>(func: T, delay: number) {
   };
 }
 
-export default function Sidebar() {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  useEffect(() => {
-    async function fetchUser() {
-      const res = await fetch("/api/currentUser");
-      const data = await res.json();
-      setUser(data);
-    }
-    fetchUser();
-  }, []);
+interface Role {
+  name: string;
+}
 
-  // Pega os itens do menu usando o usuário (se disponível)
-  // const menuData = getSidenavItems(user?.id);
+interface AllowedChild {
+  allowed: string[];
+}
+
+export default function Sidebar({ user }: { user: any }) {
+  if (!user) {
+    //lança um erro
+    throw new Error("Usuário não encontrado");
+  }
 
   const menuData = useMemo(() => getSidenavItems(user?.id), [user?.id]);
 
@@ -108,11 +110,26 @@ export default function Sidebar() {
           <div className="overflow-y-auto h-[80%]">
             {menuData.map((menu, idx) => {
               if (menu.children) {
+                // Filtra os children que o usuário pode ver
+                const allowedChildren = menu.children.filter((child) => {
+                  if ("allowed" in child && child.allowed) {
+                    if (!user || !user.roles) return false;
+                    return (user.roles as Role[]).some((role: Role) =>
+                      (child as AllowedChild).allowed.includes(role.name)
+                    );
+                  }
+                  return true;
+                });
+
+                // Se nenhum child for permitido, não renderiza o menu pai
+                if (allowedChildren.length === 0) return null;
+
                 const active = pathname.startsWith(menu.prefix)
                   ? "bg-gray-200"
                   : "";
                 const isOpen = openSubmenu === idx;
                 const ArrowIcon = isOpen ? ChevronDownIcon : ChevronRightIcon;
+
                 return (
                   <div
                     key={idx}
@@ -140,50 +157,40 @@ export default function Sidebar() {
                         isOpen ? "max-h-96" : "max-h-0"
                       }`}
                     >
-                      {(() => {
-                        const allowedChildren = menu.children.filter(
-                          (child) => {
-                            if (child.allowed) {
-                              // Se o usuário não estiver carregado ou não tiver roles, não mostra o item
-                              if (!user || !user.roles) return false;
-                              return user.roles.some((role) =>
-                                child.allowed.includes(role.name)
-                              );
-                            }
-                            return true;
-                          }
-                        );
-                        return allowedChildren.map((child, cIdx) => {
-                          const finalpath = toPath(menu.prefix, child.href);
-                          return (
-                            <div key={cIdx}>
-                              <div className="space-y-1 gap-y-2 pb-1 pt-1">
-                                <div
-                                  className={`flex justify-start gap-1 pl-5 gap-y-2 ${
-                                    finalpath === pathname
-                                      ? "bg-gradient-to-r from-purple-300 to-purple-600 rounded-r-full text-white"
-                                      : "hover:bg-gray-100 rounded-r-full"
-                                  }`}
+                      {allowedChildren.map((child, cIdx) => {
+                        let prefix = menu.prefix;
+                        if ("ignorePrefix" in child && child.ignorePrefix) {
+                          prefix = "";
+                        }
+                        const finalpath = toPath(prefix, child.href);
+                        return (
+                          <div key={cIdx}>
+                            <div className="space-y-1 gap-y-2 pb-1 pt-1">
+                              <div
+                                className={`flex justify-start gap-1 pl-5 gap-y-2 ${
+                                  finalpath === pathname
+                                    ? "bg-gradient-to-r from-purple-300 to-purple-600 rounded-r-full text-white"
+                                    : "hover:bg-gray-100 rounded-r-full"
+                                }`}
+                              >
+                                <span className="menu-item flex items-center"></span>
+                                <Link
+                                  key={cIdx}
+                                  href={
+                                    finalpath +
+                                    ("params" in child && child.params
+                                      ? `?${child.params}`
+                                      : "")
+                                  }
+                                  className="block w-full p-1 text-md transition-colors gap-y-2"
                                 >
-                                  <span className="menu-item flex items-center"></span>
-                                  <Link
-                                    key={cIdx}
-                                    href={
-                                      finalpath +
-                                      ("params" in child && child.params
-                                        ? `?${child.params}`
-                                        : "")
-                                    }
-                                    className="block w-full p-1 text-md transition-colors gap-y-2"
-                                  >
-                                    {child.label}
-                                  </Link>
-                                </div>
+                                  {child.label}
+                                </Link>
                               </div>
                             </div>
-                          );
-                        });
-                      })()}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -219,18 +226,39 @@ export default function Sidebar() {
             </Link>
           </div>
           <div className="h-[80%] items-center flex flex-col justify-start space-y-3 pt-2">
-            {menuData.map((menu, idx) => (
-              <div
-                key={idx}
-                className="p-2"
-              >
-                {menu.icon && <menu.icon className="h-7 w-7" />}
-              </div>
-            ))}
+            {menuData.map((menu, idx) => {
+              if (menu.children) {
+                // Filtra os children que o usuário pode ver
+                const allowedChildren = menu.children.filter((child) => {
+                  if ("allowed" in child && child.allowed) {
+                    if (!user || !user.roles) return false;
+                    return (user.roles as Role[]).some((role: Role) =>
+                      child.allowed.includes(role.name)
+                    );
+                  }
+                  return true;
+                });
+
+                // Se nenhum child for permitido, não renderiza o menu pai
+                if (allowedChildren.length === 0) return null;
+
+                // Define a classe ativa semelhante à versão expandida
+                const activeIcon = pathname.startsWith(menu.prefix)
+                  ? "bg-gray-200"
+                  : "";
+                return (
+                  <div
+                    key={idx}
+                    className={`p-2 ${activeIcon} rounded`}
+                  >
+                    {menu.icon && <menu.icon className="h-7 w-7" />}
+                  </div>
+                );
+              }
+              return null;
+            })}
           </div>
-
-          {/* <h1>Colapsado</h1> */}
-
+          {/* Botão de colapsar */}
           <div className="p-2 border-t border-gray-200 ">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}

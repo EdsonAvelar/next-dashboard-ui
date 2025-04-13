@@ -25,7 +25,7 @@ export default async function FechamentosModoAjudaChart({
   //       data_fechamento: { gte: fromDate, lte: toDate },
   //     },
   //     include: {
-  //       negocio: { select: { user_id: true, preco_bem: true } },
+  //       negocio: { select: { userId: true, preco_bem: true } },
   //       vendedores: true, // traz a relação FechamentoUser, onde consta userId e modo
   //     },
   //   });
@@ -36,7 +36,7 @@ export default async function FechamentosModoAjudaChart({
       data_fechamento: { gte: fromDate, lte: toDate },
     },
     include: {
-      negocio: { select: { user_id: true } },
+      negocio: { select: { userId: true } },
       vendedores: true,
     },
   });

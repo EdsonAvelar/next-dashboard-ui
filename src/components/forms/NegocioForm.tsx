@@ -82,7 +82,9 @@ const NegocioForm = ({
       className="flex flex-col gap-4"
       onSubmit={onSubmit}
     >
-      <h1 className="text-xl font-semibold">Criar Negócio</h1>
+      <h1 className="text-xl font-semibold">
+        {type === "create" ? "Criar" : "Atualizar"} Negócio
+      </h1>
       <span className="text-xs text-gray-400 font-medium">
         Informações do Contato e do Negócio
       </span>

@@ -175,7 +175,7 @@ export default async function AgendamentoPage({
 
   // Se não for admin, forçar filtro pelo usuário logado
   if (!isAdmin && user) {
-    where.negocio = { user_id: user.id };
+    where.negocio = { userId: user.id };
   }
 
   // Consulta os agendamentos com paginação e as relações necessárias
@@ -205,7 +205,7 @@ export default async function AgendamentoPage({
       <tr
         key={agendamento.id}
         data-rowid={agendamento.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-xconPurpleLight"
       >
         {/* Proprietário */}
         <td>{negocio.user?.name || <Badge type="gray">SEM DONO</Badge>}</td>
@@ -264,7 +264,7 @@ export default async function AgendamentoPage({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <InputSearch />
           <div className="flex items-center gap-4">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-xconYellow">
               <Image
                 src="/filter.png"
                 alt="filter"
@@ -272,7 +272,7 @@ export default async function AgendamentoPage({
                 height={14}
               />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-xconYellow">
               <Image
                 src="/sort.png"
                 alt="sort"

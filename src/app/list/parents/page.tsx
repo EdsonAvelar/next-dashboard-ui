@@ -31,7 +31,7 @@ const ParentListPage = () => {
   const renderRow = (item: Parent) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sn hover:bg-lamaPurpleLight"
+      className="border-b border-gray-200 even:bg-slate-50 text-sn hover:bg-xconPurpleLight"
     >
       <td className="flex items-center gap-4 p-4">
         <div className="flex flex-col">
@@ -45,7 +45,7 @@ const ParentListPage = () => {
       <td className="hidden md:table-cell">{item.address}</td>
       <td className="flex items-center gap-2">
         {/* <Link href={`/list/teachers/${item.id}`}>
-                    <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+                    <button className="w-7 h-7 flex items-center justify-center rounded-full bg-xconSky">
                         <Image src="/view.png" alt="" width={16} height={16}></Image>
                     </button>
                 </Link> */}
@@ -57,7 +57,7 @@ const ParentListPage = () => {
         />
 
         {role === "admin" && (
-          // < button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
+          // < button className="w-7 h-7 flex items-center justify-center rounded-full bg-xconPurple">
           //     <Image src="/view.png" alt="" width={16} height={16}></Image>
           // </button>
           <FormModal
@@ -78,7 +78,7 @@ const ParentListPage = () => {
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <InputSearch />
           <div className="flex items-center gap-4 self-ebd">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-xconYellow">
               {" "}
               <Image
                 src="/filter.png"
@@ -87,7 +87,7 @@ const ParentListPage = () => {
                 height={14}
               />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-xconYellow">
               {" "}
               <Image
                 src="/sort.png"
@@ -97,7 +97,7 @@ const ParentListPage = () => {
               />
             </button>
             {role === "admin" && (
-              <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+              <button className="w-8 h-8 flex items-center justify-center rounded-full bg-xconYellow">
                 {" "}
                 <Image
                   src="/plus.png"

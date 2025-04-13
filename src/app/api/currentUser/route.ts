@@ -1,24 +1,22 @@
 // app/api/currentUser/route.ts
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // ajuste o caminho conforme necessário
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: Request) {
-  // Obtém a sessão do usuário
-  const session = await getServerSession(authOptions);
-
-  if (!session || !session.user?.email) {
-    return NextResponse.json(
-      { error: "Usuário não autenticado" },
-      { status: 401 }
-    );
-  }
-
+export async function POST(request: Request) {
   try {
+    const body = await request.json();
+    const { email } = body;
+    
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email parameter is required" },
+        { status: 400 }
+      );
+    }
+    
     // Busca o usuário pelo email (assumindo que o email é único) e inclui as roles
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email },
       include: { roles: true },
     });
 
@@ -30,7 +28,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(user, { status: 200 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro ao buscar usuário atual:", error);
     return NextResponse.json(
       { error: "Erro ao buscar usuário atual" },

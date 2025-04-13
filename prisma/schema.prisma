@@ -212,8 +212,8 @@ model Negocio {
   etapa_funil_id  Int
   etapa_funil     EtapaFunil    @relation(fields: [etapa_funil_id], references: [id])
   
-  user_id         Int?
-  user            User?         @relation(fields: [user_id], references: [id])
+  userId         Int?
+  user            User?         @relation(fields: [userId], references: [id])
 
   data_criacao    DateTime      @default(now())
 

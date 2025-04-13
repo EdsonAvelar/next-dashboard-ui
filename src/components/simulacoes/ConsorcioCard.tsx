@@ -143,7 +143,7 @@ export default function ConsorcioCard({
   }, [inputs, computed]);
 
   return (
-    <div className="bg-lamaSkyLight p-4 rounded shadow space-y-4">
+    <div className="bg-xconSkyLight p-4 rounded shadow space-y-4">
       {/* Cabeçalho do Card */}
       <div className="flex justify-between items-center">
         <span className="font-semibold text-gray-700">

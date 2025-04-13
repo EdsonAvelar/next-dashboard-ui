@@ -15,10 +15,10 @@ import ReunioesMedioChart from "@/components/charts/ReunioesMedioChart";
 import ProductioNav from "@/components/ProductioNav";
 import QuickSettingsPanel from "@/components/ui/QuickSettingsPanel";
 import UserCard from "@/components/UserCard";
-import { getConfigurations } from "@/lib/actions";
+import { getConfigurations, getCurrentUser } from "@/lib/actions";
 import { parseDateUsa } from "@/lib/utils";
 
-const DashboardGeralPage = async ({
+const DashboardComercialPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | undefined };
@@ -26,6 +26,8 @@ const DashboardGeralPage = async ({
   // 1. Lê datas da query string, se existirem
   const dataInicioStr = searchParams.data_inicio || null;
   const dataFimStr = searchParams.data_fim || null;
+
+  const user = await getCurrentUser();
 
   // 2. Converte strings para datas. Se não houver, podemos usar um intervalo default
   let fromDate, toDate;
@@ -46,29 +48,37 @@ const DashboardGeralPage = async ({
 
   return (
     <>
-      <QuickSettingsPanel />
+      {/* <QuickSettingsPanel /> */}
       <div className="p-4 flex gap-4 flex-col md:flex-row">
         {/* Left */}
-
         <div className="w-full lg:w-3/3 flex flex-col gap-8 ">
+          {/*
           <ProductioNav
             searchParams={searchParams}
             dest={"/dashboard/geral"}
-          />
+          /> */}
           {/* User Cards */}
 
           <div className="grid grid-cols-2 gap-4 lg:flex lg:gap-4 lg:justify-between">
-            <UserCard type="Negócios Ativos" />
-            <UserCard type="Em Aprovação" />
+            <UserCard
+              type="Negócios Ativos"
+              userId={user.id}
+            />
+            <UserCard
+              type="Em Aprovação"
+              userId={user.id}
+            />
             <UserCard
               type="Vendas em Conclusão"
               fromDate={fromDate}
               toDate={toDate}
+              userId={user.id}
             />
             <UserCard
               type="Total Vendido"
               fromDate={fromDate}
               toDate={toDate}
+              userId={user.id}
             />
           </div>
 
@@ -78,6 +88,8 @@ const DashboardGeralPage = async ({
                 fromDate={fromDate}
                 toDate={toDate}
                 exibirZerados={exibirZerados}
+                type="producao_total"
+                userId={user.id}
               />
             </CardComponent>
 
@@ -86,6 +98,8 @@ const DashboardGeralPage = async ({
                 fromDate={fromDate}
                 toDate={toDate}
                 exibirZerados={exibirZerados}
+                type="producao_total"
+                userId={user.id}
               />
             </CardComponent>
 
@@ -94,6 +108,8 @@ const DashboardGeralPage = async ({
                 fromDate={fromDate}
                 toDate={toDate}
                 exibirZerados={exibirZerados}
+                type="producao_total"
+                userId={user.id}
               />
             </CardComponent>
             <CardComponent>
@@ -101,6 +117,8 @@ const DashboardGeralPage = async ({
                 fromDate={fromDate}
                 toDate={toDate}
                 exibirZerados={exibirZerados}
+                type="producao_total"
+                userId={user.id}
               />
             </CardComponent>
 
@@ -109,6 +127,8 @@ const DashboardGeralPage = async ({
                 fromDate={fromDate}
                 toDate={toDate}
                 exibirZerados={exibirZerados}
+                type="producao_total"
+                userId={user.id}
               />
             </CardComponent>
             <CardComponent>
@@ -116,9 +136,11 @@ const DashboardGeralPage = async ({
                 fromDate={fromDate}
                 toDate={toDate}
                 exibirZerados={exibirZerados}
+                type="producao_total"
+                userId={user.id}
               />
             </CardComponent>
-            <CardComponent>
+            {/* <CardComponent>
               <AgendamentosMedioChart
                 fromDate={fromDate}
                 toDate={toDate}
@@ -167,7 +189,6 @@ const DashboardGeralPage = async ({
               <ConversaoVendasFunil
                 fromDate={fromDate}
                 toDate={toDate}
-               
               />
             </CardComponent>
             <CardComponent>
@@ -176,7 +197,7 @@ const DashboardGeralPage = async ({
                 toDate={toDate}
                 exibirZerados={exibirZerados}
               />
-            </CardComponent>
+            </CardComponent> */}
           </div>
 
           {/* Bottom charts */}
@@ -195,4 +216,4 @@ const DashboardGeralPage = async ({
   );
 };
 
-export default DashboardGeralPage;
+export default DashboardComercialPage;

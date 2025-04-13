@@ -141,7 +141,7 @@ const Menu = () => {
           height={32}
         />
         <span className="hidden lg:block font-bold">
-          {isCollapsed ? "" : "SchoolLama"}
+          {isCollapsed ? "" : "XConCRM"}
         </span>
       </Link>
       {/* Área rolável */}

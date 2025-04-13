@@ -7,6 +7,9 @@ import { useState } from "react";
 import ProfileForm from "./forms/ProfileForm";
 import { prisma } from "@/lib/prisma";
 import ImageUploadCrop from "./ImageUploadCrop";
+import { removeUserPermission } from "@/lib/actions"; // importe a função
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 // Precisamos transformar este componente em client para controlar o modal
 // ou podemos dividir em server + client. Aqui, farei tudo em client para simplificar.
@@ -46,6 +49,19 @@ export default function SingleFuncionarioPageClient({
   const { tenantId } = relatedData; // Obtemos o tenantId do objeto relatedData
 
   const [showAddRoles, setShowAddRoles] = useState(false);
+  const route = useRouter();
+
+  const handleDeleteRole = async (roleId: number) => {
+    const res = await removeUserPermission(user.id, roleId);
+    if (res.success) {
+      // Aqui você poderia atualizar o estado ou exibir uma mensagem
+      toast.success("Permissão removida com sucesso!");
+      route.refresh();
+      // Por exemplo, recarregar os dados do usuário ou remover a role do array local
+    } else {
+      toast.success("Erro removendo permissão: " + res.msg);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 gap-4 flex flex-col">
@@ -110,16 +126,29 @@ export default function SingleFuncionarioPageClient({
         <p className="text-sm text-gray-500 mb-4">
           Veja as permissões que este usuário possui.
         </p>
-        <div className="flex flex-wrap gap-2">
-          {user.roles.map((role: Role, index: number) => (
-            <Badge
-              key={index}
-              type="blue"
-            >
-              {role.name}
-            </Badge>
-          ))}
-        </div>
+        <table className="min-w-full border divide-y divide-gray-200 mb-4">
+          <thead>
+            <tr>
+              <th className="px-4 py-2 text-left">Permissão</th>
+              <th className="px-4 py-2"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {user.roles.map((role: Role, index: number) => (
+              <tr key={role.id || index}>
+                <td className="px-4 py-2">{role.name}</td>
+                <td className="px-4 py-2 text-right">
+                  <button
+                    onClick={() => handleDeleteRole(role.id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  >
+                    Remover
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         <div className="py-4">
           <button
             onClick={() => setShowAddRoles(true)}

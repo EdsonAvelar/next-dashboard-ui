@@ -18,7 +18,7 @@ import UserCard from "@/components/UserCard";
 import { getConfigurations } from "@/lib/actions";
 import { parseDateUsa } from "@/lib/utils";
 
-const DashboardGeralPage = async ({
+const DashboardProducaoPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | undefined };
@@ -51,10 +51,6 @@ const DashboardGeralPage = async ({
         {/* Left */}
 
         <div className="w-full lg:w-3/3 flex flex-col gap-8 ">
-          <ProductioNav
-            searchParams={searchParams}
-            dest={"/dashboard/geral"}
-          />
           {/* User Cards */}
 
           <div className="grid grid-cols-2 gap-4 lg:flex lg:gap-4 lg:justify-between">
@@ -78,6 +74,7 @@ const DashboardGeralPage = async ({
                 fromDate={fromDate}
                 toDate={toDate}
                 exibirZerados={exibirZerados}
+                type="producao_total"
               />
             </CardComponent>
 
@@ -167,7 +164,6 @@ const DashboardGeralPage = async ({
               <ConversaoVendasFunil
                 fromDate={fromDate}
                 toDate={toDate}
-               
               />
             </CardComponent>
             <CardComponent>
@@ -195,4 +191,4 @@ const DashboardGeralPage = async ({
   );
 };
 
-export default DashboardGeralPage;
+export default DashboardProducaoPage;

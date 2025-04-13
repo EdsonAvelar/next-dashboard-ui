@@ -174,12 +174,12 @@ export default function FormModal({
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
   const bgColor =
     type === "create"
-      ? "bg-lamaYellow"
+      ? "bg-xconYellow"
       : type === "update"
-        ? "bg-lamaSky"
+        ? "bg-xconSky"
         : type === "delete"
-          ? "bg-lamaPurple"
-          : "bg-lamaSky"; // fallback para 'assign'
+          ? "bg-xconPurple"
+          : "bg-xconSky"; // fallback para 'assign'
 
   return (
     <>

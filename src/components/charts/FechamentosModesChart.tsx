@@ -25,7 +25,7 @@ export default async function FechamentosModesChart({
       data_fechamento: { gte: fromDate, lte: toDate },
     },
     include: {
-      negocio: { select: { user_id: true } },
+      negocio: { select: { userId: true } },
       vendedores: true,
     },
   });

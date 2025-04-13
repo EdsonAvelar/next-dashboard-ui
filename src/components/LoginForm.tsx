@@ -6,12 +6,14 @@ import { redirect } from "next/navigation";
 
 interface LoginFormProps {
   csrfToken: string | null;
+  homepage: string;
 }
 
 import { useRouter } from "next/navigation";
-import { HOMEPAGE } from "@/lib/settings";
+// import { GetHome } from "@/lib/settings";
+// import { HOMEPAGE } from "@/lib/settings";
 
-export default function LoginForm({ csrfToken }: LoginFormProps) {
+export default function LoginForm({ csrfToken, homepage }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,11 +29,40 @@ export default function LoginForm({ csrfToken }: LoginFormProps) {
       password,
       redirect: false,
     });
+
     if (res?.error) {
       setError(res.error);
       setLoading(false);
     } else {
-      router.push(HOMEPAGE);
+      // Chama a API para obter o usuário e as roles com base no email
+      const userRes = await fetch("/api/currentUser", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        // Verifica as roles do usuário e define a rota
+        let route = "/dashboard/default"; // caminho padrão
+        if (userData.roles.some((role: any) => role.name === "gerente_geral")) {
+          route = "/dashboard/geral";
+        } else if (
+          userData.roles.some((role: any) => role.name === "gerenciar_equipe")
+        ) {
+          route = "/dashboard/equipes";
+        } else if (
+          userData.roles.some((role: any) => role.name === "time_comercial")
+        ) {
+          route = "/dashboard/comercial";
+        }
+        // Outras condições podem ser adicionadas conforme necessário
+
+        router.push(route);
+      } else {
+        // Se houver erro ao obter os dados, redireciona para uma página de erro
+        router.push("/error");
+      }
     }
   };
 

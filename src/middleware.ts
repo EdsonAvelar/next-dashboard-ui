@@ -7,7 +7,7 @@ import { tenantStorage } from "./tenantStorage";
 const routePermissions: { pattern: RegExp; allowed: string[] }[] = [
   {
     pattern: /^\/negocios\/pipeline/, // Exemplo: apenas time_comercial pode acessar
-    allowed: ["time_comercial"],
+    allowed: ["time_comercial", "gerente_geral"],
   },
   // Você pode adicionar outras regras, por exemplo:
   // {

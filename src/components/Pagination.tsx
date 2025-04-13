@@ -50,7 +50,7 @@ const Pagination = ({ page, count, itemsPerPage }: PaginationProps) => {
             <button
               key={pageIndex}
               className={`px-2 rounded-sm ${
-                currentPage === pageIndex ? "bg-lamaSky" : ""
+                currentPage === pageIndex ? "bg-xconSky" : ""
               }`}
               onClick={() => changePage(pageIndex)}
             >

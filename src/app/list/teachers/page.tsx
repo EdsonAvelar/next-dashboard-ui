@@ -134,7 +134,7 @@ const TeacherListPage = async ({
     <tr
       key={item.id}
       data-rowid={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sn hover:bg-lamaPurpleLight"
+      className="border-b border-gray-200 even:bg-slate-50 text-sn hover:bg-xconPurpleLight"
     >
       <td className="flex items-center gap-4 p-4">
         <Image
@@ -160,7 +160,7 @@ const TeacherListPage = async ({
       <td className="hidden md:table-cell">{item.address}</td>
       <td className="flex items-center gap-2">
         <Link href={`/list/teachers/${item.id}`}>
-          <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+          <button className="w-7 h-7 flex items-center justify-center rounded-full bg-xconSky">
             <Image
               src="/view.png"
               alt=""
@@ -188,7 +188,7 @@ const TeacherListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <InputSearch />
           <div className="flex items-center gap-4 self-ebd">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-xconYellow">
               <Image
                 src="/filter.png"
                 alt="filter"
@@ -196,7 +196,7 @@ const TeacherListPage = async ({
                 height={14}
               />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-xconYellow">
               <Image
                 src="/sort.png"
                 alt="filter"

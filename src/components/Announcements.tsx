@@ -34,7 +34,7 @@ const Announcements = async () => {
       </div>
       <div className="flex flex-col gap-4 mt-4">
         {data.map((announcement, index) => (
-          <div className={`${index%2==0? index%3==0?'bg-lamaYellow':'bg-lamaSkyLight':'bg-lamaPurple'} rounded-md p-4`}>
+          <div className={`${index%2==0? index%3==0?'bg-xconYellow':'bg-xconSkyLight':'bg-xconPurple'} rounded-md p-4`}>
             <div className="flex items-center justify-between">
               <h2 className="font-medium">{announcement.title} </h2>
               <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">

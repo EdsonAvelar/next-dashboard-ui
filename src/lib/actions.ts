@@ -83,6 +83,7 @@ export const updateNegocio = async (
         tipo: data.tipo as NegocioTipo,
         status: "ATIVO", // ou outro valor padrão, conforme seu enum NegocioStatus
         // Conectando o Lead criado:
+        valor: data.valor || 0,
 
         // Conectando outros relacionamentos, utilizando os IDs recebidos ou definidos no form:
         funil: { connect: { id: 1 } },
@@ -551,14 +552,14 @@ export async function criarReuniao(
     // Busca o negócio para obter o usuário (proprietário)
     const negocio = await prisma.negocio.findUnique({
       where: { id: negocioId },
-      select: { user_id: true },
+      select: { userId: true },
     });
 
     if (!negocio) {
       return { success: false, msg: "Negócio não encontrado" };
     }
 
-    const proprietario_id = negocio.user_id;
+    const proprietario_id = negocio.userId;
 
     if (agendamento && proprietario_id) {
       // Verifica se já existe reunião para este agendamento
@@ -607,10 +608,10 @@ export async function criarAgendamento({
 
     const negocio = await prisma.negocio.findUnique({
       where: { id: negocioId },
-      select: { user_id: true }, // Pegamos apenas o userId
+      select: { userId: true }, // Pegamos apenas o userId
     });
 
-    if (!negocio || !negocio.user_id) {
+    if (!negocio || !negocio.userId) {
       return {
         success: false,
         msg: "Negócio não encontrado ou sem usuário associado.",
@@ -624,7 +625,7 @@ export async function criarAgendamento({
         dataAgendamento: new Date(),
         hora,
         negocio: { connect: { id: negocioId } },
-        user: { connect: { id: negocio.user_id } },
+        user: { connect: { id: negocio.userId } },
         status: "pendente",
       },
     });
@@ -1005,7 +1006,6 @@ export const createEquipe = async (
 
     // Se houver upload de logo
     if (logo) {
-
       const base64Data = logo.replace(/^data:image\/\w+;base64,/, "");
 
       // Converte o logo de base64 para Buffer (ajuste se o formato for outro)
@@ -1714,5 +1714,26 @@ export async function createNegocioComentarioAction({
   } catch (error) {
     console.log("Erro ao deletar negocio:", error);
     return { success: false, msg: "Erro ao deletar negocio: " + error };
+  }
+}
+
+export async function removeUserPermission(
+  userId: number,
+  roleId: number
+): Promise<{ success: boolean; msg: string }> {
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        roles: { disconnect: { id: roleId } },
+      },
+    });
+    return { success: true, msg: "Permissão removida com sucesso" };
+  } catch (error: any) {
+    console.error("Erro ao remover permissão:", error);
+    return {
+      success: false,
+      msg: error.message || "Erro ao remover permissão",
+    };
   }
 }

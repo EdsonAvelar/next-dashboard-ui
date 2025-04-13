@@ -18,6 +18,13 @@ function randomString(length: number) {
   return result;
 }
 
+// Função auxiliar para retornar uma data aleatória entre duas datas
+function randomDateBetween(start: Date, end: Date): Date {
+  const diff = end.getTime() - start.getTime();
+  const offset = Math.random() * diff;
+  return new Date(start.getTime() + offset);
+}
+
 /**
  * Cria dados do CRM para um tenant específico (no caso, Representação)
  */
@@ -51,13 +58,13 @@ export async function populateCRM(
   }
 
   // 2. Cria usuários (Funcionários) associados ao tenant Representação
-  // Agora, busca cargos filtrando pelo scope, pois Cargo não possui relação com Tenant.
+  // Agora o nome e email ficarão como "user1", "user2", etc.
   const cargos = await prisma.cargo.findMany({
     where: { scope: TenantType.REPRESENTATION },
   });
   const userPromises = [];
   for (let i = 0; i < NUM_USERS; i++) {
-    const name = `User ${i + 1}`;
+    const name = `user${i + 1}`;
     const email = `user${i + 1}@example.com`;
     const passwordHash = await bcrypt.hash("password", 10);
     const randomCargo = cargos[Math.floor(Math.random() * cargos.length)];
@@ -214,6 +221,40 @@ export async function populateCRM(
     });
   }
 
+  // Calcula os períodos de produção
+  const today = new Date();
+
+  // Produção Anterior: inicia 30 dias antes e termina 1 dia antes de hoje
+  const production1Start = new Date(today);
+  production1Start.setDate(today.getDate() - 30);
+  const production1End = new Date(today);
+  production1End.setDate(today.getDate() - 1);
+
+  // Produção Atual: inicia hoje e finaliza daqui a 30 dias
+  const production2Start = new Date(today);
+  const production2End = new Date(today);
+  production2End.setDate(today.getDate() + 30);
+
+  await prisma.producao.create({
+    data: {
+      name: "Produção Anterior",
+      startDate: production1Start,
+      endDate: production1End,
+      isActive: false,
+      tenantId: tenantId,
+    },
+  });
+
+  await prisma.producao.create({
+    data: {
+      name: "Produção Atual",
+      startDate: production2Start,
+      endDate: production2End,
+      isActive: true,
+      tenantId: tenantId,
+    },
+  });
+
   // Cria negócios e informações associadas
   for (let i = 0; i < NUM_NEGOCIOS; i++) {
     // Cria um lead fake
@@ -250,6 +291,12 @@ export async function populateCRM(
       (Math.random() * (500000 - 50000) + 50000).toFixed(2)
     );
 
+    // Atribui data_criacao aleatória: 50% na produção anterior, 50% na atual
+    const creationDate =
+      Math.random() < 0.5
+        ? randomDateBetween(production1Start, production1End)
+        : randomDateBetween(production2Start, production2End);
+
     const negocio = await prisma.negocio.create({
       data: {
         titulo: `Negocio ${randomString(4)}`,
@@ -261,6 +308,7 @@ export async function populateCRM(
         etapa_funil: { connect: { id: randomEtapa.id } },
         user: { connect: { id: randomUser.id } },
         tenant: { connect: { id: tenantId } },
+        data_criacao: creationDate, // Novo campo para definir a produção
       },
     });
 
@@ -320,39 +368,6 @@ export async function populateCRM(
     }
   }
   console.log(`${NUM_NEGOCIOS} negócios criados no tenant Representação.`);
-
-  const today = new Date();
-
-  // Produção 1: Inicia 30 dias antes e termina 1 dia antes de hoje
-  const production1Start = new Date(today);
-  production1Start.setDate(today.getDate() - 30);
-  const production1End = new Date(today);
-  production1End.setDate(today.getDate() - 1);
-
-  // Produção 2: Inicia hoje e finaliza daqui a 30 dias
-  const production2Start = new Date(today);
-  const production2End = new Date(today);
-  production2End.setDate(today.getDate() + 30);
-
-  await prisma.producao.create({
-    data: {
-      name: "Produção Anterior",
-      startDate: production1Start,
-      endDate: production1End,
-      isActive: false,
-      tenantId: tenantId,
-    },
-  });
-
-  await prisma.producao.create({
-    data: {
-      name: "Produção Atual",
-      startDate: production2Start,
-      endDate: production2End,
-      isActive: true,
-      tenantId: tenantId,
-    },
-  });
 
   console.log("Produções criadas com sucesso!");
 }
@@ -451,11 +466,11 @@ async function main() {
   const gerenteGeral = await prisma.role.findFirst({
     where: { name: "gerente_geral", scope: TenantType.REPRESENTATION },
   });
-  
+
   if (!gerenteGeral) {
     throw new Error("Role 'gerente_geral' não encontrada!");
   }
-  
+
   await prisma.user.create({
     data: {
       name: "Admin Master",
